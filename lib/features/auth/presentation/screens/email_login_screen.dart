@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/core/auth_session.dart';
 
 class EmailLoginScreen extends StatelessWidget {
   const EmailLoginScreen({super.key});
@@ -49,7 +51,10 @@ class EmailLoginScreen extends StatelessWidget {
               SizedBox(
                 height: 52,
                 child: FilledButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    AuthSession.signIn();
+                    context.go(AppRouter.homePath);
+                  },
                   child: const Text('Continue'),
                 ),
               ),

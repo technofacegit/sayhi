@@ -11,6 +11,7 @@ import 'package:qr_dating_app/features/chats/presentation/screens/chats_tab_scre
 import 'package:qr_dating_app/features/home/presentation/screens/home_screen.dart';
 import 'package:qr_dating_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:qr_dating_app/core/active_zone_session.dart';
+import 'package:qr_dating_app/core/auth_session.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/active_zone_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/qr_join_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_main_screen.dart';
@@ -23,7 +24,18 @@ final GlobalKey<NavigatorState> appRootNavigatorKey =
 class AppGoRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: appRootNavigatorKey,
+    refreshListenable: AuthSession.isLoggedIn,
     initialLocation: AppRouter.onboardingPath,
+    redirect: (context, state) {
+      if (!AuthSession.isLoggedIn.value) {
+        final path = state.uri.path;
+        if (path != AppRouter.chatsPath &&
+            path.startsWith('${AppRouter.chatsPath}/')) {
+          return AppRouter.chatsPath;
+        }
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: AppRouter.onboardingPath,

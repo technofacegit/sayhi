@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/core/auth_session.dart';
 import 'package:qr_dating_app/features/chats/data/mock_chat_threads.dart';
 import 'package:qr_dating_app/features/chats/presentation/model/chat_thread.dart';
 import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
@@ -40,83 +41,164 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: ListenableBuilder(
-          listenable: _search,
-          builder: (context, _) {
-            final items = _filtered;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                  child: Text(
-                    'Chats',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SearchBar(
-                    controller: _search,
-                    hintText: 'Search',
-                    leading: const Icon(Icons.search_rounded),
-                    trailing: [
-                      if (_search.text.isNotEmpty)
-                        IconButton(
-                          onPressed: () => _search.clear(),
-                          icon: const Icon(Icons.close_rounded),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: AuthSession.isLoggedIn,
+          builder: (context, loggedIn, _) {
+            if (!loggedIn) {
+              return _ChatsLoggedOutBody(
+                onSignIn: () => context.push(AppRouter.loginPath),
+              );
+            }
+            return ListenableBuilder(
+              listenable: _search,
+              builder: (context, _) {
+                final items = _filtered;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                      child: Text(
+                        'Chats',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
                         ),
-                    ],
-                    elevation: WidgetStateProperty.all(0),
-                    backgroundColor: WidgetStatePropertyAll(
-                      colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+                      ),
                     ),
-                    padding: const WidgetStatePropertyAll(
-                      EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: items.isEmpty
-                      ? Center(
-                          child: Text(
-                            _search.text.trim().isEmpty
-                                ? 'No conversations yet'
-                                : 'No conversations match your search',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SearchBar(
+                        controller: _search,
+                        hintText: 'Search',
+                        leading: const Icon(Icons.search_rounded),
+                        trailing: [
+                          if (_search.text.isNotEmpty)
+                            IconButton(
+                              onPressed: () => _search.clear(),
+                              icon: const Icon(Icons.close_rounded),
                             ),
-                          ),
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.only(bottom: 100),
-                          itemCount: items.length,
-                          separatorBuilder: (_, __) => Divider(
-                            height: 1,
-                            indent: 88,
-                            color: colorScheme.outlineVariant
-                                .withValues(alpha: 0.35),
-                          ),
-                          itemBuilder: (context, index) {
-                            final thread = items[index];
-                            return _ChatThreadTile(
-                              thread: thread,
-                              onTap: () => context.push(
-                                AppRouter.chatConversationPath(thread.id),
-                              ),
-                            );
-                          },
+                        ],
+                        elevation: WidgetStateProperty.all(0),
+                        backgroundColor: WidgetStatePropertyAll(
+                          colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.65),
                         ),
-                ),
-              ],
+                        padding: const WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: items.isEmpty
+                          ? Center(
+                              child: Text(
+                                _search.text.trim().isEmpty
+                                    ? 'No conversations yet'
+                                    : 'No conversations match your search',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.only(bottom: 100),
+                              itemCount: items.length,
+                              separatorBuilder: (_, __) => Divider(
+                                height: 1,
+                                indent: 88,
+                                color: colorScheme.outlineVariant
+                                    .withValues(alpha: 0.35),
+                              ),
+                              itemBuilder: (context, index) {
+                                final thread = items[index];
+                                return _ChatThreadTile(
+                                  thread: thread,
+                                  onTap: () => context.push(
+                                    AppRouter.chatConversationPath(thread.id),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
             );
           },
         ),
       ),
+    );
+  }
+}
+
+class _ChatsLoggedOutBody extends StatelessWidget {
+  final VoidCallback onSignIn;
+
+  const _ChatsLoggedOutBody({required this.onSignIn});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: Text(
+            'Chats',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 56,
+                  color: colorScheme.primary.withValues(alpha: 0.45),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Sohbetlerinizi görmek için oturum açın.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Oturum açtığınızda konuşmalarınız burada listelenir.',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: onSignIn,
+                    child: const Text('Oturum aç'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -148,8 +230,8 @@ class _ChatThreadTile extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor:
-                        colorScheme.surfaceContainerHighest.withValues(alpha: 0.9),
+                    backgroundColor: colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.9),
                     backgroundImage: NetworkImage(thread.avatarUrl),
                   ),
                   if (thread.unreadCount > 0)
