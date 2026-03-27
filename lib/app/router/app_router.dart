@@ -1,0 +1,39 @@
+import 'package:flutter/material.dart';
+
+class AppRouter {
+  static const onboardingPath = '/onboarding';
+  static const loginPath = '/login';
+  static const emailLoginPath = '/email-login';
+  static const homePath = '/home';
+  static const zonesPath = '/zones';
+  static const chatsPath = '/chats';
+  static const profilePath = '/profile';
+
+  /// Nested under [chatsPath].
+  static String chatConversationPath(String chatId) =>
+      '$chatsPath/conversation/$chatId';
+
+  /// Nested under [chatConversationPath] (opens from chat header).
+  static String chatUserProfilePath(String chatId) =>
+      '${chatConversationPath(chatId)}/profile';
+  /// Nested under [homePath]; opens inside the tab shell (bottom bar + FAB).
+  static const qrJoinPath = '/home/join-zone';
+  static const activeZonePath = '/active-zone';
+  static const zoneMainPath = '/zone-main';
+}
+
+class _UnknownRouteScreen extends StatelessWidget {
+  final Exception? error;
+
+  const _UnknownRouteScreen({this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Text(error?.toString() ?? 'Unknown route'),
+      ),
+    );
+  }
+}
+
