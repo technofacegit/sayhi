@@ -1,16 +1,44 @@
-# qr_dating_app
+# Say Hi
 
-A new Flutter project.
+Flutter MVP for a QR-based social / dating experience: onboarding, zones on a map, stories, chats, and a **Say Hi** action to join venue zones.
 
-## Getting Started
+## Stack
 
-This project is a starting point for a Flutter application.
+- Flutter (Material 3)
+- [go_router](https://pub.dev/packages/go_router) for navigation (shell + nested routes)
+- Maps: `flutter_map` + OSM tiles; location: `geolocator`
 
-A few resources to get you started if this is your first Flutter project:
+Backend (Supabase, etc.) is not wired yet—screens use mock data where needed.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Requirements
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Flutter SDK compatible with `environment.sdk` in `pubspec.yaml` (see `pubspec.yaml`).
+
+## Run
+
+```bash
+flutter pub get
+flutter run
+```
+
+## Checks (local)
+
+```bash
+flutter analyze
+flutter test
+```
+
+CI runs the same commands on every push and pull request to `main`.
+
+## Release tags (optional)
+
+After meaningful milestones, tag a version (matches `pubspec.yaml` when you bump it):
+
+```bash
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+```
+
+## License
+
+Private / unpublished (`publish_to: 'none'` in `pubspec.yaml`).
