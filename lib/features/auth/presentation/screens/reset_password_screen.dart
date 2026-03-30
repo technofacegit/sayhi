@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/features/auth/data/auth_repository.dart';
 import 'package:qr_dating_app/features/auth/data/auth_service.dart';
-import 'package:qr_dating_app/features/auth/domain/reset_password_validation.dart';
+import 'package:qr_dating_app/features/auth/domain/auth_input_validators.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Deep link ile recovery oturumu açıldıktan sonra yeni şifre belirleme.
@@ -41,7 +41,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Future<void> _submit() async {
     final password = _passwordController.text;
-    final err = ResetPasswordValidation.errorForPassword(password);
+    final err = AuthInputValidators.passwordPolicyError(password);
     setState(() => _fieldError = err);
     if (err != null) return;
 
@@ -83,7 +83,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         title: const Text('Reset password'),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -91,6 +91,21 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               Text(
                 'Choose a new password for your account.',
                 style: theme.textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 20),
+              InputDecorator(
+                decoration: InputDecoration(
+                  alignLabelWithHint: true,
+                  labelText: 'Şifre gereksinimleri',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                ),
+                child: Text(
+                  AuthInputValidators.passwordRequirementsDescription,
+                  style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
+                ),
               ),
               const SizedBox(height: 20),
               TextField(
@@ -106,7 +121,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   labelText: 'New password',
                   border: const OutlineInputBorder(),
                   errorText: _fieldError,
-                  helperText: 'At least 6 characters',
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscure
@@ -122,7 +136,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   if (!_loading) _submit();
                 },
               ),
-              const Spacer(),
+              const SizedBox(height: 24),
               SizedBox(
                 height: 52,
                 child: FilledButton(

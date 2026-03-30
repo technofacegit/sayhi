@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:qr_dating_app/features/home/data/story_repository.dart';
 import 'package:qr_dating_app/features/home/presentation/data/home_story_groups.dart';
+import 'package:qr_dating_app/features/home/presentation/model/story_group.dart';
 import 'package:qr_dating_app/features/home/presentation/screens/story_viewer_screen.dart';
 
 /// Horizontal story groups (each ring may open multiple sub-stories).
 class HomeStoryStrip extends StatelessWidget {
   const HomeStoryStrip({super.key});
 
-  void _openViewer(BuildContext context, int groupIndex) {
+  void _openViewer(
+    BuildContext context,
+    List<StoryGroup> groups,
+    int groupIndex,
+  ) {
     Navigator.of(context).push<void>(
       PageRouteBuilder<void>(
         opaque: false,
@@ -15,7 +21,7 @@ class HomeStoryStrip extends StatelessWidget {
           return FadeTransition(
             opacity: animation,
             child: StoryViewerScreen(
-              groups: HomeStoryGroups.all,
+              groups: groups,
               initialGroupIndex: groupIndex,
             ),
           );
@@ -28,49 +34,93 @@ class HomeStoryStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final groups = HomeStoryGroups.all;
 
-    return SizedBox(
-      height: 104,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.zero,
-        itemCount: groups.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 14),
-        itemBuilder: (context, index) {
-          final group = groups[index];
+    return FutureBuilder<List<StoryGroup>>(
+      future: StoryRepository().fetchStoryGroups(),
+      builder: (context, snapshot) {
+        final hasData = snapshot.hasData && snapshot.data!.isNotEmpty;
+        final groups = hasData ? snapshot.data! : HomeStoryGroups.all;
 
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _openViewer(context, index),
-              borderRadius: BorderRadius.circular(40),
-              child: SizedBox(
-                width: 72,
-                child: Column(
-                  children: [
-                    _StoryAvatar(
-                      imageUrl: group.ringImageUrl,
-                      colorScheme: colorScheme,
-                      slideCount: group.slideCount,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      group.label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.75),
+        if (!snapshot.hasData && !snapshot.hasError) {
+          return SizedBox(
+            height: 104,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 72,
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        width: 56,
+                        height: 56,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Text(
+                        'Loading…',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSurface
+                              .withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           );
-        },
-      ),
+        }
+
+        if (snapshot.hasError && !hasData) {
+          return const SizedBox.shrink();
+        }
+
+        return SizedBox(
+          height: 104,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            itemCount: groups.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            itemBuilder: (context, index) {
+              final group = groups[index];
+
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _openViewer(context, groups, index),
+                  borderRadius: BorderRadius.circular(40),
+                  child: SizedBox(
+                    width: 72,
+                    child: Column(
+                      children: [
+                        _StoryAvatar(
+                          imageUrl: group.ringImageUrl,
+                          colorScheme: colorScheme,
+                          slideCount: group.slideCount,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          group.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSurface
+                                .withValues(alpha: 0.75),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
