@@ -49,5 +49,7 @@
 	<string>Haritada konumunuzu göstermek ve haritayı merkeze almak için gereklidir.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Mekân QR kodunu okumak için kamera erişimi gereklidir.</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
 </dict>
 </plist>

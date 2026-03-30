@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/core/auth_session.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -43,12 +45,57 @@ class LoginScreen extends StatelessWidget {
                   _PrimaryActionButton(
                     label: 'Continue with Apple',
                     icon: Icons.apple,
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Apple Sign In coming soon'),
-                        ),
-                      );
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        final isAvailable = await SignInWithApple.isAvailable();
+                        if (!isAvailable) {
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Apple Sign In bu cihazda kullanılamıyor.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final credential =
+                            await SignInWithApple.getAppleIDCredential(
+                          scopes: [
+                            AppleIDAuthorizationScopes.email,
+                            AppleIDAuthorizationScopes.fullName,
+                          ],
+                        );
+
+                        final userId = credential.userIdentifier;
+                        if (userId == null || userId.isEmpty) {
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Apple ile giriş başarısız oldu.'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        AuthSession.signIn();
+                        if (context.mounted) context.go(AppRouter.homePath);
+                      } on SignInWithAppleAuthorizationException catch (e) {
+                        if (e.code == AuthorizationErrorCode.canceled) return;
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Apple giriş hatası: ${e.code.name}',
+                            ),
+                          ),
+                        );
+                      } catch (e) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('Apple giriş hatası: $e'),
+                          ),
+                        );
+                      }
                     },
                   ),
                   const SizedBox(height: 12),
@@ -99,7 +146,7 @@ class _PrimaryActionButton extends StatelessWidget {
       child: FilledButton(
         style: FilledButton.styleFrom(
           backgroundColor: colorScheme.onSurface,
-          foregroundColor: colorScheme.surface,
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -113,6 +160,7 @@ class _PrimaryActionButton extends StatelessWidget {
             Text(
               label,
               style: theme.textTheme.labelLarge?.copyWith(
+                color: Colors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),

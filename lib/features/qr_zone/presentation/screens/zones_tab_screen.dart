@@ -1,7 +1,11 @@
+import 'dart:io' show Platform;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:apple_maps_flutter/apple_maps_flutter.dart' as am;
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:qr_dating_app/features/qr_zone/presentation/mock_venues.dart';
 
 class ZonesTabScreen extends StatefulWidget {
@@ -32,7 +36,8 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
         .toList();
   }
 
-  static final LatLng _mapCenter = LatLng(41.034, 28.978);
+  static const _mapCenterLat = 41.034;
+  static const _mapCenterLng = 28.978;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +103,8 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
                     )
                   : _mapView
                       ? _ZonesMap(
-                          center: _mapCenter,
+                          centerLat: _mapCenterLat,
+                          centerLng: _mapCenterLng,
                           venues: venues,
                         )
                       : _ZonesGrid(venues: venues),
@@ -111,11 +117,13 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
 }
 
 class _ZonesMap extends StatefulWidget {
-  final LatLng center;
+  final double centerLat;
+  final double centerLng;
   final List<Map<String, dynamic>> venues;
 
   const _ZonesMap({
-    required this.center,
+    required this.centerLat,
+    required this.centerLng,
     required this.venues,
   });
 
@@ -124,14 +132,8 @@ class _ZonesMap extends StatefulWidget {
 }
 
 class _ZonesMapState extends State<_ZonesMap> {
-  final MapController _mapController = MapController();
-  LatLng? _userPoint;
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
-  }
+  double? _userLat;
+  double? _userLng;
 
   Future<void> _recenterOnMyLocation() async {
     final messenger = ScaffoldMessenger.of(context);
@@ -158,9 +160,10 @@ class _ZonesMapState extends State<_ZonesMap> {
 
     try {
       final pos = await Geolocator.getCurrentPosition();
-      final here = LatLng(pos.latitude, pos.longitude);
-      setState(() => _userPoint = here);
-      _mapController.move(here, 15);
+      setState(() {
+        _userLat = pos.latitude;
+        _userLng = pos.longitude;
+      });
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text('Konum alınamadı: $e')),
@@ -170,115 +173,104 @@ class _ZonesMapState extends State<_ZonesMap> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    if (Platform.isIOS) {
+      return _AppleZonesMap(
+        centerLat: widget.centerLat,
+        centerLng: widget.centerLng,
+        venues: widget.venues,
+        userLat: _userLat,
+        userLng: _userLng,
+        onMyLocationTap: _recenterOnMyLocation,
+      );
+    }
+    if (Platform.isAndroid) {
+      return _GoogleZonesMap(
+        centerLat: widget.centerLat,
+        centerLng: widget.centerLng,
+        venues: widget.venues,
+        userLat: _userLat,
+        userLng: _userLng,
+        onMyLocationTap: _recenterOnMyLocation,
+      );
+    }
 
-    final venueMarkers = <Marker>[
-      for (final z in widget.venues)
-        Marker(
-          point: LatLng(
-            (z['lat'] as num).toDouble(),
-            (z['lng'] as num).toDouble(),
-          ),
-          width: 44,
-          height: 44,
-          alignment: Alignment.bottomCenter,
-          child: Tooltip(
-            message:
-                '${z['name'] as String? ?? ''}\n${z['activeCount'] as int? ?? 0} active',
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  Icons.place_rounded,
-                  size: 40,
-                  color: colorScheme.primary,
-                  shadows: const [
-                    Shadow(
-                      blurRadius: 4,
-                      color: Colors.black26,
-                    ),
-                  ],
-                ),
-                Positioned(
-                  bottom: -2,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26.withValues(alpha: 0.18),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      '${z['activeCount'] as int? ?? 0}',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-    ];
+    return const Center(child: Text('Platform map is not supported.'));
+  }
+}
 
-    if (_userPoint != null) {
-      venueMarkers.add(
-        Marker(
-          point: _userPoint!,
-          width: 28,
-          height: 28,
-          alignment: Alignment.center,
-          child: Tooltip(
-            message: 'Konumun',
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 3),
-                boxShadow: const [
-                  BoxShadow(
-                    blurRadius: 6,
-                    color: Colors.black26,
-                  ),
-                ],
-              ),
-            ),
-          ),
+class _GoogleZonesMap extends StatefulWidget {
+  final double centerLat;
+  final double centerLng;
+  final List<Map<String, dynamic>> venues;
+  final double? userLat;
+  final double? userLng;
+  final Future<void> Function() onMyLocationTap;
+
+  const _GoogleZonesMap({
+    required this.centerLat,
+    required this.centerLng,
+    required this.venues,
+    required this.userLat,
+    required this.userLng,
+    required this.onMyLocationTap,
+  });
+
+  @override
+  State<_GoogleZonesMap> createState() => _GoogleZonesMapState();
+}
+
+class _GoogleZonesMapState extends State<_GoogleZonesMap> {
+  gm.GoogleMapController? _controller;
+
+  @override
+  void didUpdateWidget(covariant _GoogleZonesMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.userLat != null &&
+        widget.userLng != null &&
+        (widget.userLat != oldWidget.userLat ||
+            widget.userLng != oldWidget.userLng)) {
+      _controller?.animateCamera(
+        gm.CameraUpdate.newLatLngZoom(
+          gm.LatLng(widget.userLat!, widget.userLng!),
+          15,
         ),
       );
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final venueMarkers = <gm.Marker>{
+      for (final z in widget.venues)
+        gm.Marker(
+          markerId: gm.MarkerId('venue-${z['name']}'),
+          position: gm.LatLng(
+            (z['lat'] as num).toDouble(),
+            (z['lng'] as num).toDouble(),
+          ),
+          infoWindow: gm.InfoWindow(
+            title: z['name'] as String? ?? '',
+            snippet: '${z['activeCount'] as int? ?? 0} active',
+          ),
+        ),
+    };
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
       child: Stack(
         children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: widget.center,
-              initialZoom: 13.2,
-              minZoom: 10,
-              maxZoom: 18,
+          gm.GoogleMap(
+            initialCameraPosition: gm.CameraPosition(
+              target: gm.LatLng(widget.centerLat, widget.centerLng),
+              zoom: 13.2,
             ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'qr_dating_app',
-              ),
-              MarkerLayer(markers: venueMarkers),
-            ],
+            myLocationEnabled: widget.userLat != null && widget.userLng != null,
+            myLocationButtonEnabled: false,
+            markers: venueMarkers,
+            zoomControlsEnabled: false,
+            onMapCreated: (controller) => _controller = controller,
           ),
           Positioned(
             right: 12,
@@ -291,7 +283,181 @@ class _ZonesMapState extends State<_ZonesMap> {
               clipBehavior: Clip.antiAlias,
               child: IconButton(
                 tooltip: 'Konumumu merkeze al',
-                onPressed: _recenterOnMyLocation,
+                onPressed: widget.onMyLocationTap,
+                icon: const Icon(Icons.my_location_rounded),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppleZonesMap extends StatefulWidget {
+  final double centerLat;
+  final double centerLng;
+  final List<Map<String, dynamic>> venues;
+  final double? userLat;
+  final double? userLng;
+  final Future<void> Function() onMyLocationTap;
+
+  const _AppleZonesMap({
+    required this.centerLat,
+    required this.centerLng,
+    required this.venues,
+    required this.userLat,
+    required this.userLng,
+    required this.onMyLocationTap,
+  });
+
+  @override
+  State<_AppleZonesMap> createState() => _AppleZonesMapState();
+}
+
+class _AppleZonesMapState extends State<_AppleZonesMap> {
+  am.AppleMapController? _controller;
+  final Map<int, am.BitmapDescriptor> _markerIconsByCount = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _prepareMarkerIcons();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AppleZonesMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _prepareMarkerIcons();
+    if (widget.userLat != null &&
+        widget.userLng != null &&
+        (widget.userLat != oldWidget.userLat ||
+            widget.userLng != oldWidget.userLng)) {
+      _controller?.moveCamera(
+        am.CameraUpdate.newCameraPosition(
+          am.CameraPosition(
+            target: am.LatLng(widget.userLat!, widget.userLng!),
+            zoom: 15,
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _prepareMarkerIcons() async {
+    final counts = widget.venues
+        .map((z) => z['activeCount'] as int? ?? 0)
+        .toSet()
+        .where((c) => !_markerIconsByCount.containsKey(c));
+    if (counts.isEmpty) return;
+
+    for (final count in counts) {
+      final bytes = await _buildAppleMarkerBytes('$count');
+      _markerIconsByCount[count] = am.BitmapDescriptor.fromBytes(bytes);
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<Uint8List> _buildAppleMarkerBytes(String text) async {
+    const width = 86.0;
+    const height = 44.0;
+    const radius = 22.0;
+    const notchHeight = 8.0;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    final bubbleRect = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(0, 0, width, height - notchHeight),
+      const Radius.circular(radius),
+    );
+    final bubblePaint = Paint()..color = const Color(0xFF7C4DFF);
+    canvas.drawRRect(bubbleRect, bubblePaint);
+
+    final notchPath = Path()
+      ..moveTo(width / 2 - 7, height - notchHeight)
+      ..lineTo(width / 2 + 7, height - notchHeight)
+      ..lineTo(width / 2, height)
+      ..close();
+    canvas.drawPath(notchPath, bubblePaint);
+
+    final tp = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: width);
+    tp.paint(canvas, Offset((width - tp.width) / 2, (height - notchHeight - tp.height) / 2));
+
+    final image = await recorder.endRecording().toImage(
+          width.toInt(),
+          height.toInt(),
+        );
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    return byteData!.buffer.asUint8List();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final venueAnnotations = <am.Annotation>{
+      for (final z in widget.venues)
+        am.Annotation(
+          annotationId: am.AnnotationId('venue-${z['name']}'),
+          position: am.LatLng(
+            (z['lat'] as num).toDouble(),
+            (z['lng'] as num).toDouble(),
+          ),
+          icon: _markerIconsByCount[z['activeCount'] as int? ?? 0] ??
+              am.BitmapDescriptor.markerAnnotationWithHue(
+                am.BitmapDescriptor.hueViolet,
+              ),
+          infoWindow: am.InfoWindow(
+            title: z['name'] as String? ?? '',
+            snippet: '${z['activeCount'] as int? ?? 0} active',
+          ),
+        ),
+      if (widget.userLat != null && widget.userLng != null)
+        am.Annotation(
+          annotationId: am.AnnotationId('my-location'),
+          position: am.LatLng(widget.userLat!, widget.userLng!),
+          infoWindow: const am.InfoWindow(title: 'Konumun'),
+        ),
+    };
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+      child: Stack(
+        children: [
+          am.AppleMap(
+            initialCameraPosition: am.CameraPosition(
+              target: am.LatLng(widget.centerLat, widget.centerLng),
+              zoom: 13.2,
+            ),
+            myLocationEnabled: widget.userLat != null && widget.userLng != null,
+            myLocationButtonEnabled: false,
+            annotations: venueAnnotations,
+            onMapCreated: (controller) => _controller = controller,
+          ),
+          Positioned(
+            right: 12,
+            bottom: 12,
+            child: Material(
+              color: colorScheme.surface,
+              elevation: 3,
+              shadowColor: Colors.black26,
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: IconButton(
+                tooltip: 'Konumumu merkeze al',
+                onPressed: widget.onMyLocationTap,
                 icon: const Icon(Icons.my_location_rounded),
               ),
             ),

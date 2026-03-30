@@ -1,0 +1,16 @@
+TODO
+
+- Android Google Maps için API key ekle:
+  - `android/app/src/main/AndroidManifest.xml` içinde `com.google.android.geo.API_KEY` meta-data tanımla.
+  - Anahtarı doğrudan repo'ya yazma; `--dart-define` veya local properties/secrets ile yönet.
+
+- Google Maps (Android) pinlerini de custom marker yap:
+  - Apple Maps'teki gibi marker içinde `active user` sayısı görünsün.
+  - Count bazlı bitmap cache kullan (tekrar üretimi azalt).
+  - Varsayılan fallback marker bırak (bitmap henüz hazır değilse).
+
+- iOS Apple Maps davranışını gerçek cihazda doğrula:
+  - Marker görünümü
+  - "Konumumu merkeze al" akışı
+  - Konum izni prompt'u
+

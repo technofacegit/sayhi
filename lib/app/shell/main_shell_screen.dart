@@ -25,35 +25,39 @@ class MainShellScreen extends StatelessWidget {
       extendBody: true,
       body: navigationShell,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton.large(
-        onPressed: () => context.go(AppRouter.qrJoinPath),
-        tooltip: 'Say Hi',
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.waving_hand_rounded,
-                size: 30,
-                color: colorScheme.onPrimary,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Say Hi',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 11,
-                      letterSpacing: -0.2,
-                    ),
-              ),
-            ],
+      floatingActionButton: Transform.translate(
+        offset: const Offset(0, 20),
+        child: FloatingActionButton.large(
+          onPressed: () => context.go(AppRouter.qrJoinPath),
+          tooltip: 'Say Hi',
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.waving_hand_rounded,
+                  size: 30,
+                  color: colorScheme.onPrimary,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Say Hi',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
+                        letterSpacing: -0.2,
+                      ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
       bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
         shape: const CircularNotchedRectangle(),
         notchMargin: 10,
