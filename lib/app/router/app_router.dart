@@ -2,6 +2,10 @@ class AppRouter {
   static const onboardingPath = '/onboarding';
   static const loginPath = '/login';
   static const emailLoginPath = '/email-login';
+  static const emailPasswordPath = '/email-login/password';
+  static const emailRegisterPath = '/email-login/register';
+  static const emailForgotPasswordPath = '/email-login/forgot-password';
+  static const resetPasswordPath = '/reset-password';
   static const homePath = '/home';
   static const zonesPath = '/zones';
   static const chatsPath = '/chats';

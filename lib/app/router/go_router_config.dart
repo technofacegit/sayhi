@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/features/auth/presentation/screens/email_login_screen.dart';
+import 'package:qr_dating_app/features/auth/presentation/screens/email_password_screen.dart';
+import 'package:qr_dating_app/features/auth/presentation/screens/email_register_screen.dart';
+import 'package:qr_dating_app/features/auth/presentation/screens/email_forgot_password_screen.dart';
+import 'package:qr_dating_app/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:qr_dating_app/features/auth/presentation/screens/login_screen.dart';
 import 'package:qr_dating_app/app/shell/main_shell_screen.dart';
 import 'package:qr_dating_app/app/shell/shell_tab_pages.dart';
@@ -16,6 +20,7 @@ import 'package:qr_dating_app/features/qr_zone/presentation/screens/active_zone_
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/qr_join_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_main_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zones_tab_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Root stack for routes that must cover the tab shell (e.g. zone flows).
 final GlobalKey<NavigatorState> appRootNavigatorKey =
@@ -27,6 +32,23 @@ class AppGoRouter {
     refreshListenable: AuthSession.isLoggedIn,
     initialLocation: AppRouter.onboardingPath,
     redirect: (context, state) {
+      final loggedIn = Supabase.instance.client.auth.currentSession != null;
+
+      if (loggedIn) {
+        final path = state.uri.path;
+        if (path == AppRouter.resetPasswordPath) {
+          return null;
+        }
+        if (path == AppRouter.onboardingPath ||
+            path == AppRouter.loginPath ||
+            path == AppRouter.emailLoginPath ||
+            path == AppRouter.emailPasswordPath ||
+            path == AppRouter.emailRegisterPath ||
+            path == AppRouter.emailForgotPasswordPath) {
+          return AppRouter.homePath;
+        }
+      }
+
       if (!AuthSession.isLoggedIn.value) {
         final path = state.uri.path;
         if (path != AppRouter.chatsPath &&
@@ -46,8 +68,38 @@ class AppGoRouter {
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
+        path: AppRouter.resetPasswordPath,
+        builder: (context, state) => const ResetPasswordScreen(),
+      ),
+      GoRoute(
         path: AppRouter.emailLoginPath,
         builder: (context, state) => const EmailLoginScreen(),
+        routes: [
+          GoRoute(
+            path: 'password',
+            builder: (context, state) {
+              final extra = state.extra;
+              final email = extra is String ? extra : '';
+              return EmailPasswordScreen(email: email);
+            },
+          ),
+          GoRoute(
+            path: 'register',
+            builder: (context, state) {
+              final extra = state.extra;
+              final email = extra is String ? extra : '';
+              return EmailRegisterScreen(email: email);
+            },
+          ),
+          GoRoute(
+            path: 'forgot-password',
+            builder: (context, state) {
+              final extra = state.extra;
+              final email = extra is String ? extra : '';
+              return EmailForgotPasswordScreen(email: email);
+            },
+          ),
+        ],
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

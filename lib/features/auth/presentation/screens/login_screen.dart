@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
-import 'package:qr_dating_app/core/auth_session.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import '../../data/apple_auth_service.dart';
+import 'package:qr_dating_app/features/auth/presentation/controllers/auth_controller.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final appleAuthService = AppleAuthService();
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -46,55 +47,19 @@ class LoginScreen extends StatelessWidget {
                     label: 'Continue with Apple',
                     icon: Icons.apple,
                     onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(context);
                       try {
-                        final isAvailable = await SignInWithApple.isAvailable();
-                        if (!isAvailable) {
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Apple Sign In bu cihazda kullanılamıyor.',
-                              ),
-                            ),
-                          );
-                          return;
+                        await appleAuthService.signInWithApple();
+                        if (context.mounted) {
+                          context.go('/home');
                         }
-
-                        final credential =
-                            await SignInWithApple.getAppleIDCredential(
-                          scopes: [
-                            AppleIDAuthorizationScopes.email,
-                            AppleIDAuthorizationScopes.fullName,
-                          ],
-                        );
-
-                        final userId = credential.userIdentifier;
-                        if (userId == null || userId.isEmpty) {
-                          messenger.showSnackBar(
-                            const SnackBar(
-                              content: Text('Apple ile giriş başarısız oldu.'),
-                            ),
+                      } catch (e, st) {
+                        debugPrint('Apple sign-in error: $e');
+                        debugPrint('$st');
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(e.toString())),
                           );
-                          return;
                         }
-
-                        AuthSession.signIn();
-                        if (context.mounted) context.go(AppRouter.homePath);
-                      } on SignInWithAppleAuthorizationException catch (e) {
-                        if (e.code == AuthorizationErrorCode.canceled) return;
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Apple giriş hatası: ${e.code.name}',
-                            ),
-                          ),
-                        );
-                      } catch (e) {
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text('Apple giriş hatası: $e'),
-                          ),
-                        );
                       }
                     },
                   ),
@@ -106,7 +71,19 @@ class LoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   TextButton(
-                    onPressed: () => context.go(AppRouter.homePath),
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await AuthController().signInGuestAndEnsureProfile();
+                        if (context.mounted) context.go(AppRouter.homePath);
+                      } catch (e, st) {
+                        debugPrint('Guest login error: $e');
+                        debugPrint('$st');
+                        messenger.showSnackBar(
+                          SnackBar(content: Text('Guest login failed: $e')),
+                        );
+                      }
+                    },
                     child: Text(
                       'Continue as Guest',
                       style: theme.textTheme.labelLarge?.copyWith(

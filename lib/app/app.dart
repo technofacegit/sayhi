@@ -1,10 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+
+import 'package:qr_dating_app/features/auth/presentation/deep_link/auth_deep_link_coordinator.dart';
 
 import 'router/go_router_config.dart';
 import 'theme/theme.dart';
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
+
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  AuthDeepLinkCoordinator? _deepLinks;
+
+  @override
+  void initState() {
+    super.initState();
+    _deepLinks = AuthDeepLinkCoordinator();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _deepLinks?.init();
+    });
+  }
+
+  @override
+  void dispose() {
+    _deepLinks?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
