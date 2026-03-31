@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
-import 'package:qr_dating_app/core/active_zone_session.dart';
 import 'package:qr_dating_app/features/home/presentation/widgets/zone_preview_card.dart';
 
 class ActiveZoneScreen extends StatelessWidget {
@@ -36,8 +35,7 @@ class ActiveZoneScreen extends StatelessWidget {
                 height: 52,
                 child: FilledButton(
                   onPressed: () {
-                    ActiveZoneSession.enterZone(zone);
-                    context.go(AppRouter.zoneMainPath);
+                    context.go(AppRouter.qrJoinPath);
                   },
                   child: const Text('Enter Zone'),
                 ),
