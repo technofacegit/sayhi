@@ -5,15 +5,40 @@ import 'package:qr_dating_app/features/home/presentation/model/story_group.dart'
 import 'package:qr_dating_app/features/home/presentation/screens/story_viewer_screen.dart';
 
 /// Horizontal story groups (each ring may open multiple sub-stories).
-class HomeStoryStrip extends StatelessWidget {
+class HomeStoryStrip extends StatefulWidget {
   const HomeStoryStrip({super.key});
 
-  void _openViewer(
+  @override
+  State<HomeStoryStrip> createState() => _HomeStoryStripState();
+}
+
+class _HomeStoryStripState extends State<HomeStoryStrip> {
+  late Future<List<StoryGroup>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = StoryRepository().fetchStoryGroups();
+  }
+
+  void _reload() {
+    if (!mounted) return;
+    setState(() {
+      _future = StoryRepository().fetchStoryGroups();
+    });
+  }
+
+  Future<void> _openViewer(
     BuildContext context,
     List<StoryGroup> groups,
     int groupIndex,
-  ) {
-    Navigator.of(context).push<void>(
+  ) async {
+    final navigator = Navigator.of(context, rootNavigator: true);
+    final group = groups[groupIndex];
+    if (group.id != null) {
+      await StoryRepository().markStoryGroupViewed(group.id!);
+    }
+    await navigator.push<void>(
       PageRouteBuilder<void>(
         opaque: false,
         barrierColor: Colors.black,
@@ -28,6 +53,7 @@ class HomeStoryStrip extends StatelessWidget {
         },
       ),
     );
+    _reload();
   }
 
   @override
@@ -36,7 +62,7 @@ class HomeStoryStrip extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return FutureBuilder<List<StoryGroup>>(
-      future: StoryRepository().fetchStoryGroups(),
+      future: _future,
       builder: (context, snapshot) {
         final hasData = snapshot.hasData && snapshot.data!.isNotEmpty;
         final groups = hasData ? snapshot.data! : HomeStoryGroups.all;
@@ -90,7 +116,7 @@ class HomeStoryStrip extends StatelessWidget {
               return Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => _openViewer(context, groups, index),
+                  onTap: () async => _openViewer(context, groups, index),
                   borderRadius: BorderRadius.circular(40),
                   child: SizedBox(
                     width: 72,
@@ -100,6 +126,7 @@ class HomeStoryStrip extends StatelessWidget {
                           imageUrl: group.ringImageUrl,
                           colorScheme: colorScheme,
                           slideCount: group.slideCount,
+                          isUnseen: group.isUnseen,
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -129,11 +156,13 @@ class _StoryAvatar extends StatelessWidget {
   final String? imageUrl;
   final ColorScheme colorScheme;
   final int slideCount;
+  final bool isUnseen;
 
   const _StoryAvatar({
     required this.imageUrl,
     required this.colorScheme,
     required this.slideCount,
+    required this.isUnseen,
   });
 
   @override
@@ -149,14 +178,19 @@ class _StoryAvatar extends StatelessWidget {
           padding: const EdgeInsets.all(ringWidth),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                colorScheme.primary,
-                colorScheme.secondary,
-              ],
-            ),
+            gradient: isUnseen
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primary,
+                      colorScheme.secondary,
+                    ],
+                  )
+                : null,
+            color: isUnseen
+                ? null
+                : colorScheme.surfaceContainerHigh,
           ),
           child: DecoratedBox(
             decoration: BoxDecoration(

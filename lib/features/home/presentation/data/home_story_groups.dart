@@ -4,6 +4,7 @@ import 'package:qr_dating_app/features/home/presentation/model/story_group.dart'
 abstract final class HomeStoryGroups {
   static const List<StoryGroup> all = [
     StoryGroup(
+      id: 'mock-rooftop',
       label: 'Rooftop',
       ringImageUrl:
           'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200&h=200&fit=crop',
@@ -14,6 +15,7 @@ abstract final class HomeStoryGroups {
       ],
     ),
     StoryGroup(
+      id: 'mock-velvet',
       label: 'Velvet',
       ringImageUrl:
           'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=200&h=200&fit=crop',
@@ -23,6 +25,7 @@ abstract final class HomeStoryGroups {
       ],
     ),
     StoryGroup(
+      id: 'mock-sunset',
       label: 'Sunset',
       ringImageUrl:
           'https://images.unsplash.com/photo-1445118773165-6282be15491f?w=200&h=200&fit=crop',
@@ -31,6 +34,7 @@ abstract final class HomeStoryGroups {
       ],
     ),
     StoryGroup(
+      id: 'mock-tonight',
       label: 'Tonight',
       ringImageUrl:
           'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=200&h=200&fit=crop',

@@ -133,6 +133,12 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
     final topInset = MediaQuery.of(context).padding.top;
     final g = _group;
     final url = g.slideImageUrls[_slideIndex];
+    final slideTitle = _slideIndex < g.slideTitles.length
+        ? g.slideTitles[_slideIndex]
+        : '';
+    final slideBody = _slideIndex < g.slideBodies.length
+        ? g.slideBodies[_slideIndex]
+        : '';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -166,7 +172,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
             right: 0,
             bottom: 0,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 48, 24, 48),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
@@ -177,12 +183,38 @@ class _StoryViewerScreenState extends State<StoryViewerScreen>
                   ],
                 ),
               ),
-              child: Text(
-                g.label,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    g.label,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  if (slideTitle.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      slideTitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
+                  ],
+                  if (slideBody.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      slideBody,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            height: 1.3,
+                          ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),
