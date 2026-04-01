@@ -13,6 +13,8 @@ import 'package:qr_dating_app/core/zone_activity.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/mock_venues.dart';
 
+enum _ZoneActivityFilter { all, active, passive }
+
 class ZonesTabScreen extends StatefulWidget {
   const ZonesTabScreen({super.key});
 
@@ -23,6 +25,8 @@ class ZonesTabScreen extends StatefulWidget {
 class _ZonesTabScreenState extends State<ZonesTabScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _mapView = true;
+  bool _filterPanelOpen = false;
+  _ZoneActivityFilter _activityFilter = _ZoneActivityFilter.all;
 
   List<Map<String, dynamic>> _zones = List<Map<String, dynamic>>.from(
     MockVenues.all,
@@ -134,13 +138,30 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
 
   List<Map<String, dynamic>> get _filtered {
     final q = _searchController.text.trim().toLowerCase();
-    if (q.isEmpty) {
-      return List<Map<String, dynamic>>.from(_zones);
+    final now = DateTime.now();
+    Iterable<Map<String, dynamic>> list =
+        _zones.map((e) => Map<String, dynamic>.from(e));
+
+    switch (_activityFilter) {
+      case _ZoneActivityFilter.active:
+        list = list.where((z) => isZoneMembershipActiveForUser(z, now));
+        break;
+      case _ZoneActivityFilter.passive:
+        list = list.where((z) => !isZoneMembershipActiveForUser(z, now));
+        break;
+      case _ZoneActivityFilter.all:
+        break;
     }
-    return _zones
-        .where((z) => (z['name'] as String).toLowerCase().contains(q))
-        .map((e) => Map<String, dynamic>.from(e))
-        .toList();
+
+    if (q.isEmpty) {
+      return list.toList(growable: false);
+    }
+    return list
+        .where(
+          (z) =>
+              ((z['name'] as String?) ?? '').toLowerCase().contains(q),
+        )
+        .toList(growable: false);
   }
 
   static const _mapCenterLat = 41.034;
@@ -164,21 +185,126 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Mekan ara',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            hintText: 'Mekan ara',
+                            prefixIcon: const Icon(Icons.search_rounded),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    tooltip: 'Temizle',
+                                    icon: const Icon(Icons.close_rounded),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {});
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            filled: true,
+                            fillColor:
+                                colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Material(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _filterPanelOpen = !_filterPanelOpen;
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(14),
+                          child: SizedBox(
+                            width: 52,
+                            height: 52,
+                            child: Icon(
+                              Icons.filter_list_rounded,
+                              color: _activityFilter != _ZoneActivityFilter.all ||
+                                      _filterPanelOpen
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: 0.65,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.5,
-                  ),
-                ),
+                  if (_filterPanelOpen) ...[
+                    const SizedBox(height: 10),
+                    Material(
+                      color: colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.55,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Durum',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            SegmentedButton<_ZoneActivityFilter>(
+                              segments: const [
+                                ButtonSegment<_ZoneActivityFilter>(
+                                  value: _ZoneActivityFilter.all,
+                                  label: Text('Tümü'),
+                                ),
+                                ButtonSegment<_ZoneActivityFilter>(
+                                  value: _ZoneActivityFilter.active,
+                                  label: Text('Aktif'),
+                                ),
+                                ButtonSegment<_ZoneActivityFilter>(
+                                  value: _ZoneActivityFilter.passive,
+                                  label: Text('Pasif'),
+                                ),
+                              ],
+                              selected: {_activityFilter},
+                              onSelectionChanged:
+                                  (Set<_ZoneActivityFilter> next) {
+                                setState(() {
+                                  _activityFilter = next.first;
+                                });
+                              },
+                              showSelectedIcon: false,
+                              style: ButtonStyle(
+                                visualDensity: VisualDensity.compact,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ] else
+                    const SizedBox(height: 8),
+                ],
               ),
             ),
             Padding(
