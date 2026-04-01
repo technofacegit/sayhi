@@ -123,7 +123,11 @@ class AppGoRouter {
                 routes: [
                   GoRoute(
                     path: 'join-zone',
-                    builder: (context, state) => const QrJoinScreen(),
+                    builder: (context, state) {
+                      final extra = state.extra;
+                      final zoneId = extra is String ? extra : null;
+                      return QrJoinScreen(expectedZoneId: zoneId);
+                    },
                   ),
                 ],
               ),

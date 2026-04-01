@@ -45,5 +45,31 @@ class ZoneRepository {
       };
     }).toList(growable: false);
   }
+
+  /// Validates zone code, joins user to zone_members and returns zone payload.
+  Future<Map<String, dynamic>> joinZoneByCode(String code) async {
+    final result = await _client.rpc<dynamic>(
+      'join_zone_by_code',
+      params: {'input_code': code.trim()},
+    );
+    if (result is Map<String, dynamic>) return result;
+    throw Exception('Invalid zone response');
+  }
+
+  /// Validates that scanned/manual code belongs to the selected zone_id.
+  Future<Map<String, dynamic>> joinZoneByIdAndCode({
+    required String zoneId,
+    required String code,
+  }) async {
+    final result = await _client.rpc<dynamic>(
+      'join_zone_by_id_and_code',
+      params: {
+        'input_zone_id': zoneId,
+        'input_code': code.trim(),
+      },
+    );
+    if (result is Map<String, dynamic>) return result;
+    throw Exception('Invalid zone response');
+  }
 }
 

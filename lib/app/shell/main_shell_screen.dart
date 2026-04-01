@@ -19,83 +19,58 @@ class MainShellScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       extendBody: true,
+      resizeToAvoidBottomInset: false,
       body: navigationShell,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Transform.translate(
-        offset: const Offset(0, 20),
-        child: FloatingActionButton.large(
-          onPressed: () => context.go(AppRouter.qrJoinPath),
-          tooltip: 'Say Hi',
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.waving_hand_rounded,
-                  size: 30,
-                  color: colorScheme.onPrimary,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Say Hi',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: colorScheme.onPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11,
-                        letterSpacing: -0.2,
-                      ),
-                ),
-              ],
+      bottomNavigationBar: keyboardOpen
+          ? null
+          : BottomAppBar(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _NavItem(
+                    selected: navigationShell.currentIndex == 0,
+                    icon: Icons.home_outlined,
+                    selectedIcon: Icons.home_rounded,
+                    label: 'Home',
+                    onTap: () => _onNavTap(context, 0),
+                  ),
+                  _NavItem(
+                    selected: navigationShell.currentIndex == 1,
+                    icon: Icons.place_outlined,
+                    selectedIcon: Icons.place_rounded,
+                    label: 'Zones',
+                    onTap: () => _onNavTap(context, 1),
+                  ),
+                  _NavItem(
+                    selected: false,
+                    icon: Icons.waving_hand_outlined,
+                    selectedIcon: Icons.waving_hand_rounded,
+                    label: 'Say Hi',
+                    onTap: () => context.go(AppRouter.qrJoinPath),
+                  ),
+                  _NavItem(
+                    selected: navigationShell.currentIndex == 2,
+                    icon: Icons.chat_bubble_outline_rounded,
+                    selectedIcon: Icons.chat_bubble_rounded,
+                    label: 'Chats',
+                    onTap: () => _onNavTap(context, 2),
+                  ),
+                  _NavItem(
+                    selected: navigationShell.currentIndex == 3,
+                    icon: Icons.person_outline_rounded,
+                    selectedIcon: Icons.person_rounded,
+                    label: 'Profile',
+                    onTap: () => _onNavTap(context, 3),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 10,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _NavItem(
-              selected: navigationShell.currentIndex == 0,
-              icon: Icons.home_outlined,
-              selectedIcon: Icons.home_rounded,
-              label: 'Home',
-              onTap: () => _onNavTap(context, 0),
-            ),
-            _NavItem(
-              selected: navigationShell.currentIndex == 1,
-              icon: Icons.place_outlined,
-              selectedIcon: Icons.place_rounded,
-              label: 'Zones',
-              onTap: () => _onNavTap(context, 1),
-            ),
-            const SizedBox(width: 88),
-            _NavItem(
-              selected: navigationShell.currentIndex == 2,
-              icon: Icons.chat_bubble_outline_rounded,
-              selectedIcon: Icons.chat_bubble_rounded,
-              label: 'Chats',
-              onTap: () => _onNavTap(context, 2),
-            ),
-            _NavItem(
-              selected: navigationShell.currentIndex == 3,
-              icon: Icons.person_outline_rounded,
-              selectedIcon: Icons.person_rounded,
-              label: 'Profile',
-              onTap: () => _onNavTap(context, 3),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

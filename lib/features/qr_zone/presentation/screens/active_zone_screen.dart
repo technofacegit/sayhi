@@ -35,7 +35,16 @@ class ActiveZoneScreen extends StatelessWidget {
                 height: 52,
                 child: FilledButton(
                   onPressed: () {
-                    context.go(AppRouter.qrJoinPath);
+                    final zoneId = (zone['id'] as String?)?.trim();
+                    if (zoneId == null || zoneId.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Bu zone icin gecerli bir ID yok.'),
+                        ),
+                      );
+                      return;
+                    }
+                    context.go(AppRouter.qrJoinPath, extra: zoneId);
                   },
                   child: const Text('Enter Zone'),
                 ),
