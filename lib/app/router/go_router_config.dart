@@ -116,7 +116,6 @@ class AppGoRouter {
                   final z = ActiveZoneSession.current;
                   return HomeScreen(
                     activeZoneName: z?['name'] as String?,
-                    activeZoneImageUrl: z?['imageUrl'] as String?,
                     activeUserCount: z?['activeCount'] as int?,
                   );
                 },

@@ -24,6 +24,19 @@ bool zoneIsActiveFromRemaining(Duration? remaining, {bool? isActiveNow}) {
   return isActiveNow == true;
 }
 
+/// True when the user is still within the 24h window for this zone (may enter without QR).
+bool isZoneMembershipActiveForUser(
+  Map<String, dynamic> zone, [
+  DateTime? now,
+]) {
+  final t = now ?? DateTime.now();
+  final rem = zoneRemainingFromActiveUntil(zone['activeUntil'] as String?, t);
+  return zoneIsActiveFromRemaining(
+    rem,
+    isActiveNow: zone['isActiveNow'] as bool?,
+  );
+}
+
 /// Short line for map marker subtitle: "Kalan: 15 h 57 m" or "Pasif".
 String zoneActivityMapSnippet(Map<String, dynamic> zone, DateTime now) {
   final rem = zoneRemainingFromActiveUntil(

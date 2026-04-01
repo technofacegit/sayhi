@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/core/active_zone_session.dart';
+import 'package:qr_dating_app/core/zone_activity.dart';
 import 'package:qr_dating_app/features/home/data/story_repository.dart';
 import 'package:qr_dating_app/features/home/presentation/model/story_group.dart';
 import 'package:qr_dating_app/features/home/presentation/widgets/home_story_strip.dart';
@@ -11,13 +13,11 @@ import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
 class HomeScreen extends StatefulWidget {
   final String? activeZoneName;
   final int? activeUserCount;
-  final String? activeZoneImageUrl;
 
   const HomeScreen({
     super.key,
     this.activeZoneName,
     this.activeUserCount,
-    this.activeZoneImageUrl,
   });
 
   @override
@@ -97,12 +97,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       activeZoneName: (zone?['name'] as String?) ?? fallbackName,
                       activeUserCount:
                           (zone?['activeCount'] as int?) ?? widget.activeUserCount,
-                      venueImageUrl:
-                          (zone?['imageUrl'] as String?) ?? widget.activeZoneImageUrl,
-                      activeUntil: zone?['activeUntil'] as String?,
-                      isActiveNow: zone?['isActiveNow'] as bool?,
                       onTap: hasZone
-                          ? () => context.push(AppRouter.zoneMainPath)
+                          ? () {
+                              final map = zone != null
+                                  ? Map<String, dynamic>.from(zone)
+                                  : ActiveZoneSession.current;
+                              if (map == null) return;
+                              final id = (map['id'] as String?)?.trim();
+                              if (id == null || id.isEmpty) return;
+                              if (isZoneMembershipActiveForUser(map)) {
+                                ActiveZoneSession.enterZone(map);
+                                context.push(AppRouter.zoneMainPath);
+                              } else {
+                                context.go(AppRouter.qrJoinPath, extra: id);
+                              }
+                            }
                           : null,
                     );
                   },

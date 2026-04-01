@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/core/active_zone_session.dart';
+import 'package:qr_dating_app/core/zone_activity.dart';
 
 class ActiveZoneScreen extends StatelessWidget {
   final Map<String, dynamic> zone;
@@ -76,7 +78,13 @@ class ActiveZoneScreen extends StatelessWidget {
                       );
                       return;
                     }
-                    context.go(AppRouter.qrJoinPath, extra: zoneId);
+                    final payload = Map<String, dynamic>.from(zone);
+                    if (isZoneMembershipActiveForUser(payload)) {
+                      ActiveZoneSession.enterZone(payload);
+                      context.go(AppRouter.zoneMainPath);
+                    } else {
+                      context.go(AppRouter.qrJoinPath, extra: zoneId);
+                    }
                   },
                   child: const Text('Enter Zone'),
                 ),
