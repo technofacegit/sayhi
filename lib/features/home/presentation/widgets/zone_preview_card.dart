@@ -1,9 +1,14 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-class ZonePreviewCard extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:qr_dating_app/core/zone_activity.dart';
+
+class ZonePreviewCard extends StatefulWidget {
   final String? activeZoneName;
   final int? activeUserCount;
   final String? venueImageUrl;
+  final String? activeUntil;
+  final bool? isActiveNow;
   /// When set and [activeZoneName] is non-empty, the whole card is tappable.
   final VoidCallback? onTap;
 
@@ -12,17 +17,54 @@ class ZonePreviewCard extends StatelessWidget {
     this.activeZoneName,
     this.activeUserCount,
     this.venueImageUrl,
+    this.activeUntil,
+    this.isActiveNow,
     this.onTap,
   });
+
+  @override
+  State<ZonePreviewCard> createState() => _ZonePreviewCardState();
+}
+
+class _ZonePreviewCardState extends State<ZonePreviewCard> {
+  late final ValueNotifier<DateTime> _ticker;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = ValueNotifier<DateTime>(DateTime.now());
+    _timer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _ticker.value = DateTime.now(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _ticker.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final joined = activeZoneName != null && activeZoneName!.isNotEmpty;
-    final tappable = joined && onTap != null;
+    final joined = widget.activeZoneName != null && widget.activeZoneName!.isNotEmpty;
+    final tappable = joined && widget.onTap != null;
+    final activeUntil = DateTime.tryParse(widget.activeUntil ?? '')?.toLocal();
 
-    final content = Column(
+    final content = ValueListenableBuilder<DateTime>(
+      valueListenable: _ticker,
+      builder: (context, now, _) {
+        final remaining = activeUntil?.difference(now);
+        final isActive = remaining != null
+            ? remaining.inSeconds > 0
+            : (widget.isActiveNow == true);
+        final statusColor = isActive ? Colors.green : Colors.grey;
+        final countdown = formatZoneRemainingHm(remaining);
+        return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -30,9 +72,7 @@ class ZonePreviewCard extends StatelessWidget {
               Icon(
                 joined ? Icons.place_rounded : Icons.location_off_outlined,
                 size: 22,
-                color: joined
-                    ? colorScheme.primary
-                    : colorScheme.onSurface.withValues(alpha: 0.45),
+                color: joined ? statusColor : colorScheme.onSurface.withValues(alpha: 0.45),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -47,38 +87,32 @@ class ZonePreviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           if (joined) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: venueImageUrl != null
-                    ? Image.network(
-                        venueImageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _FallbackVenueVisual(
-                            zoneName: activeZoneName!,
-                          );
-                        },
-                      )
-                    : _FallbackVenueVisual(
-                        zoneName: activeZoneName!,
-                      ),
-              ),
-            ),
-            const SizedBox(height: 10),
             Text(
-              activeZoneName!,
+              widget.activeZoneName!,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              '${activeUserCount ?? 24} active now',
+              '${widget.activeUserCount ?? 0} active now',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.72),
               ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.circle, size: 10, color: statusColor),
+                const SizedBox(width: 6),
+                Text(
+                  isActive ? 'Kalan: $countdown' : 'Pasif',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurface.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ] else
             Text(
@@ -89,11 +123,13 @@ class ZonePreviewCard extends StatelessWidget {
             ),
         ],
     );
+      },
+    );
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: tappable ? onTap : null,
+        onTap: tappable ? widget.onTap : null,
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(18),
@@ -105,40 +141,6 @@ class ZonePreviewCard extends StatelessWidget {
             color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
           ),
           child: content,
-        ),
-      ),
-    );
-  }
-}
-
-class _FallbackVenueVisual extends StatelessWidget {
-  final String zoneName;
-
-  const _FallbackVenueVisual({required this.zoneName});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primary.withValues(alpha: 0.35),
-            colorScheme.secondary.withValues(alpha: 0.35),
-          ],
-        ),
-      ),
-      child: Center(
-        child: Text(
-          zoneName,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: colorScheme.onPrimary,
-                fontWeight: FontWeight.w700,
-              ),
         ),
       ),
     );

@@ -1,32 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:qr_dating_app/features/home/data/story_repository.dart';
-import 'package:qr_dating_app/features/home/presentation/data/home_story_groups.dart';
 import 'package:qr_dating_app/features/home/presentation/model/story_group.dart';
 import 'package:qr_dating_app/features/home/presentation/screens/story_viewer_screen.dart';
 
-/// Horizontal story groups (each ring may open multiple sub-stories).
-class HomeStoryStrip extends StatefulWidget {
-  const HomeStoryStrip({super.key});
+/// Horizontal story groups from Supabase only. [groupsFuture] is owned by the parent
+/// (e.g. for pull-to-refresh). [onStoriesChanged] refetches after a story is viewed.
+class HomeStoryStrip extends StatelessWidget {
+  const HomeStoryStrip({
+    super.key,
+    required this.groupsFuture,
+    required this.onStoriesChanged,
+  });
 
-  @override
-  State<HomeStoryStrip> createState() => _HomeStoryStripState();
-}
-
-class _HomeStoryStripState extends State<HomeStoryStrip> {
-  late Future<List<StoryGroup>> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _future = StoryRepository().fetchStoryGroups();
-  }
-
-  void _reload() {
-    if (!mounted) return;
-    setState(() {
-      _future = StoryRepository().fetchStoryGroups();
-    });
-  }
+  final Future<List<StoryGroup>> groupsFuture;
+  final VoidCallback onStoriesChanged;
 
   Future<void> _openViewer(
     BuildContext context,
@@ -53,7 +40,7 @@ class _HomeStoryStripState extends State<HomeStoryStrip> {
         },
       ),
     );
-    _reload();
+    onStoriesChanged();
   }
 
   @override
@@ -62,11 +49,8 @@ class _HomeStoryStripState extends State<HomeStoryStrip> {
     final colorScheme = theme.colorScheme;
 
     return FutureBuilder<List<StoryGroup>>(
-      future: _future,
+      future: groupsFuture,
       builder: (context, snapshot) {
-        final hasData = snapshot.hasData && snapshot.data!.isNotEmpty;
-        final groups = hasData ? snapshot.data! : HomeStoryGroups.all;
-
         if (!snapshot.hasData && !snapshot.hasError) {
           return SizedBox(
             height: 104,
@@ -99,55 +83,126 @@ class _HomeStoryStripState extends State<HomeStoryStrip> {
           );
         }
 
-        if (snapshot.hasError && !hasData) {
-          return const SizedBox.shrink();
+        if (snapshot.hasError) {
+          return _StoryStripPlaceholder(
+            message: 'Storyler yüklenemedi',
+            theme: theme,
+            colorScheme: colorScheme,
+          );
         }
 
-        return SizedBox(
-          height: 104,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.zero,
-            itemCount: groups.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
-            itemBuilder: (context, index) {
-              final group = groups[index];
+        final groups = snapshot.data!;
+        if (groups.isEmpty) {
+          return _StoryStripPlaceholder(
+            message: 'Henüz story yok',
+            theme: theme,
+            colorScheme: colorScheme,
+          );
+        }
 
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async => _openViewer(context, groups, index),
-                  borderRadius: BorderRadius.circular(40),
-                  child: SizedBox(
-                    width: 72,
-                    child: Column(
-                      children: [
-                        _StoryAvatar(
-                          imageUrl: group.ringImageUrl,
-                          colorScheme: colorScheme,
-                          slideCount: group.slideCount,
-                          isUnseen: group.isUnseen,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          group.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onSurface
-                                .withValues(alpha: 0.75),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
+        return _StoryStripContent(
+          groups: groups,
+          theme: theme,
+          colorScheme: colorScheme,
+          onOpen: _openViewer,
         );
       },
+    );
+  }
+}
+
+class _StoryStripPlaceholder extends StatelessWidget {
+  const _StoryStripPlaceholder({
+    required this.message,
+    required this.theme,
+    required this.colorScheme,
+  });
+
+  final String message;
+  final ThemeData theme;
+  final ColorScheme colorScheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 104,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            message,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StoryStripContent extends StatelessWidget {
+  const _StoryStripContent({
+    required this.groups,
+    required this.theme,
+    required this.colorScheme,
+    required this.onOpen,
+  });
+
+  final List<StoryGroup> groups;
+  final ThemeData theme;
+  final ColorScheme colorScheme;
+  final Future<void> Function(
+    BuildContext context,
+    List<StoryGroup> groups,
+    int groupIndex,
+  ) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 104,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        itemCount: groups.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 14),
+        itemBuilder: (context, index) {
+          final group = groups[index];
+
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () async => onOpen(context, groups, index),
+              borderRadius: BorderRadius.circular(40),
+              child: SizedBox(
+                width: 72,
+                child: Column(
+                  children: [
+                    _StoryAvatar(
+                      imageUrl: group.ringImageUrl,
+                      colorScheme: colorScheme,
+                      slideCount: group.slideCount,
+                      isUnseen: group.isUnseen,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      group.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

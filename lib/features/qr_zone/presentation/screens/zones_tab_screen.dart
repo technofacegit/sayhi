@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
@@ -8,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as gm;
 import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/core/zone_activity.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/mock_venues.dart';
 
@@ -27,9 +29,11 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
   );
   bool _loading = true;
   bool _loadTried = false;
+  Timer? _activityTimer;
 
   @override
   void dispose() {
+    _activityTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -37,6 +41,12 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
   @override
   void initState() {
     super.initState();
+    _activityTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) {
+        if (mounted) setState(() {});
+      },
+    );
     _loadZones();
   }
 
@@ -74,6 +84,7 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
     final name = zone['name'] as String? ?? 'Zone';
     final city = zone['city'] as String?;
     final count = zone['activeCount'] as int? ?? 0;
+    final sheetNow = DateTime.now();
 
     await showModalBottomSheet<void>(
       context: context,
@@ -98,6 +109,12 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
                       ? '$city • $count aktif üye'
                       : '$count aktif üye',
                   style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 8),
+                ZoneActivityStatusRow(
+                  activeUntilIso: zone['activeUntil'] as String?,
+                  now: sheetNow,
+                  isActiveNowFallback: zone['isActiveNow'] as bool?,
                 ),
                 const SizedBox(height: 14),
                 FilledButton(
@@ -133,6 +150,7 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final now = DateTime.now();
     final venues = _filtered;
     final mappableVenues = venues
         .where(
@@ -206,10 +224,12 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
                               centerLat: _mapCenterLat,
                               centerLng: _mapCenterLng,
                               venues: mappableVenues,
+                              now: now,
                               onVenueTap: _showZoneEntrySheet,
                             )
                           : _ZonesGrid(
                               venues: venues,
+                              now: now,
                               onVenueTap: _showZoneEntrySheet,
                             ),
             ),
@@ -224,12 +244,14 @@ class _ZonesMap extends StatefulWidget {
   final double centerLat;
   final double centerLng;
   final List<Map<String, dynamic>> venues;
+  final DateTime now;
   final void Function(Map<String, dynamic> venue) onVenueTap;
 
   const _ZonesMap({
     required this.centerLat,
     required this.centerLng,
     required this.venues,
+    required this.now,
     required this.onVenueTap,
   });
 
@@ -284,6 +306,7 @@ class _ZonesMapState extends State<_ZonesMap> {
         centerLat: widget.centerLat,
         centerLng: widget.centerLng,
         venues: widget.venues,
+        now: widget.now,
         userLat: _userLat,
         userLng: _userLng,
         onMyLocationTap: _recenterOnMyLocation,
@@ -295,6 +318,7 @@ class _ZonesMapState extends State<_ZonesMap> {
         centerLat: widget.centerLat,
         centerLng: widget.centerLng,
         venues: widget.venues,
+        now: widget.now,
         userLat: _userLat,
         userLng: _userLng,
         onMyLocationTap: _recenterOnMyLocation,
@@ -310,6 +334,7 @@ class _GoogleZonesMap extends StatefulWidget {
   final double centerLat;
   final double centerLng;
   final List<Map<String, dynamic>> venues;
+  final DateTime now;
   final double? userLat;
   final double? userLng;
   final Future<void> Function() onMyLocationTap;
@@ -319,6 +344,7 @@ class _GoogleZonesMap extends StatefulWidget {
     required this.centerLat,
     required this.centerLng,
     required this.venues,
+    required this.now,
     required this.userLat,
     required this.userLng,
     required this.onMyLocationTap,
@@ -362,7 +388,7 @@ class _GoogleZonesMapState extends State<_GoogleZonesMap> {
           ),
           infoWindow: gm.InfoWindow(
             title: z['name'] as String? ?? '',
-            snippet: (z['city'] as String?) ?? '${z['activeCount'] as int? ?? 0} active',
+            snippet: zoneActivityMapSnippet(z, widget.now),
           ),
           onTap: () => widget.onVenueTap(z),
         ),
@@ -409,6 +435,7 @@ class _AppleZonesMap extends StatefulWidget {
   final double centerLat;
   final double centerLng;
   final List<Map<String, dynamic>> venues;
+  final DateTime now;
   final double? userLat;
   final double? userLng;
   final Future<void> Function() onMyLocationTap;
@@ -418,6 +445,7 @@ class _AppleZonesMap extends StatefulWidget {
     required this.centerLat,
     required this.centerLng,
     required this.venues,
+    required this.now,
     required this.userLat,
     required this.userLng,
     required this.onMyLocationTap,
@@ -534,7 +562,7 @@ class _AppleZonesMapState extends State<_AppleZonesMap> {
               ),
           infoWindow: am.InfoWindow(
             title: z['name'] as String? ?? '',
-            snippet: (z['city'] as String?) ?? '${z['activeCount'] as int? ?? 0} active',
+            snippet: zoneActivityMapSnippet(z, widget.now),
             onTap: () => widget.onVenueTap(z),
           ),
           onTap: () => widget.onVenueTap(z),
@@ -585,10 +613,12 @@ class _AppleZonesMapState extends State<_AppleZonesMap> {
 
 class _ZonesGrid extends StatelessWidget {
   final List<Map<String, dynamic>> venues;
+  final DateTime now;
   final void Function(Map<String, dynamic> venue) onVenueTap;
 
   const _ZonesGrid({
     required this.venues,
+    required this.now,
     required this.onVenueTap,
   });
 
@@ -658,6 +688,16 @@ class _ZonesGrid extends StatelessWidget {
                         '$count aktif',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: 0.65),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      ZoneActivityStatusRow(
+                        activeUntilIso: z['activeUntil'] as String?,
+                        now: now,
+                        isActiveNowFallback: z['isActiveNow'] as bool?,
+                        iconSize: 8,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],

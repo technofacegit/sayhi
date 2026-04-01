@@ -1,55 +1,88 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/core/zone_activity.dart';
 
-class RecentZonesCard extends StatelessWidget {
+class RecentZonesCard extends StatefulWidget {
   final List<Map<String, dynamic>> zones;
 
   const RecentZonesCard({super.key, required this.zones});
 
   @override
+  State<RecentZonesCard> createState() => _RecentZonesCardState();
+}
+
+class _RecentZonesCardState extends State<RecentZonesCard> {
+  late final ValueNotifier<DateTime> _ticker;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = ValueNotifier<DateTime>(DateTime.now());
+    _timer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _ticker.value = DateTime.now(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Recent zones',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
+    return ValueListenableBuilder<DateTime>(
+      valueListenable: _ticker,
+      builder: (context, now, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Recent zones',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: zones.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final zone = zones[index];
-            return _RecentZoneFeedCard(
-              zone: zone,
-              onTap: () {
-                context.push(
-                  AppRouter.activeZonePath,
-                  extra: Map<String, dynamic>.from(zone),
-                );
-              },
-            );
-          },
-        ),
-      ],
+          const SizedBox(height: 12),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: widget.zones.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final zone = widget.zones[index];
+              return _RecentZoneFeedCard(
+                zone: zone,
+                now: now,
+                onTap: () {
+                  context.push(
+                    AppRouter.activeZonePath,
+                    extra: Map<String, dynamic>.from(zone),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _RecentZoneFeedCard extends StatelessWidget {
   final Map<String, dynamic> zone;
+  final DateTime now;
   final VoidCallback onTap;
 
   const _RecentZoneFeedCard({
     required this.zone,
+    required this.now,
     required this.onTap,
   });
 
@@ -60,6 +93,13 @@ class _RecentZoneFeedCard extends StatelessWidget {
     final name = zone['name'] as String? ?? '';
     final count = zone['activeCount'] as int? ?? 0;
     final imageUrl = zone['imageUrl'] as String?;
+    final activeUntilIso = zone['activeUntil'] as String?;
+    final remaining = zoneRemainingFromActiveUntil(activeUntilIso, now);
+    final isActive = zoneIsActiveFromRemaining(
+      remaining,
+      isActiveNow: zone['isActiveNow'] as bool?,
+    );
+    final statusColor = isActive ? Colors.green : Colors.grey;
 
     return Material(
       color: Colors.transparent,
@@ -67,7 +107,7 @@ class _RecentZoneFeedCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: AspectRatio(
-          aspectRatio: 1,
+          aspectRatio: 2.2,
           child: Ink(
             width: double.infinity,
             decoration: BoxDecoration(
@@ -132,6 +172,22 @@ class _RecentZoneFeedCard extends StatelessWidget {
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: Colors.white.withValues(alpha: 0.85),
                           ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.circle, size: 10, color: statusColor),
+                            const SizedBox(width: 6),
+                            Text(
+                              isActive
+                                  ? 'Kalan: ${formatZoneRemainingHm(remaining)}'
+                                  : 'Pasif',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
