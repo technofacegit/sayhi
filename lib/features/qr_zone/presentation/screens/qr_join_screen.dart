@@ -7,6 +7,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/active_zone_session.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
+import 'package:qr_dating_app/features/qr_zone/domain/zone_code_input.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Bottom inset so content clears [BottomAppBar] + center FAB notch when shell uses extendBody.
@@ -75,7 +76,7 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
   }
 
   Future<bool> _joinWithCode(String rawCode) async {
-    final code = rawCode.trim();
+    final code = normalizeZoneCodeForJoin(rawCode);
     if (code.isEmpty) return false;
     if (mounted) {
       setState(() => _joining = true);
@@ -158,10 +159,10 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
           content: TextField(
             controller: controller,
             autofocus: true,
-            maxLength: 10,
+            maxLength: 64,
             maxLengthEnforcement: MaxLengthEnforcement.enforced,
             inputFormatters: [
-              LengthLimitingTextInputFormatter(10),
+              LengthLimitingTextInputFormatter(64),
             ],
             decoration: const InputDecoration(
               labelText: 'Zone Code',
