@@ -136,6 +136,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get zoneMainLoadError => 'Bu bölgedeki kişiler yüklenemedi.';
 
   @override
+  String get zoneMainFetchingProfiles => 'Profiller getiriliyor';
+
+  @override
+  String get zoneMainEmptyAfterIcebreaker =>
+      'Şimdilik başka kimse yok. Yenilemek için aşağı çekin.';
+
+  @override
   String get zoneMainMemberBioPlaceholder => '—';
 
   @override

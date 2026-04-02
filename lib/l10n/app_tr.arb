@@ -79,6 +79,8 @@
   "zoneMainLeaveError": "Bölgeden ayrılamadı. Tekrar deneyin.",
   "zoneMainMissingZoneId": "Bölge kimliği eksik.",
   "zoneMainLoadError": "Bu bölgedeki kişiler yüklenemedi.",
+  "zoneMainFetchingProfiles": "Profiller getiriliyor",
+  "zoneMainEmptyAfterIcebreaker": "Şimdilik başka kimse yok. Yenilemek için aşağı çekin.",
   "zoneMainMemberBioPlaceholder": "—",
   "icebreakerSaveError": "Cevap kaydedilemedi. Tekrar deneyin.",
   "icebreakerEarlyTitle": "Erken geldin",

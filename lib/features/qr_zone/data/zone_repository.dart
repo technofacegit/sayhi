@@ -186,12 +186,14 @@ class ZoneRepository {
       final m = e as Map<String, dynamic>;
       final uid = m['user_id'] as String? ?? '';
       final avatar = m['avatar_url'] as String?;
+      final genderRaw = m['gender'] as String?;
       return ZoneMemberPreview(
         id: uid,
         photoUrl: (avatar != null && avatar.isNotEmpty) ? avatar : '',
         name: m['display_name'] as String? ?? '',
         age: (m['age'] as num?)?.toInt(),
         bio: m['bio'] as String? ?? '',
+        gender: (genderRaw != null && genderRaw.isNotEmpty) ? genderRaw : null,
       );
     }).toList(growable: false);
     return ZoneMemberPreviewsResult(activeCount: count, members: members);

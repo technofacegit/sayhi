@@ -19,10 +19,11 @@ class ZoneMainScreen extends StatefulWidget {
 class _ZoneMainScreenState extends State<ZoneMainScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
-  final Set<String> _likedIds = {};
   final ZoneRepository _repo = ZoneRepository();
   Future<ZoneMemberPreviewsResult>? _membersFuture;
   RealtimeChannel? _realtimeChannel;
+  bool _fetchingProfilesAfterIcebreaker = false;
+  bool _icebreakerSessionComplete = false;
 
   @override
   void initState() {
@@ -89,21 +90,20 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
     if (mounted) context.go(AppRouter.homePath);
   }
 
-  void _toggleLike(String id) {
-    setState(() {
-      if (_likedIds.contains(id)) {
-        _likedIds.remove(id);
-      } else {
-        _likedIds.add(id);
-      }
-    });
-  }
-
   Future<void> _onRefresh(String zoneId) async {
     setState(() {
+      _fetchingProfilesAfterIcebreaker = false;
       _membersFuture = _repo.fetchZoneMemberPreviews(zoneId);
     });
     await _membersFuture;
+  }
+
+  void _onIcebreakerComplete(String zoneId) {
+    setState(() {
+      _icebreakerSessionComplete = true;
+      _fetchingProfilesAfterIcebreaker = true;
+      _membersFuture = _repo.fetchZoneMemberPreviews(zoneId);
+    });
   }
 
   @override
@@ -226,8 +226,39 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
                   : FutureBuilder<ZoneMemberPreviewsResult>(
                       future: _membersFuture,
                       builder: (context, snapshot) {
+                        if (_fetchingProfilesAfterIcebreaker &&
+                            snapshot.connectionState == ConnectionState.done) {
+                          Future.microtask(() {
+                            if (mounted && _fetchingProfilesAfterIcebreaker) {
+                              setState(() => _fetchingProfilesAfterIcebreaker = false);
+                            }
+                          });
+                        }
                         if (snapshot.connectionState == ConnectionState.waiting &&
                             !snapshot.hasData) {
+                          if (_fetchingProfilesAfterIcebreaker) {
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const SizedBox(
+                                    height: 36,
+                                    width: 36,
+                                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Text(
+                                    l10n.zoneMainFetchingProfiles,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      color: onSurfaceMuted,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
                           return const Center(
                             child: CircularProgressIndicator(strokeWidth: 2),
                           );
@@ -266,10 +297,16 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
                                   hasScrollBody: true,
                                   child: SingleChildScrollView(
                                     physics: const AlwaysScrollableScrollPhysics(),
-                                    child: ZoneIcebreakerGame(
-                                      zoneId: zoneId,
-                                      repository: _repo,
-                                    ),
+                                    child: _icebreakerSessionComplete
+                                        ? _EmptyAfterIcebreaker(
+                                            onSurfaceMuted: onSurfaceMuted,
+                                          )
+                                        : ZoneIcebreakerGame(
+                                            zoneId: zoneId,
+                                            repository: _repo,
+                                            onIcebreakerComplete: () =>
+                                                _onIcebreakerComplete(zoneId),
+                                          ),
                                   ),
                                 )
                               else
@@ -286,13 +323,10 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
                                     delegate: SliverChildBuilderDelegate(
                                       (context, index) {
                                         final m = members[index];
-                                        final liked = _likedIds.contains(m.id);
                                         return _MemberCard(
                                           member: m,
-                                          liked: liked,
                                           surfaceCard: surfaceCard,
                                           onSurfaceMuted: onSurfaceMuted,
-                                          onLike: () => _toggleLike(m.id),
                                         );
                                       },
                                       childCount: members.length,
@@ -307,6 +341,36 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyAfterIcebreaker extends StatelessWidget {
+  const _EmptyAfterIcebreaker({required this.onSurfaceMuted});
+
+  final Color onSurfaceMuted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 48, 24, 88),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.people_outline_rounded, size: 48, color: onSurfaceMuted),
+          const SizedBox(height: 16),
+          Text(
+            l10n.zoneMainEmptyAfterIcebreaker,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: onSurfaceMuted,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -355,20 +419,27 @@ class _ZoneErrorState extends StatelessWidget {
   }
 }
 
+Color _zoneMemberBorderColor(ColorScheme colorScheme, String? genderRaw) {
+  final g = genderRaw?.trim().toLowerCase();
+  if (g == 'female' || g == 'f' || g == 'kadın' || g == 'kadin') {
+    return const Color(0xFFFF6B8A);
+  }
+  if (g == 'male' || g == 'm' || g == 'erkek') {
+    return const Color(0xFF42A5F5);
+  }
+  return colorScheme.outline.withValues(alpha: 0.12);
+}
+
 class _MemberCard extends StatelessWidget {
   const _MemberCard({
     required this.member,
-    required this.liked,
     required this.surfaceCard,
     required this.onSurfaceMuted,
-    required this.onLike,
   });
 
   final ZoneMemberPreview member;
-  final bool liked;
   final Color surfaceCard;
   final Color onSurfaceMuted;
-  final VoidCallback onLike;
 
   @override
   Widget build(BuildContext context) {
@@ -376,6 +447,7 @@ class _MemberCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final l10n = context.l10n;
     final hasPhoto = member.photoUrl.isNotEmpty;
+    final borderColor = _zoneMemberBorderColor(colorScheme, member.gender);
 
     return Material(
       color: surfaceCard,
@@ -390,7 +462,8 @@ class _MemberCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: colorScheme.outline.withValues(alpha: 0.09),
+              color: borderColor,
+              width: 2,
             ),
           ),
           child: Column(
@@ -400,7 +473,7 @@ class _MemberCard extends StatelessWidget {
                 flex: 5,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(19),
+                    top: Radius.circular(18),
                   ),
                   child: Stack(
                     fit: StackFit.expand,
@@ -427,30 +500,6 @@ class _MemberCard extends StatelessWidget {
                             color: onSurfaceMuted,
                           ),
                         ),
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Material(
-                          color: Colors.black.withValues(alpha: 0.35),
-                          shape: const CircleBorder(),
-                          clipBehavior: Clip.antiAlias,
-                          child: IconButton(
-                            padding: const EdgeInsets.all(6),
-                            constraints: const BoxConstraints(
-                              minWidth: 36,
-                              minHeight: 36,
-                            ),
-                            icon: Icon(
-                              liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                              color: liked
-                                  ? const Color(0xFFFF6B8A)
-                                  : Colors.white,
-                              size: 20,
-                            ),
-                            onPressed: onLike,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),

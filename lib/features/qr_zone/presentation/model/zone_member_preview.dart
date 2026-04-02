@@ -1,4 +1,5 @@
 /// Zone grid row (people in venue); [age] may be null if not set on profile.
+/// [gender] is optional (`female`, `male`, `other` from Supabase); used for card border tint.
 class ZoneMemberPreview {
   const ZoneMemberPreview({
     required this.id,
@@ -6,6 +7,7 @@ class ZoneMemberPreview {
     required this.name,
     this.age,
     required this.bio,
+    this.gender,
   });
 
   final String id;
@@ -13,4 +15,5 @@ class ZoneMemberPreview {
   final String name;
   final int? age;
   final String bio;
+  final String? gender;
 }

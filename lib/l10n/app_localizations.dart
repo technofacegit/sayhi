@@ -326,6 +326,18 @@ abstract class AppLocalizations {
   /// **'Could not load people in this zone.'**
   String get zoneMainLoadError;
 
+  /// No description provided for @zoneMainFetchingProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading profiles…'**
+  String get zoneMainFetchingProfiles;
+
+  /// No description provided for @zoneMainEmptyAfterIcebreaker.
+  ///
+  /// In en, this message translates to:
+  /// **'No one else is here yet. Pull to refresh or check back soon.'**
+  String get zoneMainEmptyAfterIcebreaker;
+
   /// No description provided for @zoneMainMemberBioPlaceholder.
   ///
   /// In en, this message translates to:

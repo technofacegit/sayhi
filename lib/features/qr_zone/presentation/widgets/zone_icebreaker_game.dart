@@ -9,10 +9,14 @@ class ZoneIcebreakerGame extends StatefulWidget {
     super.key,
     required this.zoneId,
     this.repository,
+    this.onIcebreakerComplete,
   });
 
   final String zoneId;
   final ZoneRepository? repository;
+
+  /// Called after the last icebreaker answer is saved (e.g. to refetch zone profiles).
+  final VoidCallback? onIcebreakerComplete;
 
   @override
   State<ZoneIcebreakerGame> createState() => _ZoneIcebreakerGameState();
@@ -75,14 +79,20 @@ class _ZoneIcebreakerGameState extends State<ZoneIcebreakerGame> {
       return;
     }
     if (!mounted) return;
-    setState(() {
-      _submitting = false;
-      if (_stepIndex + 1 >= _questions.length) {
-        _finished = true;
-      } else {
-        _stepIndex++;
-      }
-    });
+    final isLast = _stepIndex + 1 >= _questions.length;
+    setState(() => _submitting = false);
+    if (isLast) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        if (widget.onIcebreakerComplete != null) {
+          widget.onIcebreakerComplete!();
+        } else {
+          setState(() => _finished = true);
+        }
+      });
+      return;
+    }
+    setState(() => _stepIndex++);
   }
 
   @override

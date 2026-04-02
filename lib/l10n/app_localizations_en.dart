@@ -135,6 +135,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get zoneMainLoadError => 'Could not load people in this zone.';
 
   @override
+  String get zoneMainFetchingProfiles => 'Loading profiles…';
+
+  @override
+  String get zoneMainEmptyAfterIcebreaker =>
+      'No one else is here yet. Pull to refresh or check back soon.';
+
+  @override
   String get zoneMainMemberBioPlaceholder => '—';
 
   @override
