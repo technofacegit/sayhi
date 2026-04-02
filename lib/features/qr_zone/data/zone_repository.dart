@@ -1,4 +1,17 @@
+import 'package:qr_dating_app/features/qr_zone/presentation/model/icebreaker_question.dart';
+import 'package:qr_dating_app/features/qr_zone/presentation/model/zone_member_preview.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// Result of [ZoneRepository.fetchZoneMemberPreviews].
+class ZoneMemberPreviewsResult {
+  const ZoneMemberPreviewsResult({
+    required this.activeCount,
+    required this.members,
+  });
+
+  final int activeCount;
+  final List<ZoneMemberPreview> members;
+}
 
 /// Loads active zones joined with venues for the Zones tab.
 class ZoneRepository {
@@ -155,6 +168,87 @@ class ZoneRepository {
       };
     }
     throw Exception('Invalid zone response');
+  }
+
+  /// Active members in [zoneId] with profile fields; excludes current user.
+  /// Caller must be an active member (24h window). Updates [activeCount] from server.
+  Future<ZoneMemberPreviewsResult> fetchZoneMemberPreviews(String zoneId) async {
+    final raw = await _client.rpc<dynamic>(
+      'get_zone_member_previews_for_zone',
+      params: {'input_zone_id': zoneId},
+    );
+    if (raw is! Map<String, dynamic>) {
+      throw Exception('Invalid zone members response');
+    }
+    final count = (raw['active_count'] as num?)?.toInt() ?? 0;
+    final list = raw['members'] as List? ?? const [];
+    final members = list.map<ZoneMemberPreview>((e) {
+      final m = e as Map<String, dynamic>;
+      final uid = m['user_id'] as String? ?? '';
+      final avatar = m['avatar_url'] as String?;
+      return ZoneMemberPreview(
+        id: uid,
+        photoUrl: (avatar != null && avatar.isNotEmpty) ? avatar : '',
+        name: m['display_name'] as String? ?? 'Member',
+        age: (m['age'] as num?)?.toInt(),
+        bio: m['bio'] as String? ?? '',
+      );
+    }).toList(growable: false);
+    return ZoneMemberPreviewsResult(activeCount: count, members: members);
+  }
+
+  /// Active icebreaker prompts for the empty-zone mini-game (ordered, capped).
+  Future<List<IcebreakerQuestion>> fetchIcebreakerQuestions({int limit = 3}) async {
+    final rows = await _client
+        .from('icebreaker_questions')
+        .select('id, prompt, options')
+        .eq('is_active', true)
+        .order('sort_order')
+        .limit(limit);
+    final list = rows as List;
+    return list.map<IcebreakerQuestion>((raw) {
+      final m = raw as Map<String, dynamic>;
+      final opts = m['options'];
+      final labels = <String>[];
+      if (opts is List) {
+        for (final o in opts) {
+          if (o != null) labels.add(o.toString());
+        }
+      }
+      return IcebreakerQuestion(
+        id: m['id'] as String,
+        prompt: m['prompt'] as String? ?? '',
+        options: labels,
+      );
+    }).toList(growable: false);
+  }
+
+  /// Persists one answer; requires active zone membership (24h), enforced server-side.
+  Future<void> submitIcebreakerAnswer({
+    required String zoneId,
+    required String questionId,
+    required int optionIndex,
+  }) async {
+    await _client.rpc<void>(
+      'submit_icebreaker_answer',
+      params: {
+        'p_zone_id': zoneId,
+        'p_question_id': questionId,
+        'p_option_index': optionIndex,
+      },
+    );
+  }
+
+  /// Marks membership inactive for the current user (leave zone).
+  Future<void> leaveZone(String zoneId) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) {
+      throw Exception('Not signed in');
+    }
+    await _client.from('zone_members').update({
+      'is_active': false,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('zone_id', zoneId).eq('user_id', uid);
   }
 
   /// Validates that scanned/manual code belongs to the selected zone_id.
