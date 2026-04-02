@@ -146,6 +146,52 @@ class AppLocalizationsTr extends AppLocalizations {
   String get zoneMainMemberBioPlaceholder => '—';
 
   @override
+  String get zoneHubHeadline => 'Mod seçin';
+
+  @override
+  String get zoneModeWarmUp => 'Isınma';
+
+  @override
+  String get zoneModeWarmUpSubtitle =>
+      'Tanışmadan önce kısa buz kırıcı soruları.';
+
+  @override
+  String get zoneModeWhoIs => 'Kim oyunu';
+
+  @override
+  String get zoneModeWhoIsSubtitle => 'Tahmin et — çok yakında.';
+
+  @override
+  String get zoneModeLobby => 'Lobi';
+
+  @override
+  String get zoneModeLobbySubtitle => 'Bu bölgede kimler var, görüntüle.';
+
+  @override
+  String get zoneLobbyTitle => 'Lobi';
+
+  @override
+  String get zoneWarmUpTitle => 'Isınma';
+
+  @override
+  String get zoneWhoIsTitle => 'Kim oyunu';
+
+  @override
+  String get whoIsLoadError => 'Bu tur yüklenemedi. Tekrar deneyin.';
+
+  @override
+  String get whoIsCorrect => 'Doğru!';
+
+  @override
+  String get whoIsWrongFeedback => 'Olmadı — doğru profil vurgulandı.';
+
+  @override
+  String get whoIsNextRound => 'Sonraki tur';
+
+  @override
+  String get whoIsChooseHint => 'İpucuna uyan profili seç.';
+
+  @override
   String get icebreakerSaveError => 'Cevap kaydedilemedi. Tekrar deneyin.';
 
   @override

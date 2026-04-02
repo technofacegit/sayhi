@@ -23,4 +23,7 @@ class AppRouter {
   static const qrJoinPath = '/home/join-zone';
   static const activeZonePath = '/active-zone';
   static const zoneMainPath = '/zone-main';
+  static const zoneWarmUpPath = '/zone-warm-up';
+  static const zoneWhoIsPath = '/zone-who-is';
+  static const zoneLobbyPath = '/zone-lobby';
 }

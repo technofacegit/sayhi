@@ -1,4 +1,6 @@
 import 'package:qr_dating_app/features/qr_zone/presentation/model/icebreaker_question.dart';
+import 'package:qr_dating_app/features/qr_zone/data/who_is_round_parser.dart';
+import 'package:qr_dating_app/features/qr_zone/presentation/model/who_is_game_round.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/model/zone_member_preview.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -279,6 +281,46 @@ class ZoneRepository {
       };
     }
     throw Exception('Invalid zone response');
+  }
+
+  /// Who Is game: calls [get_who_is_game_round_v5] (question + 3 rows from
+  /// [synthetic_profiles], prompt from [who_is_questions], round/history from
+  /// [who_is_game_history] — exact JSON shape is parsed flexibly).
+  ///
+  /// Tries `p_user_id` then `user_id` because SQL arg names differ per project.
+  Future<WhoIsGameRound> fetchWhoIsGameRound() async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) {
+      throw Exception('Not signed in');
+    }
+
+    dynamic raw;
+    PostgrestException? lastPg;
+    for (final params in <Map<String, dynamic>>[
+      {'p_user_id': uid},
+      {'user_id': uid},
+    ]) {
+      try {
+        raw = await _client.rpc<dynamic>(
+          'get_who_is_game_round_v5',
+          params: params,
+        );
+        lastPg = null;
+        break;
+      } on PostgrestException catch (e) {
+        lastPg = e;
+      }
+    }
+    if (lastPg != null) {
+      final m = lastPg.message.trim();
+      throw Exception(m.isNotEmpty ? m : 'Who Is (${lastPg.code})');
+    }
+
+    try {
+      return parseWhoIsGameRoundResponse(raw);
+    } on FormatException catch (e) {
+      throw Exception(e.message);
+    }
   }
 }
 

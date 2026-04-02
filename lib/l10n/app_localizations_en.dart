@@ -145,6 +145,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get zoneMainMemberBioPlaceholder => '—';
 
   @override
+  String get zoneHubHeadline => 'Choose a mode';
+
+  @override
+  String get zoneModeWarmUp => 'Warm Up';
+
+  @override
+  String get zoneModeWarmUpSubtitle =>
+      'Quick icebreaker questions before you mingle.';
+
+  @override
+  String get zoneModeWhoIs => 'Who is Game';
+
+  @override
+  String get zoneModeWhoIsSubtitle => 'Guess who — coming soon.';
+
+  @override
+  String get zoneModeLobby => 'Lobby';
+
+  @override
+  String get zoneModeLobbySubtitle => 'See who is here in this zone.';
+
+  @override
+  String get zoneLobbyTitle => 'Lobby';
+
+  @override
+  String get zoneWarmUpTitle => 'Warm Up';
+
+  @override
+  String get zoneWhoIsTitle => 'Who is Game';
+
+  @override
+  String get whoIsLoadError => 'Could not load this round. Try again.';
+
+  @override
+  String get whoIsCorrect => 'Correct!';
+
+  @override
+  String get whoIsWrongFeedback =>
+      'Not quite — the right profile is highlighted.';
+
+  @override
+  String get whoIsNextRound => 'Next round';
+
+  @override
+  String get whoIsChooseHint => 'Tap the profile that fits the clue.';
+
+  @override
   String get icebreakerSaveError => 'Could not save answer. Try again.';
 
   @override

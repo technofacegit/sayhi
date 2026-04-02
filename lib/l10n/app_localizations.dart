@@ -344,6 +344,96 @@ abstract class AppLocalizations {
   /// **'—'**
   String get zoneMainMemberBioPlaceholder;
 
+  /// No description provided for @zoneHubHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a mode'**
+  String get zoneHubHeadline;
+
+  /// No description provided for @zoneModeWarmUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm Up'**
+  String get zoneModeWarmUp;
+
+  /// No description provided for @zoneModeWarmUpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick icebreaker questions before you mingle.'**
+  String get zoneModeWarmUpSubtitle;
+
+  /// No description provided for @zoneModeWhoIs.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is Game'**
+  String get zoneModeWhoIs;
+
+  /// No description provided for @zoneModeWhoIsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guess who — coming soon.'**
+  String get zoneModeWhoIsSubtitle;
+
+  /// No description provided for @zoneModeLobby.
+  ///
+  /// In en, this message translates to:
+  /// **'Lobby'**
+  String get zoneModeLobby;
+
+  /// No description provided for @zoneModeLobbySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See who is here in this zone.'**
+  String get zoneModeLobbySubtitle;
+
+  /// No description provided for @zoneLobbyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lobby'**
+  String get zoneLobbyTitle;
+
+  /// No description provided for @zoneWarmUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm Up'**
+  String get zoneWarmUpTitle;
+
+  /// No description provided for @zoneWhoIsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is Game'**
+  String get zoneWhoIsTitle;
+
+  /// No description provided for @whoIsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this round. Try again.'**
+  String get whoIsLoadError;
+
+  /// No description provided for @whoIsCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct!'**
+  String get whoIsCorrect;
+
+  /// No description provided for @whoIsWrongFeedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite — the right profile is highlighted.'**
+  String get whoIsWrongFeedback;
+
+  /// No description provided for @whoIsNextRound.
+  ///
+  /// In en, this message translates to:
+  /// **'Next round'**
+  String get whoIsNextRound;
+
+  /// No description provided for @whoIsChooseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the profile that fits the clue.'**
+  String get whoIsChooseHint;
+
   /// No description provided for @icebreakerSaveError.
   ///
   /// In en, this message translates to:

@@ -19,7 +19,10 @@ import 'package:qr_dating_app/core/active_zone_session.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/active_zone_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/qr_join_screen.dart';
+import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_lobby_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_main_screen.dart';
+import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_warm_up_screen.dart';
+import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_who_is_game_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zones_tab_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -202,6 +205,39 @@ class AppGoRouter {
           return null;
         },
         builder: (context, state) => const ZoneMainScreen(),
+      ),
+      GoRoute(
+        path: AppRouter.zoneWarmUpPath,
+        parentNavigatorKey: appRootNavigatorKey,
+        redirect: (context, state) {
+          if (ActiveZoneSession.current == null) {
+            return AppRouter.homePath;
+          }
+          return null;
+        },
+        builder: (context, state) => const ZoneWarmUpScreen(),
+      ),
+      GoRoute(
+        path: AppRouter.zoneWhoIsPath,
+        parentNavigatorKey: appRootNavigatorKey,
+        redirect: (context, state) {
+          if (ActiveZoneSession.current == null) {
+            return AppRouter.homePath;
+          }
+          return null;
+        },
+        builder: (context, state) => const ZoneWhoIsGameScreen(),
+      ),
+      GoRoute(
+        path: AppRouter.zoneLobbyPath,
+        parentNavigatorKey: appRootNavigatorKey,
+        redirect: (context, state) {
+          if (ActiveZoneSession.current == null) {
+            return AppRouter.homePath;
+          }
+          return null;
+        },
+        builder: (context, state) => const ZoneLobbyScreen(),
       ),
     ],
   );
