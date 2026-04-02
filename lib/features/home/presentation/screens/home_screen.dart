@@ -9,6 +9,7 @@ import 'package:qr_dating_app/features/home/presentation/widgets/home_story_stri
 import 'package:qr_dating_app/features/home/presentation/widgets/recent_zones_card.dart';
 import 'package:qr_dating_app/features/home/presentation/widgets/zone_preview_card.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class HomeScreen extends StatefulWidget {
   final String? activeZoneName;
@@ -73,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const SizedBox(height: 24),
                 Text(
-                  'Say Hi',
+                  context.l10n.homeTitle,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,

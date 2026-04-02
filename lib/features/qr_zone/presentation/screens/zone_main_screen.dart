@@ -5,6 +5,7 @@ import 'package:qr_dating_app/core/active_zone_session.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/model/zone_member_preview.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/widgets/zone_icebreaker_game.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Zone home: venue header, member grid (Supabase), leave FAB.
@@ -80,7 +81,7 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not leave zone. Try again.')),
+        SnackBar(content: Text(context.l10n.zoneMainLeaveError)),
       );
       return;
     }
@@ -109,8 +110,9 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final zone = ActiveZoneSession.current!;
-    final venueName = zone['name'] as String? ?? 'Venue';
+    final venueName = zone['name'] as String? ?? l10n.defaultVenueName;
     final zoneId = (zone['id'] as String?)?.trim();
 
     final onSurfaceMuted = colorScheme.onSurface.withValues(alpha: 0.62);
@@ -121,7 +123,7 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _leaveZone,
         icon: const Icon(Icons.logout_rounded, size: 20),
-        label: const Text('Leave zone'),
+        label: Text(l10n.zoneMainLeaveZone),
         elevation: 0,
         extendedPadding: const EdgeInsets.symmetric(horizontal: 20),
       ),
@@ -196,7 +198,7 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
                                       ? snapshot.data!.activeCount
                                       : ((zone['activeCount'] as int?) ?? 0);
                                   return Text(
-                                    '$count active now',
+                                    l10n.zoneMainActiveNow(count),
                                     style: theme.textTheme.labelLarge?.copyWith(
                                       color: onSurfaceMuted,
                                       letterSpacing: 0.2,
@@ -217,7 +219,7 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
             Expanded(
               child: zoneId == null || zoneId.isEmpty
                   ? _ZoneErrorState(
-                      message: 'Missing zone id.',
+                      message: l10n.zoneMainMissingZoneId,
                       onSurfaceMuted: onSurfaceMuted,
                       onRetry: null,
                     )
@@ -242,7 +244,8 @@ class _ZoneMainScreenState extends State<ZoneMainScreen>
                             return const SizedBox.shrink();
                           }
                           return _ZoneErrorState(
-                            message: 'Could not load people in this zone.',
+                            message: l10n.zoneMainLoadError,
+                            retryLabel: l10n.commonRetry,
                             onSurfaceMuted: onSurfaceMuted,
                             onRetry: () {
                               setState(() {
@@ -314,11 +317,13 @@ class _ZoneErrorState extends StatelessWidget {
     required this.message,
     required this.onSurfaceMuted,
     this.onRetry,
+    this.retryLabel,
   });
 
   final String message;
   final Color onSurfaceMuted;
   final VoidCallback? onRetry;
+  final String? retryLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -336,11 +341,11 @@ class _ZoneErrorState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge?.copyWith(color: onSurfaceMuted),
             ),
-            if (onRetry != null) ...[
+            if (onRetry != null && retryLabel != null) ...[
               const SizedBox(height: 20),
               FilledButton.tonal(
                 onPressed: onRetry,
-                child: const Text('Retry'),
+                child: Text(retryLabel!),
               ),
             ],
           ],
@@ -369,6 +374,7 @@ class _MemberCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final hasPhoto = member.photoUrl.isNotEmpty;
 
     return Material(
@@ -486,7 +492,7 @@ class _MemberCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Expanded(
                         child: Text(
-                          member.bio.isEmpty ? '—' : member.bio,
+                          member.bio.isEmpty ? l10n.zoneMainMemberBioPlaceholder : member.bio,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(

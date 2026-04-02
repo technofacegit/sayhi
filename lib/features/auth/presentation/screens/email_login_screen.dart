@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/features/auth/data/profile_lookup_service.dart';
 import 'package:qr_dating_app/features/auth/domain/auth_input_validators.dart';
+import 'package:qr_dating_app/l10n/app_localizations.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class EmailLoginScreen extends StatefulWidget {
   const EmailLoginScreen({super.key});
@@ -16,14 +18,14 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
   bool _submitAttempted = false;
   bool _loading = false;
 
-  String? get _emailError {
+  String? _emailError(AppLocalizations l10n) {
     final text = _emailController.text;
     final trimmed = text.trim();
     if (trimmed.isEmpty) {
-      return _submitAttempted ? 'E-posta adresi gerekli.' : null;
+      return _submitAttempted ? l10n.authEmailRequired : null;
     }
     if (!AuthInputValidators.isValidEmail(text)) {
-      return 'Geçerli bir e-posta adresi girin.';
+      return l10n.authEmailInvalid;
     }
     return null;
   }
@@ -35,6 +37,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
   }
 
   Future<void> _continue() async {
+    final l10n = context.l10n;
     setState(() => _submitAttempted = true);
     final email = _emailController.text.trim();
     if (!AuthInputValidators.isValidEmail(email)) return;
@@ -54,9 +57,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Profil kontrolü başarısız (migration / RLS): $e',
-            ),
+            content: Text(l10n.authProfileLookupFailed(e.toString())),
           ),
         );
       }
@@ -69,6 +70,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
@@ -85,7 +87,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
             children: [
               const SizedBox(height: 8),
               Text(
-                'Continue with Email',
+                l10n.authContinueWithEmailTitle,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.3,
@@ -93,7 +95,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Use your email to sign in or create an account.',
+                l10n.authContinueWithEmailSubtitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.onSurface.withValues(alpha: 0.72),
                 ),
@@ -109,9 +111,9 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                   _submitAttempted = false;
                 }),
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: l10n.authEmailLabel,
                   border: const OutlineInputBorder(),
-                  errorText: _emailError,
+                  errorText: _emailError(l10n),
                 ),
               ),
               const Spacer(),
@@ -125,7 +127,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                           width: 22,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Continue'),
+                      : Text(l10n.authEmailContinue),
                 ),
               ),
             ],

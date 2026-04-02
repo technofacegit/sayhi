@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/zone_activity.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class RecentZonesCard extends StatefulWidget {
   final List<Map<String, dynamic>> zones;
@@ -44,7 +45,7 @@ class _RecentZonesCardState extends State<RecentZonesCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Recent zones',
+            context.l10n.recentZonesTitle,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -90,6 +91,7 @@ class _RecentZoneFeedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final name = zone['name'] as String? ?? '';
     final count = zone['activeCount'] as int? ?? 0;
     final imageUrl = zone['imageUrl'] as String?;
@@ -168,7 +170,7 @@ class _RecentZoneFeedCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '$count active',
+                          l10n.recentZoneActive(count),
                           style: theme.textTheme.labelMedium?.copyWith(
                             color: Colors.white.withValues(alpha: 0.85),
                           ),
@@ -180,8 +182,8 @@ class _RecentZoneFeedCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               isActive
-                                  ? 'Kalan: ${formatZoneRemainingHm(remaining)}'
-                                  : 'Pasif',
+                                  ? l10n.recentZoneRemaining(formatZoneRemainingHm(l10n, remaining))
+                                  : l10n.zoneInactive,
                               style: theme.textTheme.labelMedium?.copyWith(
                                 color: Colors.white.withValues(alpha: 0.9),
                                 fontWeight: FontWeight.w600,

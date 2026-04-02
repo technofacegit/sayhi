@@ -1,0 +1,323 @@
+{
+  "@@locale": "en",
+  "appTitle": "Say Hi",
+  "navHome": "Home",
+  "navZones": "Zones",
+  "navSayHi": "Say Hi",
+  "navChats": "Chats",
+  "navProfile": "Profile",
+  "commonCancel": "Cancel",
+  "commonContinue": "Continue",
+  "commonRetry": "Retry",
+  "commonSkip": "Skip",
+  "commonStart": "Start",
+  "commonBack": "Back",
+  "commonDelete": "Delete",
+  "commonBlock": "Block",
+  "commonReport": "Report",
+  "commonSearch": "Search",
+  "commonLoading": "Loading…",
+  "commonOk": "OK",
+  "homeTitle": "Say Hi",
+  "zonePreviewActiveZone": "Active zone",
+  "zonePreviewNoActiveZone": "No active zone",
+  "zonePreviewActiveNow": "{count} active now",
+  "@zonePreviewActiveNow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "zonePreviewJoinHint": "Join a zone to see who is here right now.",
+  "recentZonesTitle": "Recent zones",
+  "recentZoneActive": "{count} active",
+  "@recentZoneActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recentZoneRemaining": "Remaining: {time}",
+  "@recentZoneRemaining": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "recentZoneInactive": "Inactive",
+  "defaultZoneName": "Zone",
+  "defaultVenueName": "Venue",
+  "zoneRemainingPrefix": "Remaining: {time}",
+  "@zoneRemainingPrefix": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "zoneInactive": "Inactive",
+  "zoneDurationZero": "0 h 0 m",
+  "zoneDurationHm": "{hours} h {minutes} m",
+  "@zoneDurationHm": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "zoneMainLeaveZone": "Leave zone",
+  "zoneMainActiveNow": "{count} active now",
+  "@zoneMainActiveNow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "zoneMainLeaveError": "Could not leave zone. Try again.",
+  "zoneMainMissingZoneId": "Missing zone id.",
+  "zoneMainLoadError": "Could not load people in this zone.",
+  "zoneMainMemberBioPlaceholder": "—",
+  "icebreakerSaveError": "Could not save answer. Try again.",
+  "icebreakerEarlyTitle": "You're early",
+  "icebreakerEarlySubtitle": "Kick things off with a quick icebreaker.",
+  "icebreakerCardTitle": "Icebreaker",
+  "icebreakerWarmedUp": "You're warmed up!",
+  "icebreakerDoneBody": "Nice work on all {count} questions. When someone joins the zone, they'll show up here.",
+  "@icebreakerDoneBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "icebreakerLoadError": "Couldn't load icebreaker questions.",
+  "icebreakerRetry": "Retry",
+  "icebreakerProgress": "{current} / {total}",
+  "@icebreakerProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingSkip": "Skip",
+  "onboardingContinue": "Continue",
+  "onboardingStart": "Start",
+  "onboardingPage1Title": "Scan into the moment",
+  "onboardingPage1Subtitle": "Join a venue zone by scanning a QR code—only people here, right now.",
+  "onboardingPage2Title": "Discover nearby",
+  "onboardingPage2Subtitle": "Swipe through profiles in your zone and keep it effortlessly respectful.",
+  "onboardingPage3Title": "Match & chat",
+  "onboardingPage3Subtitle": "When it's mutual, start a conversation and meet—no endless scrolling.",
+  "loginWelcomeTitle": "Welcome to Say Hi",
+  "loginWelcomeSubtitle": "Meet people in the same place—right now.",
+  "loginContinueApple": "Continue with Apple",
+  "loginContinueEmail": "Continue with Email",
+  "loginContinueGuest": "Continue as Guest",
+  "loginGuestFailed": "Guest login failed: {error}",
+  "@loginGuestFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "profileTitle": "Profile",
+  "profileLogout": "Logout",
+  "logoutDialogTitle": "Sign out",
+  "logoutDialogMessage": "You are about to sign out. Continue?",
+  "logoutConfirm": "Sign out",
+  "logoutCancel": "Cancel",
+  "routerMissingZone": "Missing zone",
+  "activeZoneAppBar": "Active Zone",
+  "activeZoneHeadline": "Active Zone",
+  "activeZoneUserCount": "{count} active users",
+  "@activeZoneUserCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activeZoneEnter": "Enter Zone",
+  "activeZoneInvalidId": "No valid ID for this zone.",
+  "activeZoneCancel": "Cancel",
+  "qrJoinTitle": "Join a Zone",
+  "qrJoinCameraHint": "Point your camera at the venue QR code",
+  "qrJoinManualTitle": "Enter code manually",
+  "qrJoinZoneCodeLabel": "Zone Code",
+  "qrJoinZoneCodeHint": "e.g. ROOFTOP",
+  "qrJoinBack": "Back",
+  "qrJoinTorch": "Torch",
+  "qrJoinVerifying": "Verifying…",
+  "qrJoinEnterManually": "Enter code manually",
+  "qrJoinInvalidCode": "Invalid or wrong QR code.",
+  "qrJoinFailed": "Could not join zone: {error}",
+  "@qrJoinFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "zonesGoToEntry": "Go to zone entry",
+  "zonesSearchHint": "Search venues",
+  "zonesClearTooltip": "Clear",
+  "zonesStatus": "Status",
+  "zonesFilterAll": "All",
+  "zonesFilterActive": "Active",
+  "zonesFilterInactive": "Inactive",
+  "zonesMap": "Map",
+  "zonesGrid": "Grid",
+  "zonesNoResults": "No results",
+  "zonesLocationOff": "Location services are off.",
+  "zonesLocationPermission": "Location permission required.",
+  "zonesLocationError": "Could not get location: {error}",
+  "@zonesLocationError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "zonesMapUnsupported": "Platform map is not supported.",
+  "zonesRecenter": "Center on my location",
+  "zonesYourLocation": "Your location",
+  "zonesCityActiveMembers": "{city} • {count} active members",
+  "@zonesCityActiveMembers": {
+    "placeholders": {
+      "city": {},
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesActiveMembers": "{count} active members",
+  "@zonesActiveMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesActiveCount": "{count} active",
+  "@zonesActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storyLoading": "Loading…",
+  "storyLoadError": "Stories could not be loaded",
+  "storyEmpty": "No stories yet",
+  "authPassword": "Password",
+  "authPasswordRequirementsLabel": "Password requirements",
+  "authPasswordConfirm": "Confirm password",
+  "authShowPassword": "Show",
+  "authHidePassword": "Hide",
+  "authEmailLabel": "Email",
+  "authEmailRequired": "Email is required.",
+  "authEmailInvalid": "Enter a valid email address.",
+  "authProfileLookupFailed": "Profile check failed (migration / RLS): {error}",
+  "@authProfileLookupFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "authContinueWithEmailTitle": "Continue with Email",
+  "authContinueWithEmailSubtitle": "Use your email to sign in or create an account.",
+  "authRegisterTitle": "Create account",
+  "authRegisterSubmit": "Sign up",
+  "authRegisterConfirmEmail": "Click the confirmation link in your email to finish.",
+  "authRegisterFailed": "Could not create account.",
+  "authRegisterEmailRateLimit": "Email send rate limit exceeded. Try again in a few minutes.",
+  "authForgotTitle": "Reset password",
+  "authForgotSubtitle": "We will send a link to your email. Open it on this phone to finish resetting your password.",
+  "authForgotSendLink": "Send reset link",
+  "authForgotEmailSent": "Check your email. Open the link on this device to set a new password.",
+  "authResetTitle": "Reset password",
+  "authResetSubtitle": "Choose a new password for your account.",
+  "authResetNewPassword": "New password",
+  "authResetUpdate": "Update password",
+  "authResetSuccess": "Password updated successfully",
+  "authSignIn": "Sign in",
+  "authForgotPasswordLink": "Forgot password",
+  "authPasswordTitle": "Password",
+  "authEmailContinue": "Continue",
+  "authDefaultUserName": "User",
+  "authPasswordTooShort": "Password must be at least 8 characters.",
+  "authPasswordNeedUpper": "Include at least one uppercase letter (A-Z).",
+  "authPasswordNeedLower": "Include at least one lowercase letter (a-z).",
+  "authPasswordNeedDigit": "Include at least one digit.",
+  "authPasswordNeedSpecial": "Include at least one special character (non-alphanumeric).",
+  "authPasswordMismatch": "Passwords do not match.",
+  "authPasswordRequirementsBody": "Your password must include:\n• At least 8 characters\n• At least one uppercase letter (A-Z)\n• At least one lowercase letter (a-z)\n• At least one digit (0-9)\n• At least one special character (!@#\\$%^&* etc.)",
+  "chatsTitle": "Chats",
+  "chatsEmpty": "No conversations yet",
+  "chatsNoMatch": "No conversations match your search",
+  "chatsSignInTitle": "Sign in to see your chats.",
+  "chatsSignInSubtitle": "When signed in, your conversations appear here.",
+  "chatsSignInButton": "Sign in",
+  "chatNotFound": "Chat not found",
+  "chatMessageHint": "Message…",
+  "chatProfileNotFound": "Profile not found",
+  "chatAbout": "About",
+  "chatSafety": "Safety",
+  "chatBlockTitle": "Block {name}?",
+  "@chatBlockTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chatBlockBody": "They won't be able to message you or see your profile in this chat.",
+  "chatBlockConfirm": "Block",
+  "chatBlockSuccess": "{name} has been blocked.",
+  "@chatBlockSuccess": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chatDeleteTitle": "Delete conversation?",
+  "chatDeleteBody": "This chat will be removed from your list. This can't be undone.",
+  "chatDeleteConfirm": "Delete",
+  "chatDeleteSuccess": "Conversation deleted.",
+  "chatReportSubmitted": "Report submitted. Thanks for helping keep Say Hi safe.",
+  "chatYesterday": "Yesterday",
+  "chatWeekdayMon": "Mon",
+  "chatWeekdayTue": "Tue",
+  "chatWeekdayWed": "Wed",
+  "chatWeekdayThu": "Thu",
+  "chatWeekdayFri": "Fri",
+  "chatWeekdaySat": "Sat",
+  "chatWeekdaySun": "Sun",
+  "mockThreadElenaLast": "See you at the rooftop tonight ✨",
+  "mockThreadMarcusLast": "Haha that was a good one",
+  "mockThreadSofiaLast": "Are you still at the café?",
+  "mockThreadJamesLast": "Sent you a voice note — check when you can",
+  "mockThreadNinaLast": "Thanks for the intro yesterday!",
+  "mockThreadAlexLast": "Maybe next weekend works better for me",
+  "mockMsgElena1": "Hey! Loved your profile.",
+  "mockMsgElena2": "Thanks! Yours too — especially the travel pics.",
+  "mockMsgElena3": "Are you free this week?",
+  "mockMsgElena4": "Thursday or Friday evening works for me.",
+  "mockMsgElena5": "See you at the rooftop tonight ✨",
+  "mockMsgMarcus1": "Did you see the match?",
+  "mockMsgMarcus2": "Only the highlights — insane finish",
+  "mockMsgMarcus3": "Haha that was a good one",
+  "mockMsgSofia1": "Still at the market near the bridge?",
+  "mockMsgSofia2": "Are you still at the café?",
+  "mockMsgJames1": "Sent you a voice note — check when you can",
+  "mockMsgNina1": "Thanks for the intro yesterday!",
+  "mockMsgNina2": "Anytime — glad you two hit it off",
+  "mockMsgAlex1": "Rain check on Sunday?",
+  "mockMsgAlex2": "Maybe next weekend works better for me",
+  "mockBioElena": "Product designer who loves rooftop sunsets and indie concerts. Always up for a good espresso and honest conversation. Looking for someone curious and kind.",
+  "mockBioMarcus": "Weekend hiker, weekday engineer. Big on football, cooking, and bad puns. Say hi if you want to swap playlist recommendations.",
+  "mockBioSofia": "Art history grad, café hopper, sometimes painter. I value humor, empathy, and people who read more than their algorithm suggests.",
+  "mockBioJames": "Runner, podcast addict, dog person. Looking for real chemistry and low-drama plans.",
+  "mockBioNina": "Yoga in the morning, vinyl in the evening. I believe the best dates are half planned, half spontaneous.",
+  "mockBioAlex": "Photographer, traveler, coffee snob. Prefer plans that start with a walk and end with dessert.",
+  "chatDeleteChatLabel": "Delete chat",
+  "defaultMemberName": "Member"
+}

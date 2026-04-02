@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_dating_app/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/features/auth/presentation/screens/email_login_screen.dart';
@@ -182,8 +183,10 @@ class AppGoRouter {
         builder: (context, state) {
           final extra = state.extra;
           if (extra is! Map<String, dynamic>) {
-            return const Scaffold(
-              body: Center(child: Text('Missing zone')),
+            return Scaffold(
+              body: Center(
+                child: Text(AppLocalizations.of(context)!.routerMissingZone),
+              ),
             );
           }
           return ActiveZoneScreen(zone: extra);

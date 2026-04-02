@@ -63,7 +63,7 @@ class ZoneRepository {
       final map = raw as Map<String, dynamic>;
       final venue = (map['venues'] as Map<String, dynamic>?);
       final members = (map['zone_members'] as List?) ?? const [];
-      final name = venue?['name'] as String? ?? 'Zone';
+      final name = venue?['name'] as String? ?? '';
       final city = venue?['city'] as String?;
       final imageUrl = venue?['image_url'] as String?;
       final lat = (venue?['lat'] as num?)?.toDouble();
@@ -115,7 +115,7 @@ class ZoneRepository {
       return <String, dynamic>{
         'id': map['id'] as String?,
         'code': map['code'] as String?,
-        'name': (map['name'] as String?) ?? 'Zone',
+        'name': (map['name'] as String?) ?? '',
         'city': map['city'] as String?,
         'imageUrl': map['image_url'] as String?,
         'activeCount': (map['active_count'] as num?)?.toInt() ?? 0,
@@ -136,7 +136,7 @@ class ZoneRepository {
     return <String, dynamic>{
       'id': raw['id'] as String?,
       'code': raw['code'] as String?,
-      'name': (raw['name'] as String?) ?? 'Zone',
+      'name': (raw['name'] as String?) ?? '',
       'city': raw['city'] as String?,
       'imageUrl': raw['image_url'] as String?,
       'activeCount': (raw['active_count'] as num?)?.toInt() ?? 0,
@@ -189,7 +189,7 @@ class ZoneRepository {
       return ZoneMemberPreview(
         id: uid,
         photoUrl: (avatar != null && avatar.isNotEmpty) ? avatar : '',
-        name: m['display_name'] as String? ?? 'Member',
+        name: m['display_name'] as String? ?? '',
         age: (m['age'] as num?)?.toInt(),
         bio: m['bio'] as String? ?? '',
       );

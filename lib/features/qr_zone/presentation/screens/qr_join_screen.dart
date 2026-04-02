@@ -8,6 +8,7 @@ import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/active_zone_session.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
 import 'package:qr_dating_app/features/qr_zone/domain/zone_code_input.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Bottom inset so content clears [BottomAppBar] + center FAB notch when shell uses extendBody.
@@ -76,6 +77,7 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
   }
 
   Future<bool> _joinWithCode(String rawCode) async {
+    final l10n = context.l10n;
     final code = normalizeZoneCodeForJoin(rawCode);
     if (code.isEmpty) return false;
     if (mounted) {
@@ -103,7 +105,7 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
       }
       final message = e.message.contains('INVALID_ZONE_CODE') ||
               e.message.contains('ZONE_CODE_MISMATCH')
-          ? 'Yanlis veya gecersiz QR kod.'
+          ? l10n.qrJoinInvalidCode
           : e.message;
       await _showCenteredError(message);
       return false;
@@ -115,8 +117,8 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
       }
       final message = e.toString().contains('INVALID_ZONE_CODE') ||
               e.toString().contains('ZONE_CODE_MISMATCH')
-          ? 'Yanlis veya gecersiz QR kod.'
-          : 'Zone girisi basarisiz: $e';
+          ? l10n.qrJoinInvalidCode
+          : l10n.qrJoinFailed(e.toString());
       await _showCenteredError(message);
       return false;
     } finally {
@@ -153,9 +155,10 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
     final code = await showDialog<String>(
       context: context,
       builder: (ctx) {
+        final dialogL10n = ctx.l10n;
         final controller = TextEditingController();
         return AlertDialog(
-          title: const Text('Enter code manually'),
+          title: Text(dialogL10n.qrJoinManualTitle),
           content: TextField(
             controller: controller,
             autofocus: true,
@@ -164,9 +167,9 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
             inputFormatters: [
               LengthLimitingTextInputFormatter(64),
             ],
-            decoration: const InputDecoration(
-              labelText: 'Zone Code',
-              hintText: 'e.g. ROOFTOP',
+            decoration: InputDecoration(
+              labelText: dialogL10n.qrJoinZoneCodeLabel,
+              hintText: dialogL10n.qrJoinZoneCodeHint,
               counterText: '',
             ),
             textCapitalization: TextCapitalization.characters,
@@ -178,14 +181,14 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel'),
+              child: Text(dialogL10n.commonCancel),
             ),
             FilledButton(
               onPressed: () {
                 final t = controller.text.trim();
                 Navigator.of(ctx).pop(t.isEmpty ? null : t);
               },
-              child: const Text('Continue'),
+              child: Text(dialogL10n.commonContinue),
             ),
           ],
         );
@@ -206,6 +209,7 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final surface = colorScheme.surface;
     final mq = MediaQuery.of(context);
     final bottomPad = mq.padding.bottom + _kShellBottomClearance;
@@ -229,10 +233,10 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
           leading: IconButton(
             onPressed: () => context.pop(),
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            tooltip: 'Back',
+            tooltip: l10n.commonBack,
           ),
           title: Text(
-            'Join a Zone',
+            l10n.qrJoinTitle,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -242,7 +246,7 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
             IconButton(
               onPressed: () => _scannerController.toggleTorch(),
               icon: const Icon(Icons.flashlight_on_rounded),
-              tooltip: 'Torch',
+              tooltip: l10n.qrJoinTorch,
             ),
           ],
         ),
@@ -257,7 +261,7 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
                     children: [
                       const SizedBox(height: 8),
                       Text(
-                        'Point your camera at the venue QR code',
+                        l10n.qrJoinCameraHint,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: 0.72),
@@ -367,7 +371,7 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
                                                     ),
                                                     const SizedBox(width: 10),
                                                     Text(
-                                                      'Dogrulaniyor...',
+                                                      l10n.qrJoinVerifying,
                                                       style: theme.textTheme.bodyMedium
                                                           ?.copyWith(color: Colors.white),
                                                     ),
@@ -399,7 +403,7 @@ class _QrJoinScreenState extends State<QrJoinScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _joining ? null : _openManualCode,
                   icon: const Icon(Icons.keyboard_rounded, size: 20),
-                  label: const Text('Enter code manually'),
+                  label: Text(l10n.qrJoinEnterManually),
                 ),
               ),
             ),

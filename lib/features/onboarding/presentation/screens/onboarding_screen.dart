@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -11,26 +12,29 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const _pages = <_OnboardingPageData>[
-    _OnboardingPageData(
-      title: 'Scan into the moment',
-      subtitle: 'Join a venue zone by scanning a QR code—only people here, right now.',
-      icon: Icons.qr_code_rounded,
-    ),
-    _OnboardingPageData(
-      title: 'Discover nearby',
-      subtitle: 'Swipe through profiles in your zone and keep it effortlessly respectful.',
-      icon: Icons.favorite_rounded,
-    ),
-    _OnboardingPageData(
-      title: 'Match & chat',
-      subtitle: 'When it’s mutual, start a conversation and meet—no endless scrolling.',
-      icon: Icons.chat_bubble_rounded,
-    ),
-  ];
-
   late final PageController _pageController;
   int _pageIndex = 0;
+
+  List<_OnboardingPageData> _pages(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      _OnboardingPageData(
+        title: l10n.onboardingPage1Title,
+        subtitle: l10n.onboardingPage1Subtitle,
+        icon: Icons.qr_code_rounded,
+      ),
+      _OnboardingPageData(
+        title: l10n.onboardingPage2Title,
+        subtitle: l10n.onboardingPage2Subtitle,
+        icon: Icons.favorite_rounded,
+      ),
+      _OnboardingPageData(
+        title: l10n.onboardingPage3Title,
+        subtitle: l10n.onboardingPage3Subtitle,
+        icon: Icons.chat_bubble_rounded,
+      ),
+    ];
+  }
 
   @override
   void initState() {
@@ -48,7 +52,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isLast = _pageIndex == _pages.length - 1;
+    final l10n = context.l10n;
+    final pages = _pages(context);
+    final isLast = _pageIndex == pages.length - 1;
 
     return Scaffold(
       body: SafeArea(
@@ -62,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: TextButton(
                   onPressed: () => context.go(AppRouter.loginPath),
                   child: Text(
-                    'Skip',
+                    l10n.onboardingSkip,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.70),
                     ),
@@ -72,10 +78,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
-                  itemCount: _pages.length,
+                  itemCount: pages.length,
                   onPageChanged: (index) => setState(() => _pageIndex = index),
                   itemBuilder: (context, index) {
-                    final page = _pages[index];
+                    final page = pages[index];
                     return _OnboardingPage(
                       title: page.title,
                       subtitle: page.subtitle,
@@ -86,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               const SizedBox(height: 12),
               _DotsIndicator(
-                count: _pages.length,
+                count: pages.length,
                 index: _pageIndex,
                 activeColor: colorScheme.onSurface,
                 inactiveColor: colorScheme.onSurface.withValues(alpha: 0.18),
@@ -111,7 +117,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       curve: Curves.easeOutCubic,
                     );
                   },
-                  child: Text(isLast ? 'Start' : 'Continue'),
+                  child: Text(isLast ? l10n.onboardingStart : l10n.onboardingContinue),
                 ),
               ),
               const SizedBox(height: 16),
@@ -240,4 +246,3 @@ class _DotsIndicator extends StatelessWidget {
     );
   }
 }
-

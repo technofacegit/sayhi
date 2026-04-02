@@ -1,3 +1,5 @@
+import 'package:qr_dating_app/l10n/app_localizations.dart';
+
 /// Email ve şifre alanları için istemci tarafı doğrulama.
 abstract final class AuthInputValidators {
   static bool isValidEmail(String raw) {
@@ -8,37 +10,32 @@ abstract final class AuthInputValidators {
   }
 
   /// Geçersizse kullanıcıya gösterilecek ilk kural ihlali mesajı.
-  static String? passwordPolicyError(String password) {
+  static String? passwordPolicyError(AppLocalizations l10n, String password) {
     if (password.length < 8) {
-      return 'Şifre en az 8 karakter olmalıdır.';
+      return l10n.authPasswordTooShort;
     }
     if (!RegExp(r'[A-Z]').hasMatch(password)) {
-      return 'En az bir büyük harf (A-Z) içermelidir.';
+      return l10n.authPasswordNeedUpper;
     }
     if (!RegExp(r'[a-z]').hasMatch(password)) {
-      return 'En az bir küçük harf (a-z) içermelidir.';
+      return l10n.authPasswordNeedLower;
     }
     if (!RegExp(r'[0-9]').hasMatch(password)) {
-      return 'En az bir rakam içermelidir.';
+      return l10n.authPasswordNeedDigit;
     }
     if (!RegExp(r'[^a-zA-Z0-9]').hasMatch(password)) {
-      return 'En az bir özel karakter (harf ve rakam dışı) içermelidir.';
+      return l10n.authPasswordNeedSpecial;
     }
     return null;
   }
 
-  static String? passwordMismatchError(String password, String confirm) {
+  static String? passwordMismatchError(AppLocalizations l10n, String password, String confirm) {
     if (password != confirm) {
-      return 'Şifreler eşleşmiyor.';
+      return l10n.authPasswordMismatch;
     }
     return null;
   }
 
-  static const String passwordRequirementsDescription = '''
-Şifreniz şunları içermelidir:
-• En az 8 karakter
-• En az bir büyük harf (A-Z)
-• En az bir küçük harf (a-z)
-• En az bir rakam (0-9)
-• En az bir özel karakter (!@#\$%^&* vb.)''';
+  static String passwordRequirementsDescription(AppLocalizations l10n) =>
+      l10n.authPasswordRequirementsBody;
 }

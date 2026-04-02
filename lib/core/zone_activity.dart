@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:qr_dating_app/l10n/app_localizations.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
-/// Remaining time as "15 h 57 m" (hours and minutes only, no seconds).
-String formatZoneRemainingHm(Duration? remaining) {
+/// Remaining time label using locale (hours and minutes only).
+String formatZoneRemainingHm(AppLocalizations l10n, Duration? remaining) {
   if (remaining == null || remaining.inSeconds <= 0) {
-    return '0 h 0 m';
+    return l10n.zoneDurationZero;
   }
   final ceilMin = (remaining.inSeconds / 60).ceil();
   final h = ceilMin ~/ 60;
   final m = ceilMin % 60;
-  return '$h h $m m';
+  return l10n.zoneDurationHm(h, m);
 }
 
 /// Parses [activeUntilIso] (UTC or local) and returns remaining until then from [now].
@@ -37,8 +39,8 @@ bool isZoneMembershipActiveForUser(
   );
 }
 
-/// Short line for map marker subtitle: "Kalan: 15 h 57 m" or "Pasif".
-String zoneActivityMapSnippet(Map<String, dynamic> zone, DateTime now) {
+/// Short line for map marker subtitle.
+String zoneActivityMapSnippet(AppLocalizations l10n, Map<String, dynamic> zone, DateTime now) {
   final rem = zoneRemainingFromActiveUntil(
     zone['activeUntil'] as String?,
     now,
@@ -48,12 +50,12 @@ String zoneActivityMapSnippet(Map<String, dynamic> zone, DateTime now) {
     isActiveNow: zone['isActiveNow'] as bool?,
   );
   if (active) {
-    return 'Kalan: ${formatZoneRemainingHm(rem)}';
+    return l10n.recentZoneRemaining(formatZoneRemainingHm(l10n, rem));
   }
-  return 'Pasif';
+  return l10n.zoneInactive;
 }
 
-/// Green dot + "Kalan: …" or grey + "Pasif" for zone maps / lists.
+/// Green dot + remaining line or grey + inactive for zone maps / lists.
 class ZoneActivityStatusRow extends StatelessWidget {
   final String? activeUntilIso;
   final DateTime now;
@@ -73,12 +75,13 @@ class ZoneActivityStatusRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final remaining = zoneRemainingFromActiveUntil(activeUntilIso, now);
     final isActive = zoneIsActiveFromRemaining(remaining, isActiveNow: isActiveNowFallback);
     final color = isActive ? Colors.green : Colors.grey;
     final text = isActive
-        ? 'Kalan: ${formatZoneRemainingHm(remaining)}'
-        : 'Pasif';
+        ? l10n.recentZoneRemaining(formatZoneRemainingHm(l10n, remaining))
+        : l10n.zoneInactive;
 
     return Row(
       mainAxisSize: MainAxisSize.min,

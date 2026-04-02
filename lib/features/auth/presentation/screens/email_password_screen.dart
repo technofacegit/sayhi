@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
 import 'package:qr_dating_app/features/auth/domain/auth_input_validators.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EmailPasswordScreen extends StatefulWidget {
@@ -26,8 +27,9 @@ class _EmailPasswordScreenState extends State<EmailPasswordScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     final password = _passwordController.text;
-    final policy = AuthInputValidators.passwordPolicyError(password);
+    final policy = AuthInputValidators.passwordPolicyError(l10n, password);
     setState(() => _fieldError = policy);
     if (policy != null) return;
 
@@ -43,7 +45,7 @@ class _EmailPasswordScreenState extends State<EmailPasswordScreen> {
           'id': user.id,
           'email': email,
           'name': user.userMetadata?['full_name'] as String? ??
-              (email.contains('@') ? email.split('@').first : 'User'),
+              (email.contains('@') ? email.split('@').first : l10n.authDefaultUserName),
           'bio': null,
           'age': null,
           'avatar_url': null,
@@ -76,6 +78,7 @@ class _EmailPasswordScreenState extends State<EmailPasswordScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final email = widget.email.trim();
 
     return Scaffold(
@@ -93,7 +96,7 @@ class _EmailPasswordScreenState extends State<EmailPasswordScreen> {
             children: [
               const SizedBox(height: 8),
               Text(
-                'Şifre',
+                l10n.authPasswordTitle,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.3,
@@ -110,14 +113,14 @@ class _EmailPasswordScreenState extends State<EmailPasswordScreen> {
               InputDecorator(
                 decoration: InputDecoration(
                   alignLabelWithHint: true,
-                  labelText: 'Şifre gereksinimleri',
+                  labelText: l10n.authPasswordRequirementsLabel,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
                 ),
                 child: Text(
-                  AuthInputValidators.passwordRequirementsDescription,
+                  AuthInputValidators.passwordRequirementsDescription(l10n),
                   style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
                 ),
               ),
@@ -131,11 +134,11 @@ class _EmailPasswordScreenState extends State<EmailPasswordScreen> {
                   }
                 },
                 decoration: InputDecoration(
-                  labelText: 'Şifre',
+                  labelText: l10n.authPassword,
                   border: const OutlineInputBorder(),
                   errorText: _fieldError,
                   suffixIcon: IconButton(
-                    tooltip: _obscure ? 'Göster' : 'Gizle',
+                    tooltip: _obscure ? l10n.authShowPassword : l10n.authHidePassword,
                     onPressed: () => setState(() => _obscure = !_obscure),
                     icon: Icon(
                       _obscure
@@ -153,7 +156,7 @@ class _EmailPasswordScreenState extends State<EmailPasswordScreen> {
                     AppRouter.emailForgotPasswordPath,
                     extra: widget.email.trim(),
                   ),
-                  child: const Text('Şifremi unuttum'),
+                  child: Text(l10n.authForgotPasswordLink),
                 ),
               ),
               const SizedBox(height: 16),
@@ -161,7 +164,7 @@ class _EmailPasswordScreenState extends State<EmailPasswordScreen> {
                 height: 52,
                 child: FilledButton(
                   onPressed: _submit,
-                  child: const Text('Giriş yap'),
+                  child: Text(l10n.authSignIn),
                 ),
               ),
             ],

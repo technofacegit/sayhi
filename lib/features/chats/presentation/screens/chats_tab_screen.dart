@@ -5,6 +5,8 @@ import 'package:qr_dating_app/core/auth_session.dart';
 import 'package:qr_dating_app/features/chats/data/mock_chat_threads.dart';
 import 'package:qr_dating_app/features/chats/presentation/model/chat_thread.dart';
 import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
+import 'package:qr_dating_app/l10n/app_localizations.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class ChatsTabScreen extends StatefulWidget {
   const ChatsTabScreen({super.key});
@@ -22,9 +24,9 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
     super.dispose();
   }
 
-  List<ChatThread> get _filtered {
+  List<ChatThread> _filtered(AppLocalizations l10n) {
     final q = _search.text.trim().toLowerCase();
-    final list = MockChatThreads.all;
+    final list = MockChatThreads.all(l10n);
     if (q.isEmpty) return list;
     return list
         .where((t) =>
@@ -37,6 +39,7 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -52,14 +55,14 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
             return ListenableBuilder(
               listenable: _search,
               builder: (context, _) {
-                final items = _filtered;
+                final items = _filtered(l10n);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                       child: Text(
-                        'Chats',
+                        l10n.chatsTitle,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.5,
@@ -70,7 +73,7 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: SearchBar(
                         controller: _search,
-                        hintText: 'Search',
+                        hintText: l10n.commonSearch,
                         leading: const Icon(Icons.search_rounded),
                         trailing: [
                           if (_search.text.isNotEmpty)
@@ -95,8 +98,8 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                           ? Center(
                               child: Text(
                                 _search.text.trim().isEmpty
-                                    ? 'No conversations yet'
-                                    : 'No conversations match your search',
+                                    ? l10n.chatsEmpty
+                                    : l10n.chatsNoMatch,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                 ),
@@ -142,6 +145,7 @@ class _ChatsLoggedOutBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -149,7 +153,7 @@ class _ChatsLoggedOutBody extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
           child: Text(
-            'Chats',
+            l10n.chatsTitle,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
               letterSpacing: -0.5,
@@ -169,7 +173,7 @@ class _ChatsLoggedOutBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Sohbetlerinizi görmek için oturum açın.',
+                  l10n.chatsSignInTitle,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
@@ -178,7 +182,7 @@ class _ChatsLoggedOutBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Oturum açtığınızda konuşmalarınız burada listelenir.',
+                  l10n.chatsSignInSubtitle,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
@@ -191,7 +195,7 @@ class _ChatsLoggedOutBody extends StatelessWidget {
                   height: 52,
                   child: FilledButton(
                     onPressed: onSignIn,
-                    child: const Text('Oturum aç'),
+                    child: Text(l10n.chatsSignInButton),
                   ),
                 ),
               ],
@@ -287,7 +291,7 @@ class _ChatThreadTile extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          formatChatListTimestamp(thread.lastMessageAt),
+                          formatChatListTimestamp(thread.lastMessageAt, context.l10n),
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: thread.unreadCount > 0
                                 ? colorScheme.primary

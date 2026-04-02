@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
 import 'package:qr_dating_app/features/auth/domain/auth_input_validators.dart';
+import 'package:qr_dating_app/l10n/app_localizations.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EmailRegisterScreen extends StatefulWidget {
@@ -29,17 +31,18 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
     super.dispose();
   }
 
-  String _defaultName(String email) {
+  String _defaultName(AppLocalizations l10n, String email) {
     final local = email.split('@').first.trim();
-    return local.isNotEmpty ? local : 'User';
+    return local.isNotEmpty ? local : l10n.authDefaultUserName;
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     final password = _passwordController.text;
     final confirm = _confirmController.text;
 
-    final policy = AuthInputValidators.passwordPolicyError(password);
-    final mismatch = AuthInputValidators.passwordMismatchError(password, confirm);
+    final policy = AuthInputValidators.passwordPolicyError(l10n, password);
+    final mismatch = AuthInputValidators.passwordMismatchError(l10n, password, confirm);
 
     setState(() {
       _passwordError = policy;
@@ -61,14 +64,14 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
       final session = response.session;
 
       if (user == null) {
-        throw Exception('Kayıt oluşturulamadı.');
+        throw Exception(l10n.authRegisterFailed);
       }
 
       if (session != null) {
         await Supabase.instance.client.from('profiles').upsert({
           'id': user.id,
           'email': email,
-          'name': _defaultName(email),
+          'name': _defaultName(l10n, email),
           'bio': null,
           'age': null,
           'avatar_url': null,
@@ -80,10 +83,8 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Hesabınızı tamamlamak için e-postadaki onay bağlantısına tıklayın.',
-              ),
+            SnackBar(
+              content: Text(l10n.authRegisterConfirmEmail),
             ),
           );
           context.go(AppRouter.loginPath);
@@ -94,7 +95,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
       debugPrint('$st');
       if (mounted) {
         final msg = e.code == 'over_email_send_rate_limit'
-            ? 'E-posta gönderim limiti aşıldı. Birkaç dakika sonra tekrar deneyin.'
+            ? l10n.authRegisterEmailRateLimit
             : e.message;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg)),
@@ -115,6 +116,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final email = widget.email.trim();
 
     return Scaffold(
@@ -132,7 +134,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
             children: [
               const SizedBox(height: 8),
               Text(
-                'Hesap oluştur',
+                l10n.authRegisterTitle,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.3,
@@ -149,14 +151,14 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
               InputDecorator(
                 decoration: InputDecoration(
                   alignLabelWithHint: true,
-                  labelText: 'Şifre gereksinimleri',
+                  labelText: l10n.authPasswordRequirementsLabel,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
                 ),
                 child: Text(
-                  AuthInputValidators.passwordRequirementsDescription,
+                  AuthInputValidators.passwordRequirementsDescription(l10n),
                   style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
                 ),
               ),
@@ -170,11 +172,11 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                   }
                 },
                 decoration: InputDecoration(
-                  labelText: 'Şifre',
+                  labelText: l10n.authPassword,
                   border: const OutlineInputBorder(),
                   errorText: _passwordError,
                   suffixIcon: IconButton(
-                    tooltip: _obscure ? 'Göster' : 'Gizle',
+                    tooltip: _obscure ? l10n.authShowPassword : l10n.authHidePassword,
                     onPressed: () => setState(() => _obscure = !_obscure),
                     icon: Icon(
                       _obscure
@@ -194,11 +196,11 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                   }
                 },
                 decoration: InputDecoration(
-                  labelText: 'Şifre tekrar',
+                  labelText: l10n.authPasswordConfirm,
                   border: const OutlineInputBorder(),
                   errorText: _confirmError,
                   suffixIcon: IconButton(
-                    tooltip: _obscureConfirm ? 'Göster' : 'Gizle',
+                    tooltip: _obscureConfirm ? l10n.authShowPassword : l10n.authHidePassword,
                     onPressed: () =>
                         setState(() => _obscureConfirm = !_obscureConfirm),
                     icon: Icon(
@@ -215,7 +217,7 @@ class _EmailRegisterScreenState extends State<EmailRegisterScreen> {
                 height: 52,
                 child: FilledButton(
                   onPressed: _submit,
-                  child: const Text('Kayıt ol'),
+                  child: Text(l10n.authRegisterSubmit),
                 ),
               ),
             ],

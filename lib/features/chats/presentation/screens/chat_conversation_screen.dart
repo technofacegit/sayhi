@@ -5,6 +5,7 @@ import 'package:qr_dating_app/features/chats/data/mock_chat_messages.dart';
 import 'package:qr_dating_app/features/chats/data/mock_chat_threads.dart';
 import 'package:qr_dating_app/features/chats/presentation/model/chat_message.dart';
 import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class ChatConversationScreen extends StatefulWidget {
   final String chatId;
@@ -45,8 +46,9 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final thread = MockChatThreads.byId(widget.chatId);
-    final messages = MockChatMessages.forChat(widget.chatId);
+    final l10n = context.l10n;
+    final thread = MockChatThreads.byId(l10n, widget.chatId);
+    final messages = MockChatMessages.forChat(l10n, widget.chatId);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -58,7 +60,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
           ),
         ),
-        body: const Center(child: Text('Chat not found')),
+        body: Center(child: Text(l10n.chatNotFound)),
       );
     }
 
@@ -130,7 +132,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                       minLines: 1,
                       maxLines: 4,
                       decoration: InputDecoration(
-                        hintText: 'Message…',
+                        hintText: l10n.chatMessageHint,
                         filled: true,
                         fillColor: colorScheme.surfaceContainerHighest
                             .withValues(alpha: 0.6),

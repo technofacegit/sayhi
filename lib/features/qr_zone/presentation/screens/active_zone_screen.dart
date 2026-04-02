@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/active_zone_session.dart';
 import 'package:qr_dating_app/core/zone_activity.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class ActiveZoneScreen extends StatelessWidget {
   final Map<String, dynamic> zone;
@@ -12,13 +13,15 @@ class ActiveZoneScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final name = zone['name'] as String? ?? '';
+    final displayName = name.isEmpty ? l10n.defaultZoneName : name;
     final imageUrl = zone['imageUrl'] as String?;
     final count = zone['activeCount'] as int? ?? 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Active Zone'),
+        title: Text(l10n.activeZoneAppBar),
       ),
       body: SafeArea(
         child: Padding(
@@ -27,7 +30,7 @@ class ActiveZoneScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Active Zone',
+                l10n.activeZoneHeadline,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -42,24 +45,24 @@ class ActiveZoneScreen extends StatelessWidget {
                           imageUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => _ZoneImageFallback(
-                            zoneName: name.isEmpty ? 'Zone' : name,
+                            zoneName: displayName,
                           ),
                         )
                       : _ZoneImageFallback(
-                          zoneName: name.isEmpty ? 'Zone' : name,
+                          zoneName: displayName,
                         ),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                name.isEmpty ? 'Zone' : name,
+                displayName,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 6),
               Text(
-                '$count aktif kullanici',
+                l10n.activeZoneUserCount(count),
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
                 ),
@@ -72,8 +75,8 @@ class ActiveZoneScreen extends StatelessWidget {
                     final zoneId = (zone['id'] as String?)?.trim();
                     if (zoneId == null || zoneId.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Bu zone icin gecerli bir ID yok.'),
+                        SnackBar(
+                          content: Text(l10n.activeZoneInvalidId),
                         ),
                       );
                       return;
@@ -86,7 +89,7 @@ class ActiveZoneScreen extends StatelessWidget {
                       context.go(AppRouter.qrJoinPath, extra: zoneId);
                     }
                   },
-                  child: const Text('Enter Zone'),
+                  child: Text(l10n.activeZoneEnter),
                 ),
               ),
               const SizedBox(height: 12),
@@ -95,7 +98,7 @@ class ActiveZoneScreen extends StatelessWidget {
                 child: TextButton(
                   onPressed: () => context.pop(),
                   child: Text(
-                    'İptal',
+                    l10n.activeZoneCancel,
                     style: theme.textTheme.labelLarge?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),

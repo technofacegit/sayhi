@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import '../../data/apple_auth_service.dart';
 import 'package:qr_dating_app/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -12,6 +13,7 @@ class LoginScreen extends StatelessWidget {
     final appleAuthService = AppleAuthService();
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       body: SafeArea(
@@ -26,7 +28,7 @@ class LoginScreen extends StatelessWidget {
                 children: [
                   const SizedBox(height: 8),
                   Text(
-                    'Welcome to Say Hi',
+                    l10n.loginWelcomeTitle,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.w800,
@@ -35,7 +37,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Meet people in the same place—right now.',
+                    l10n.loginWelcomeSubtitle,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       height: 1.35,
@@ -44,7 +46,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 28),
                   _PrimaryActionButton(
-                    label: 'Continue with Apple',
+                    label: l10n.loginContinueApple,
                     icon: Icons.apple,
                     onPressed: () async {
                       try {
@@ -65,7 +67,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _SecondaryActionButton(
-                    label: 'Continue with Email',
+                    label: l10n.loginContinueEmail,
                     icon: Icons.mail_rounded,
                     onPressed: () => context.push(AppRouter.emailLoginPath),
                   ),
@@ -80,12 +82,12 @@ class LoginScreen extends StatelessWidget {
                         debugPrint('Guest login error: $e');
                         debugPrint('$st');
                         messenger.showSnackBar(
-                          SnackBar(content: Text('Guest login failed: $e')),
+                          SnackBar(content: Text(l10n.loginGuestFailed(e.toString()))),
                         );
                       }
                     },
                     child: Text(
-                      'Continue as Guest',
+                      l10n.loginContinueGuest,
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.70),
                       ),
@@ -192,4 +194,3 @@ class _SecondaryActionButton extends StatelessWidget {
     );
   }
 }
-

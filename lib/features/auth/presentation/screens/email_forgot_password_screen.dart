@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/features/auth/data/auth_repository.dart';
 import 'package:qr_dating_app/features/auth/data/auth_service.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// E-posta ile şifre sıfırlama bağlantısı gönderir (deep link: `myapp://reset-password`).
@@ -35,14 +36,13 @@ class _EmailForgotPasswordScreenState extends State<EmailForgotPasswordScreen> {
 
   Future<void> _send() async {
     setState(() => _loading = true);
+    final l10n = context.l10n;
     try {
       await _repository.sendPasswordResetEmail(_email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Check your email. Open the link on this device to set a new password.',
-            ),
+          SnackBar(
+            content: Text(l10n.authForgotEmailSent),
           ),
         );
       }
@@ -71,6 +71,7 @@ class _EmailForgotPasswordScreenState extends State<EmailForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
@@ -87,7 +88,7 @@ class _EmailForgotPasswordScreenState extends State<EmailForgotPasswordScreen> {
             children: [
               const SizedBox(height: 8),
               Text(
-                'Reset password',
+                l10n.authForgotTitle,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.3,
@@ -102,8 +103,7 @@ class _EmailForgotPasswordScreenState extends State<EmailForgotPasswordScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                'We will send a link to your email. Open it on this phone '
-                'to finish resetting your password.',
+                l10n.authForgotSubtitle,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   height: 1.35,
                   color: colorScheme.onSurface.withValues(alpha: 0.75),
@@ -120,7 +120,7 @@ class _EmailForgotPasswordScreenState extends State<EmailForgotPasswordScreen> {
                           height: 22,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Send reset link'),
+                      : Text(l10n.authForgotSendLink),
                 ),
               ),
             ],

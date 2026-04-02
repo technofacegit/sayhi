@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/model/icebreaker_question.dart';
 
 /// Mini icebreaker when the zone grid is empty: questions from Supabase, answers persisted via RPC.
@@ -68,7 +69,7 @@ class _ZoneIcebreakerGameState extends State<ZoneIcebreakerGame> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not save answer. Try again.')),
+        SnackBar(content: Text(context.l10n.icebreakerSaveError)),
       );
       setState(() => _submitting = false);
       return;
@@ -102,6 +103,7 @@ class _ZoneIcebreakerGameState extends State<ZoneIcebreakerGame> {
     final q = _questions[_stepIndex];
     final total = _questions.length;
     final current = _stepIndex + 1;
+    final l10n = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -109,7 +111,7 @@ class _ZoneIcebreakerGameState extends State<ZoneIcebreakerGame> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'You\'re early',
+            l10n.icebreakerEarlyTitle,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   letterSpacing: 1.2,
@@ -119,7 +121,7 @@ class _ZoneIcebreakerGameState extends State<ZoneIcebreakerGame> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Kick things off with a quick icebreaker.',
+            l10n.icebreakerEarlySubtitle,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
@@ -128,7 +130,7 @@ class _ZoneIcebreakerGameState extends State<ZoneIcebreakerGame> {
           ),
           const SizedBox(height: 22),
           _IcebreakerCard(
-            stepLabel: '$current / $total',
+            stepLabel: l10n.icebreakerProgress(current, total),
             progress: current / total,
             question: q,
             submitting: _submitting,
@@ -159,6 +161,7 @@ class _IcebreakerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = context.l10n;
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 320),
@@ -204,7 +207,7 @@ class _IcebreakerCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Icebreaker',
+                      l10n.icebreakerCardTitle,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         letterSpacing: -0.2,
@@ -326,6 +329,7 @@ class _CompletionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: Container(
@@ -348,7 +352,7 @@ class _CompletionCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'You\'re warmed up!',
+              l10n.icebreakerWarmedUp,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
@@ -357,7 +361,7 @@ class _CompletionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Nice work on all $total questions. When someone joins the zone, they\'ll show up here.',
+              l10n.icebreakerDoneBody(total),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: cs.onSurface.withValues(alpha: 0.72),
@@ -379,6 +383,7 @@ class _LoadError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -386,14 +391,14 @@ class _LoadError extends StatelessWidget {
           Icon(Icons.quiz_outlined, size: 40, color: cs.outline),
           const SizedBox(height: 12),
           Text(
-            'Couldn\'t load icebreaker questions.',
+            l10n.icebreakerLoadError,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 16),
           FilledButton.tonal(
             onPressed: () => onRetry(),
-            child: const Text('Retry'),
+            child: Text(l10n.icebreakerRetry),
           ),
         ],
       ),

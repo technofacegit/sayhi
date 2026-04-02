@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_dating_app/features/home/data/story_repository.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:qr_dating_app/features/home/presentation/model/story_group.dart';
 import 'package:qr_dating_app/features/home/presentation/screens/story_viewer_screen.dart';
 
@@ -47,6 +48,7 @@ class HomeStoryStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return FutureBuilder<List<StoryGroup>>(
       future: groupsFuture,
@@ -67,7 +69,7 @@ class HomeStoryStrip extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Loading…',
+                        l10n.commonLoading,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.labelSmall?.copyWith(
@@ -85,7 +87,7 @@ class HomeStoryStrip extends StatelessWidget {
 
         if (snapshot.hasError) {
           return _StoryStripPlaceholder(
-            message: 'Storyler yüklenemedi',
+            message: l10n.storyLoadError,
             theme: theme,
             colorScheme: colorScheme,
           );
@@ -94,7 +96,7 @@ class HomeStoryStrip extends StatelessWidget {
         final groups = snapshot.data!;
         if (groups.isEmpty) {
           return _StoryStripPlaceholder(
-            message: 'Henüz story yok',
+            message: l10n.storyEmpty,
             theme: theme,
             colorScheme: colorScheme,
           );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/features/chats/data/mock_chat_user_profiles.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class ChatUserProfileScreen extends StatelessWidget {
   final String chatId;
@@ -18,6 +19,7 @@ class ChatUserProfileScreen extends StatelessWidget {
     required String confirmLabel,
     required String successMessage,
   }) async {
+    final l10n = context.l10n;
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -26,7 +28,7 @@ class ChatUserProfileScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
@@ -44,7 +46,8 @@ class ChatUserProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profile = MockChatUserProfiles.byChatId(chatId);
+    final l10n = context.l10n;
+    final profile = MockChatUserProfiles.byChatId(l10n, chatId);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -56,7 +59,7 @@ class ChatUserProfileScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
           ),
         ),
-        body: const Center(child: Text('Profile not found')),
+        body: Center(child: Text(l10n.chatProfileNotFound)),
       );
     }
 
@@ -82,7 +85,7 @@ class ChatUserProfileScreen extends StatelessWidget {
             _PhotoGrid(photos: profile.photoUrls),
             const SizedBox(height: 24),
             Text(
-              'About',
+              l10n.chatAbout,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -97,7 +100,7 @@ class ChatUserProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             Text(
-              'Safety',
+              l10n.chatSafety,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -106,14 +109,13 @@ class ChatUserProfileScreen extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => _confirmAndGoChats(
                 context,
-                title: 'Block ${profile.name}?',
-                body:
-                    'They won’t be able to message you or see your profile in this chat.',
-                confirmLabel: 'Block',
-                successMessage: '${profile.name} has been blocked.',
+                title: l10n.chatBlockTitle(profile.name),
+                body: l10n.chatBlockBody,
+                confirmLabel: l10n.chatBlockConfirm,
+                successMessage: l10n.chatBlockSuccess(profile.name),
               ),
               icon: const Icon(Icons.block_rounded),
-              label: const Text('Block'),
+              label: Text(l10n.commonBlock),
               style: OutlinedButton.styleFrom(
                 foregroundColor: colorScheme.error,
                 side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
@@ -124,14 +126,13 @@ class ChatUserProfileScreen extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: () => _confirmAndGoChats(
                 context,
-                title: 'Delete conversation?',
-                body:
-                    'This chat will be removed from your list. This can’t be undone.',
-                confirmLabel: 'Delete',
-                successMessage: 'Conversation deleted.',
+                title: l10n.chatDeleteTitle,
+                body: l10n.chatDeleteBody,
+                confirmLabel: l10n.chatDeleteConfirm,
+                successMessage: l10n.chatDeleteSuccess,
               ),
               icon: const Icon(Icons.delete_outline_rounded),
-              label: const Text('Delete chat'),
+              label: Text(l10n.chatDeleteChatLabel),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -140,13 +141,13 @@ class ChatUserProfileScreen extends StatelessWidget {
             TextButton.icon(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Report submitted. Thanks for helping keep Say Hi safe.'),
+                  SnackBar(
+                    content: Text(l10n.chatReportSubmitted),
                   ),
                 );
               },
               icon: const Icon(Icons.flag_outlined),
-              label: const Text('Report'),
+              label: Text(l10n.commonReport),
             ),
           ],
         ),

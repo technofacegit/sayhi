@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class ZonePreviewCard extends StatelessWidget {
   final String? activeZoneName;
@@ -17,6 +18,7 @@ class ZonePreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final joined = activeZoneName != null && activeZoneName!.isNotEmpty;
     final tappable = joined && onTap != null;
 
@@ -35,7 +37,7 @@ class ZonePreviewCard extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                joined ? 'Active zone' : 'No active zone',
+                joined ? l10n.zonePreviewActiveZone : l10n.zonePreviewNoActiveZone,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -53,14 +55,14 @@ class ZonePreviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${activeUserCount ?? 0} active now',
+            l10n.zonePreviewActiveNow(activeUserCount ?? 0),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.72),
             ),
           ),
         ] else
           Text(
-            'Join a zone to see who is here right now.',
+            l10n.zonePreviewJoinHint,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.65),
             ),

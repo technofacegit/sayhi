@@ -4,6 +4,7 @@ import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/features/auth/data/auth_repository.dart';
 import 'package:qr_dating_app/features/auth/data/auth_service.dart';
 import 'package:qr_dating_app/features/auth/domain/auth_input_validators.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Deep link ile recovery oturumu açıldıktan sonra yeni şifre belirleme.
@@ -40,8 +41,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
     final password = _passwordController.text;
-    final err = AuthInputValidators.passwordPolicyError(password);
+    final err = AuthInputValidators.passwordPolicyError(l10n, password);
     setState(() => _fieldError = err);
     if (err != null) return;
 
@@ -50,7 +52,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       await _repository.updatePassword(password);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password updated successfully')),
+        SnackBar(content: Text(l10n.authResetSuccess)),
       );
       context.go(AppRouter.homePath);
     } on AuthException catch (e, st) {
@@ -77,10 +79,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reset password'),
+        title: Text(l10n.authResetTitle),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -89,21 +92,21 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Choose a new password for your account.',
+                l10n.authResetSubtitle,
                 style: theme.textTheme.bodyLarge,
               ),
               const SizedBox(height: 20),
               InputDecorator(
                 decoration: InputDecoration(
                   alignLabelWithHint: true,
-                  labelText: 'Şifre gereksinimleri',
+                  labelText: l10n.authPasswordRequirementsLabel,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
                 ),
                 child: Text(
-                  AuthInputValidators.passwordRequirementsDescription,
+                  AuthInputValidators.passwordRequirementsDescription(l10n),
                   style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
                 ),
               ),
@@ -118,7 +121,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   }
                 },
                 decoration: InputDecoration(
-                  labelText: 'New password',
+                  labelText: l10n.authResetNewPassword,
                   border: const OutlineInputBorder(),
                   errorText: _fieldError,
                   suffixIcon: IconButton(
@@ -147,7 +150,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           height: 22,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Update password'),
+                      : Text(l10n.authResetUpdate),
                 ),
               ),
             ],

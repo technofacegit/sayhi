@@ -1,0 +1,323 @@
+{
+  "@@locale": "tr",
+  "appTitle": "Say Hi",
+  "navHome": "Ana Sayfa",
+  "navZones": "Bölgeler",
+  "navSayHi": "Say Hi",
+  "navChats": "Sohbetler",
+  "navProfile": "Profil",
+  "commonCancel": "İptal",
+  "commonContinue": "Devam",
+  "commonRetry": "Yeniden dene",
+  "commonSkip": "Atla",
+  "commonStart": "Başla",
+  "commonBack": "Geri",
+  "commonDelete": "Sil",
+  "commonBlock": "Engelle",
+  "commonReport": "Şikayet et",
+  "commonSearch": "Ara",
+  "commonLoading": "Yükleniyor…",
+  "commonOk": "OK",
+  "homeTitle": "Say Hi",
+  "zonePreviewActiveZone": "Aktif bölge",
+  "zonePreviewNoActiveZone": "Aktif bölge yok",
+  "zonePreviewActiveNow": "{count} şu an aktif",
+  "@zonePreviewActiveNow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "zonePreviewJoinHint": "Kimlerin burada olduğunu görmek için bir bölgeye katıl.",
+  "recentZonesTitle": "Son bölgeler",
+  "recentZoneActive": "{count} aktif",
+  "@recentZoneActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recentZoneRemaining": "Kalan: {time}",
+  "@recentZoneRemaining": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "recentZoneInactive": "Pasif",
+  "defaultZoneName": "Bölge",
+  "defaultVenueName": "Mekan",
+  "zoneRemainingPrefix": "Kalan: {time}",
+  "@zoneRemainingPrefix": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "zoneInactive": "Pasif",
+  "zoneDurationZero": "0 sa 0 dk",
+  "zoneDurationHm": "{hours} sa {minutes} dk",
+  "@zoneDurationHm": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "zoneMainLeaveZone": "Bölgeden ayrıl",
+  "zoneMainActiveNow": "{count} şu an aktif",
+  "@zoneMainActiveNow": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "zoneMainLeaveError": "Bölgeden ayrılamadı. Tekrar deneyin.",
+  "zoneMainMissingZoneId": "Bölge kimliği eksik.",
+  "zoneMainLoadError": "Bu bölgedeki kişiler yüklenemedi.",
+  "zoneMainMemberBioPlaceholder": "—",
+  "icebreakerSaveError": "Cevap kaydedilemedi. Tekrar deneyin.",
+  "icebreakerEarlyTitle": "Erken geldin",
+  "icebreakerEarlySubtitle": "Hızlı bir buz kırıcı ile başla.",
+  "icebreakerCardTitle": "Buz kırıcı",
+  "icebreakerWarmedUp": "Isındın!",
+  "icebreakerDoneBody": "Tüm {count} soruyu bitirdin. Birisi bölgeye katıldığında burada görünür.",
+  "@icebreakerDoneBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "icebreakerLoadError": "Buz kırıcı soruları yüklenemedi.",
+  "icebreakerRetry": "Yeniden dene",
+  "icebreakerProgress": "{current} / {total}",
+  "@icebreakerProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "onboardingSkip": "Atla",
+  "onboardingContinue": "Devam",
+  "onboardingStart": "Başla",
+  "onboardingPage1Title": "Anı yakala",
+  "onboardingPage1Subtitle": "QR kodu tarayarak mekan bölgesine katıl—yalnızca şu an buradaki insanlar.",
+  "onboardingPage2Title": "Yakını keşfet",
+  "onboardingPage2Subtitle": "Bölgenizdeki profilleri kaydır; saygılı ve rahat kal.",
+  "onboardingPage3Title": "Eşleş ve sohbet et",
+  "onboardingPage3Subtitle": "Karşılıklı olunca sohbete başla ve buluş—sonsuz kaydırma yok.",
+  "loginWelcomeTitle": "Say Hi'ye hoş geldin",
+  "loginWelcomeSubtitle": "Aynı yerdeki insanlarla tanış—şu an.",
+  "loginContinueApple": "Apple ile devam et",
+  "loginContinueEmail": "E-posta ile devam et",
+  "loginContinueGuest": "Misafir olarak devam et",
+  "loginGuestFailed": "Misafir girişi başarısız: {error}",
+  "@loginGuestFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "profileTitle": "Profil",
+  "profileLogout": "Çıkış yap",
+  "logoutDialogTitle": "Çıkış",
+  "logoutDialogMessage": "Çıkış yapmak üzeresiniz. Devam etmek istiyor musunuz?",
+  "logoutConfirm": "Çıkış yap",
+  "logoutCancel": "İptal",
+  "routerMissingZone": "Bölge eksik",
+  "activeZoneAppBar": "Aktif bölge",
+  "activeZoneHeadline": "Aktif bölge",
+  "activeZoneUserCount": "{count} aktif kullanıcı",
+  "@activeZoneUserCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activeZoneEnter": "Bölgeye gir",
+  "activeZoneInvalidId": "Bu bölge için geçerli bir ID yok.",
+  "activeZoneCancel": "İptal",
+  "qrJoinTitle": "Bölgeye katıl",
+  "qrJoinCameraHint": "Kameranı mekan QR koduna tut",
+  "qrJoinManualTitle": "Kodu elle gir",
+  "qrJoinZoneCodeLabel": "Bölge kodu",
+  "qrJoinZoneCodeHint": "ör. ROOFTOP",
+  "qrJoinBack": "Geri",
+  "qrJoinTorch": "Fener",
+  "qrJoinVerifying": "Doğrulanıyor…",
+  "qrJoinEnterManually": "Kodu elle gir",
+  "qrJoinInvalidCode": "Yanlış veya geçersiz QR kod.",
+  "qrJoinFailed": "Bölgeye giriş başarısız: {error}",
+  "@qrJoinFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "zonesGoToEntry": "Bölge giriş ekranına git",
+  "zonesSearchHint": "Mekan ara",
+  "zonesClearTooltip": "Temizle",
+  "zonesStatus": "Durum",
+  "zonesFilterAll": "Tümü",
+  "zonesFilterActive": "Aktif",
+  "zonesFilterInactive": "Pasif",
+  "zonesMap": "Harita",
+  "zonesGrid": "Grid",
+  "zonesNoResults": "Sonuç yok",
+  "zonesLocationOff": "Konum servisleri kapalı.",
+  "zonesLocationPermission": "Konum izni gerekli.",
+  "zonesLocationError": "Konum alınamadı: {error}",
+  "@zonesLocationError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "zonesMapUnsupported": "Bu platformda harita desteklenmiyor.",
+  "zonesRecenter": "Konumumu merkeze al",
+  "zonesYourLocation": "Konumun",
+  "zonesCityActiveMembers": "{city} • {count} aktif üye",
+  "@zonesCityActiveMembers": {
+    "placeholders": {
+      "city": {},
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesActiveMembers": "{count} aktif üye",
+  "@zonesActiveMembers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "zonesActiveCount": "{count} aktif",
+  "@zonesActiveCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "storyLoading": "Yükleniyor…",
+  "storyLoadError": "Storyler yüklenemedi",
+  "storyEmpty": "Henüz story yok",
+  "authPassword": "Şifre",
+  "authPasswordRequirementsLabel": "Şifre gereksinimleri",
+  "authPasswordConfirm": "Şifre tekrar",
+  "authShowPassword": "Göster",
+  "authHidePassword": "Gizle",
+  "authEmailLabel": "E-posta",
+  "authEmailRequired": "E-posta adresi gerekli.",
+  "authEmailInvalid": "Geçerli bir e-posta adresi girin.",
+  "authProfileLookupFailed": "Profil kontrolü başarısız (migration / RLS): {error}",
+  "@authProfileLookupFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "authContinueWithEmailTitle": "E-posta ile devam et",
+  "authContinueWithEmailSubtitle": "Giriş yapmak veya hesap oluşturmak için e-postanı kullan.",
+  "authRegisterTitle": "Hesap oluştur",
+  "authRegisterSubmit": "Kayıt ol",
+  "authRegisterConfirmEmail": "Hesabınızı tamamlamak için e-postadaki onay bağlantısına tıklayın.",
+  "authRegisterFailed": "Kayıt oluşturulamadı.",
+  "authRegisterEmailRateLimit": "E-posta gönderim limiti aşıldı. Birkaç dakika sonra tekrar deneyin.",
+  "authForgotTitle": "Şifre sıfırla",
+  "authForgotSubtitle": "E-postana bir bağlantı göndereceğiz. Şifreni sıfırlamak için bu telefonda aç.",
+  "authForgotSendLink": "Sıfırlama bağlantısı gönder",
+  "authForgotEmailSent": "E-postanı kontrol et. Yeni şifre için bağlantıyı bu cihazda aç.",
+  "authResetTitle": "Şifre sıfırla",
+  "authResetSubtitle": "Hesabın için yeni bir şifre seç.",
+  "authResetNewPassword": "Yeni şifre",
+  "authResetUpdate": "Şifreyi güncelle",
+  "authResetSuccess": "Şifre başarıyla güncellendi",
+  "authSignIn": "Giriş yap",
+  "authForgotPasswordLink": "Şifremi unuttum",
+  "authPasswordTitle": "Şifre",
+  "authEmailContinue": "Devam",
+  "authDefaultUserName": "Kullanıcı",
+  "authPasswordTooShort": "Şifre en az 8 karakter olmalıdır.",
+  "authPasswordNeedUpper": "En az bir büyük harf (A-Z) içermelidir.",
+  "authPasswordNeedLower": "En az bir küçük harf (a-z) içermelidir.",
+  "authPasswordNeedDigit": "En az bir rakam içermelidir.",
+  "authPasswordNeedSpecial": "En az bir özel karakter (harf ve rakam dışı) içermelidir.",
+  "authPasswordMismatch": "Şifreler eşleşmiyor.",
+  "authPasswordRequirementsBody": "Şifreniz şunları içermelidir:\n• En az 8 karakter\n• En az bir büyük harf (A-Z)\n• En az bir küçük harf (a-z)\n• En az bir rakam (0-9)\n• En az bir özel karakter (!@#\\$%^&* vb.)",
+  "chatsTitle": "Sohbetler",
+  "chatsEmpty": "Henüz sohbet yok",
+  "chatsNoMatch": "Aramanızla eşleşen sohbet yok",
+  "chatsSignInTitle": "Sohbetlerinizi görmek için oturum açın.",
+  "chatsSignInSubtitle": "Oturum açtığınızda konuşmalarınız burada listelenir.",
+  "chatsSignInButton": "Oturum aç",
+  "chatNotFound": "Sohbet bulunamadı",
+  "chatMessageHint": "Mesaj…",
+  "chatProfileNotFound": "Profil bulunamadı",
+  "chatAbout": "Hakkında",
+  "chatSafety": "Güvenlik",
+  "chatBlockTitle": "{name} engellensin mi?",
+  "@chatBlockTitle": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chatBlockBody": "Bu sohbette size mesaj atamaz ve profilinizi göremez.",
+  "chatBlockConfirm": "Engelle",
+  "chatBlockSuccess": "{name} engellendi.",
+  "@chatBlockSuccess": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "chatDeleteTitle": "Sohbet silinsin mi?",
+  "chatDeleteBody": "Sohbet listenden kaldırılır. Geri alınamaz.",
+  "chatDeleteConfirm": "Sil",
+  "chatDeleteSuccess": "Sohbet silindi.",
+  "chatReportSubmitted": "Şikayet gönderildi. Say Hi'yi güvenli tutmaya yardımcı olduğun için teşekkürler.",
+  "chatYesterday": "Dün",
+  "chatWeekdayMon": "Pzt",
+  "chatWeekdayTue": "Sal",
+  "chatWeekdayWed": "Çar",
+  "chatWeekdayThu": "Per",
+  "chatWeekdayFri": "Cum",
+  "chatWeekdaySat": "Cmt",
+  "chatWeekdaySun": "Paz",
+  "mockThreadElenaLast": "See you at the rooftop tonight ✨",
+  "mockThreadMarcusLast": "Haha that was a good one",
+  "mockThreadSofiaLast": "Are you still at the café?",
+  "mockThreadJamesLast": "Sent you a voice note — check when you can",
+  "mockThreadNinaLast": "Thanks for the intro yesterday!",
+  "mockThreadAlexLast": "Maybe next weekend works better for me",
+  "mockMsgElena1": "Hey! Loved your profile.",
+  "mockMsgElena2": "Thanks! Yours too — especially the travel pics.",
+  "mockMsgElena3": "Are you free this week?",
+  "mockMsgElena4": "Thursday or Friday evening works for me.",
+  "mockMsgElena5": "See you at the rooftop tonight ✨",
+  "mockMsgMarcus1": "Did you see the match?",
+  "mockMsgMarcus2": "Only the highlights — insane finish",
+  "mockMsgMarcus3": "Haha that was a good one",
+  "mockMsgSofia1": "Still at the market near the bridge?",
+  "mockMsgSofia2": "Are you still at the café?",
+  "mockMsgJames1": "Sent you a voice note — check when you can",
+  "mockMsgNina1": "Thanks for the intro yesterday!",
+  "mockMsgNina2": "Anytime — glad you two hit it off",
+  "mockMsgAlex1": "Rain check on Sunday?",
+  "mockMsgAlex2": "Maybe next weekend works better for me",
+  "mockBioElena": "Product designer who loves rooftop sunsets and indie concerts. Always up for a good espresso and honest conversation. Looking for someone curious and kind.",
+  "mockBioMarcus": "Weekend hiker, weekday engineer. Big on football, cooking, and bad puns. Say hi if you want to swap playlist recommendations.",
+  "mockBioSofia": "Art history grad, café hopper, sometimes painter. I value humor, empathy, and people who read more than their algorithm suggests.",
+  "mockBioJames": "Runner, podcast addict, dog person. Looking for real chemistry and low-drama plans.",
+  "mockBioNina": "Yoga in the morning, vinyl in the evening. I believe the best dates are half planned, half spontaneous.",
+  "mockBioAlex": "Photographer, traveler, coffee snob. Prefer plans that start with a walk and end with dessert.",
+  "chatDeleteChatLabel": "Sohbeti sil",
+  "defaultMemberName": "Üye"
+}

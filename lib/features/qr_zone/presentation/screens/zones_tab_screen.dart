@@ -12,6 +12,7 @@ import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/zone_activity.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/mock_venues.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 
 enum _ZoneActivityFilter { all, active, passive }
 
@@ -85,7 +86,9 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
 
   Future<void> _showZoneEntrySheet(Map<String, dynamic> zone) async {
     final theme = Theme.of(context);
-    final name = zone['name'] as String? ?? 'Zone';
+    final l10n = context.l10n;
+    final name = zone['name'] as String? ?? '';
+    final displayName = name.isEmpty ? l10n.defaultZoneName : name;
     final city = zone['city'] as String?;
     final count = zone['activeCount'] as int? ?? 0;
     final sheetNow = DateTime.now();
@@ -94,6 +97,7 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
       context: context,
       showDragHandle: true,
       builder: (sheetContext) {
+        final sheetL10n = sheetContext.l10n;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
@@ -102,7 +106,7 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  name,
+                  displayName,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -110,8 +114,8 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
                 const SizedBox(height: 6),
                 Text(
                   city != null && city.isNotEmpty
-                      ? '$city • $count aktif üye'
-                      : '$count aktif üye',
+                      ? sheetL10n.zonesCityActiveMembers(city, count)
+                      : sheetL10n.zonesActiveMembers(count),
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 8),
@@ -126,7 +130,7 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
                     Navigator.of(sheetContext).pop();
                     _openZone(zone);
                   },
-                  child: const Text('Zone giriş ekranına git'),
+                  child: Text(sheetL10n.zonesGoToEntry),
                 ),
               ],
             ),
@@ -171,6 +175,7 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
     final now = DateTime.now();
     final venues = _filtered;
     final mappableVenues = venues
@@ -197,11 +202,11 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
                           controller: _searchController,
                           onChanged: (_) => setState(() {}),
                           decoration: InputDecoration(
-                            hintText: 'Mekan ara',
+                            hintText: l10n.zonesSearchHint,
                             prefixIcon: const Icon(Icons.search_rounded),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
-                                    tooltip: 'Temizle',
+                                    tooltip: l10n.zonesClearTooltip,
                                     icon: const Icon(Icons.close_rounded),
                                     onPressed: () {
                                       _searchController.clear();
@@ -263,25 +268,25 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
-                              'Durum',
+                              l10n.zonesStatus,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 10),
                             SegmentedButton<_ZoneActivityFilter>(
-                              segments: const [
+                              segments: [
                                 ButtonSegment<_ZoneActivityFilter>(
                                   value: _ZoneActivityFilter.all,
-                                  label: Text('Tümü'),
+                                  label: Text(l10n.zonesFilterAll),
                                 ),
                                 ButtonSegment<_ZoneActivityFilter>(
                                   value: _ZoneActivityFilter.active,
-                                  label: Text('Aktif'),
+                                  label: Text(l10n.zonesFilterActive),
                                 ),
                                 ButtonSegment<_ZoneActivityFilter>(
                                   value: _ZoneActivityFilter.passive,
-                                  label: Text('Pasif'),
+                                  label: Text(l10n.zonesFilterInactive),
                                 ),
                               ],
                               selected: {_activityFilter},
@@ -310,16 +315,16 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SegmentedButton<bool>(
-                segments: const [
+                segments: [
                   ButtonSegment<bool>(
                     value: true,
-                    label: Text('Harita'),
-                    icon: Icon(Icons.map_outlined),
+                    label: Text(l10n.zonesMap),
+                    icon: const Icon(Icons.map_outlined),
                   ),
                   ButtonSegment<bool>(
                     value: false,
-                    label: Text('Grid'),
-                    icon: Icon(Icons.grid_view_rounded),
+                    label: Text(l10n.zonesGrid),
+                    icon: const Icon(Icons.grid_view_rounded),
                   ),
                 ],
                 selected: {_mapView},
@@ -338,7 +343,7 @@ class _ZonesTabScreenState extends State<ZonesTabScreen> {
                   : venues.isEmpty
                       ? Center(
                           child: Text(
-                            'Sonuç yok',
+                            l10n.zonesNoResults,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.onSurface
                                   .withValues(alpha: 0.6),
@@ -391,11 +396,12 @@ class _ZonesMapState extends State<_ZonesMap> {
 
   Future<void> _recenterOnMyLocation() async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
 
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Konum servisleri kapalı.')),
+        SnackBar(content: Text(l10n.zonesLocationOff)),
       );
       return;
     }
@@ -407,7 +413,7 @@ class _ZonesMapState extends State<_ZonesMap> {
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Konum izni gerekli.')),
+        SnackBar(content: Text(l10n.zonesLocationPermission)),
       );
       return;
     }
@@ -420,7 +426,7 @@ class _ZonesMapState extends State<_ZonesMap> {
       });
     } catch (e) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Konum alınamadı: $e')),
+        SnackBar(content: Text(l10n.zonesLocationError(e.toString()))),
       );
     }
   }
@@ -452,7 +458,7 @@ class _ZonesMapState extends State<_ZonesMap> {
       );
     }
 
-    return const Center(child: Text('Platform map is not supported.'));
+    return Center(child: Text(context.l10n.zonesMapUnsupported));
   }
 }
 
@@ -514,7 +520,7 @@ class _GoogleZonesMapState extends State<_GoogleZonesMap> {
           ),
           infoWindow: gm.InfoWindow(
             title: z['name'] as String? ?? '',
-            snippet: zoneActivityMapSnippet(z, widget.now),
+            snippet: zoneActivityMapSnippet(context.l10n, z, widget.now),
           ),
           onTap: () => widget.onVenueTap(z),
         ),
@@ -545,7 +551,7 @@ class _GoogleZonesMapState extends State<_GoogleZonesMap> {
               shape: const CircleBorder(),
               clipBehavior: Clip.antiAlias,
               child: IconButton(
-                tooltip: 'Konumumu merkeze al',
+                tooltip: context.l10n.zonesRecenter,
                 onPressed: widget.onMyLocationTap,
                 icon: const Icon(Icons.my_location_rounded),
               ),
@@ -688,7 +694,7 @@ class _AppleZonesMapState extends State<_AppleZonesMap> {
               ),
           infoWindow: am.InfoWindow(
             title: z['name'] as String? ?? '',
-            snippet: zoneActivityMapSnippet(z, widget.now),
+            snippet: zoneActivityMapSnippet(context.l10n, z, widget.now),
             onTap: () => widget.onVenueTap(z),
           ),
           onTap: () => widget.onVenueTap(z),
@@ -697,7 +703,7 @@ class _AppleZonesMapState extends State<_AppleZonesMap> {
         am.Annotation(
           annotationId: am.AnnotationId('my-location'),
           position: am.LatLng(widget.userLat!, widget.userLng!),
-          infoWindow: const am.InfoWindow(title: 'Konumun'),
+          infoWindow: am.InfoWindow(title: context.l10n.zonesYourLocation),
         ),
     };
 
@@ -725,7 +731,7 @@ class _AppleZonesMapState extends State<_AppleZonesMap> {
               shape: const CircleBorder(),
               clipBehavior: Clip.antiAlias,
               child: IconButton(
-                tooltip: 'Konumumu merkeze al',
+                tooltip: context.l10n.zonesRecenter,
                 onPressed: widget.onMyLocationTap,
                 icon: const Icon(Icons.my_location_rounded),
               ),
@@ -752,6 +758,7 @@ class _ZonesGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -764,7 +771,8 @@ class _ZonesGrid extends StatelessWidget {
       itemCount: venues.length,
       itemBuilder: (context, index) {
         final z = venues[index];
-        final name = z['name'] as String? ?? '';
+        final rawName = z['name'] as String? ?? '';
+        final name = rawName.isEmpty ? l10n.defaultZoneName : rawName;
         final imageUrl = z['imageUrl'] as String?;
         final count = z['activeCount'] as int? ?? 0;
 
@@ -811,7 +819,7 @@ class _ZonesGrid extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$count aktif',
+                        l10n.zonesActiveCount(count),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onSurface.withValues(alpha: 0.65),
                         ),

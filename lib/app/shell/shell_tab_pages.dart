@@ -2,27 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
+import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileTabScreen extends StatelessWidget {
   const ProfileTabScreen({super.key});
 
   Future<void> _confirmLogout(BuildContext context) async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Çıkış'),
-        content: const Text(
-          'Çıkış yapmak üzeresiniz. Devam etmek istiyor musunuz?',
-        ),
+        title: Text(l10n.logoutDialogTitle),
+        content: Text(l10n.logoutDialogMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('İptal'),
+            child: Text(l10n.logoutCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Çıkış yap'),
+            child: Text(l10n.logoutConfirm),
           ),
         ],
       ),
@@ -54,9 +54,10 @@ class ProfileTabScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = context.l10n;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(l10n.profileTitle)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -67,7 +68,7 @@ class ProfileTabScreen extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: () => _confirmLogout(context),
                 icon: const Icon(Icons.logout_rounded),
-                label: const Text('Logout'),
+                label: Text(l10n.profileLogout),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colorScheme.error,
                   side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
