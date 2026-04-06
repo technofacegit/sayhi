@@ -15,6 +15,41 @@ class ZoneMemberPreviewsResult {
   final List<ZoneMemberPreview> members;
 }
 
+/// Result of [ZoneRepository.fetchZoneMemberPreviewsPage].
+class ZoneMemberPreviewsPage {
+  const ZoneMemberPreviewsPage({
+    required this.activeCount,
+    required this.members,
+    required this.hasMore,
+  });
+
+  final int activeCount;
+  final List<ZoneMemberPreview> members;
+  final bool hasMore;
+}
+
+/// Server-side lobby filters ([fetchZoneMemberPreviewsPage]).
+/// Gender [female|male|other] matches the same loose labels as the lobby grid borders.
+class ZoneLobbyFilters {
+  const ZoneLobbyFilters({
+    this.gender,
+    this.minAge,
+    this.maxAge,
+  });
+
+  /// `null` = any gender. Use [female], [male], [other] for filtering.
+  final String? gender;
+  final int? minAge;
+  final int? maxAge;
+
+  static const ZoneLobbyFilters none = ZoneLobbyFilters();
+
+  bool get hasAny =>
+      gender != null ||
+      minAge != null ||
+      maxAge != null;
+}
+
 /// Loads active zones joined with venues for the Zones tab.
 class ZoneRepository {
   ZoneRepository({SupabaseClient? client})
@@ -22,6 +57,9 @@ class ZoneRepository {
 
   final SupabaseClient _client;
   static const Duration _zoneActiveWindow = Duration(hours: 24);
+
+  /// Page size for [fetchZoneMemberPreviewsPage] (server caps at 100).
+  static const int lobbyMemberPageSize = 20;
 
   /// Returns a list of maps shaped like UI expectations.
   Future<List<Map<String, dynamic>>> fetchZones() async {
@@ -184,7 +222,45 @@ class ZoneRepository {
     }
     final count = (raw['active_count'] as num?)?.toInt() ?? 0;
     final list = raw['members'] as List? ?? const [];
-    final members = list.map<ZoneMemberPreview>((e) {
+    return ZoneMemberPreviewsResult(
+      activeCount: count,
+      members: _parseZoneMemberPreviewList(list),
+    );
+  }
+
+  /// Lobby grid: one page ordered by membership activity (newest first).
+  Future<ZoneMemberPreviewsPage> fetchZoneMemberPreviewsPage(
+    String zoneId, {
+    int offset = 0,
+    int limit = lobbyMemberPageSize,
+    ZoneLobbyFilters filters = ZoneLobbyFilters.none,
+  }) async {
+    final raw = await _client.rpc<dynamic>(
+      'get_zone_member_previews_for_zone_page',
+      params: {
+        'input_zone_id': zoneId,
+        'p_limit': limit,
+        'p_offset': offset,
+        'p_gender_filter': filters.gender,
+        'p_min_age': filters.minAge,
+        'p_max_age': filters.maxAge,
+      },
+    );
+    if (raw is! Map<String, dynamic>) {
+      throw Exception('Invalid zone members page response');
+    }
+    final count = (raw['active_count'] as num?)?.toInt() ?? 0;
+    final list = raw['members'] as List? ?? const [];
+    final hasMore = raw['has_more'] == true;
+    return ZoneMemberPreviewsPage(
+      activeCount: count,
+      members: _parseZoneMemberPreviewList(list),
+      hasMore: hasMore,
+    );
+  }
+
+  static List<ZoneMemberPreview> _parseZoneMemberPreviewList(List<dynamic> list) {
+    return list.map<ZoneMemberPreview>((e) {
       final m = e as Map<String, dynamic>;
       final uid = m['user_id'] as String? ?? '';
       final avatar = m['avatar_url'] as String?;
@@ -198,7 +274,6 @@ class ZoneRepository {
         gender: (genderRaw != null && genderRaw.isNotEmpty) ? genderRaw : null,
       );
     }).toList(growable: false);
-    return ZoneMemberPreviewsResult(activeCount: count, members: members);
   }
 
   /// Active icebreaker prompts for the empty-zone mini-game (ordered, capped).

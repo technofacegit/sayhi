@@ -392,6 +392,78 @@ abstract class AppLocalizations {
   /// **'Lobby'**
   String get zoneLobbyTitle;
 
+  /// No description provided for @zoneLobbyFilterTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get zoneLobbyFilterTooltip;
+
+  /// No description provided for @zoneLobbyFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get zoneLobbyFilterTitle;
+
+  /// No description provided for @zoneLobbyFilterGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get zoneLobbyFilterGender;
+
+  /// No description provided for @zoneLobbyFilterGenderAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get zoneLobbyFilterGenderAll;
+
+  /// No description provided for @zoneLobbyFilterGenderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get zoneLobbyFilterGenderFemale;
+
+  /// No description provided for @zoneLobbyFilterGenderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get zoneLobbyFilterGenderMale;
+
+  /// No description provided for @zoneLobbyFilterGenderOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get zoneLobbyFilterGenderOther;
+
+  /// No description provided for @zoneLobbyFilterAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get zoneLobbyFilterAge;
+
+  /// No description provided for @zoneLobbyFilterAgeToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit by age'**
+  String get zoneLobbyFilterAgeToggle;
+
+  /// No description provided for @zoneLobbyFilterApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get zoneLobbyFilterApply;
+
+  /// No description provided for @zoneLobbyFilterClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get zoneLobbyFilterClear;
+
+  /// No description provided for @zoneLobbyFilterEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No one matches these filters. Try changing them or clear filters.'**
+  String get zoneLobbyFilterEmpty;
+
   /// No description provided for @zoneWarmUpTitle.
   ///
   /// In en, this message translates to:

@@ -171,6 +171,43 @@ class AppLocalizationsTr extends AppLocalizations {
   String get zoneLobbyTitle => 'Lobi';
 
   @override
+  String get zoneLobbyFilterTooltip => 'Filtreler';
+
+  @override
+  String get zoneLobbyFilterTitle => 'Filtreler';
+
+  @override
+  String get zoneLobbyFilterGender => 'Cinsiyet';
+
+  @override
+  String get zoneLobbyFilterGenderAll => 'Tümü';
+
+  @override
+  String get zoneLobbyFilterGenderFemale => 'Kadın';
+
+  @override
+  String get zoneLobbyFilterGenderMale => 'Erkek';
+
+  @override
+  String get zoneLobbyFilterGenderOther => 'Diğer';
+
+  @override
+  String get zoneLobbyFilterAge => 'Yaş';
+
+  @override
+  String get zoneLobbyFilterAgeToggle => 'Yaşa göre sınırla';
+
+  @override
+  String get zoneLobbyFilterApply => 'Uygula';
+
+  @override
+  String get zoneLobbyFilterClear => 'Temizle';
+
+  @override
+  String get zoneLobbyFilterEmpty =>
+      'Bu filtrelere uyan kimse yok. Filtreleri değiştirin veya temizleyin.';
+
+  @override
   String get zoneWarmUpTitle => 'Isınma';
 
   @override

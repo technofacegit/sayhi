@@ -170,6 +170,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get zoneLobbyTitle => 'Lobby';
 
   @override
+  String get zoneLobbyFilterTooltip => 'Filters';
+
+  @override
+  String get zoneLobbyFilterTitle => 'Filters';
+
+  @override
+  String get zoneLobbyFilterGender => 'Gender';
+
+  @override
+  String get zoneLobbyFilterGenderAll => 'All';
+
+  @override
+  String get zoneLobbyFilterGenderFemale => 'Female';
+
+  @override
+  String get zoneLobbyFilterGenderMale => 'Male';
+
+  @override
+  String get zoneLobbyFilterGenderOther => 'Other';
+
+  @override
+  String get zoneLobbyFilterAge => 'Age';
+
+  @override
+  String get zoneLobbyFilterAgeToggle => 'Limit by age';
+
+  @override
+  String get zoneLobbyFilterApply => 'Apply';
+
+  @override
+  String get zoneLobbyFilterClear => 'Clear';
+
+  @override
+  String get zoneLobbyFilterEmpty =>
+      'No one matches these filters. Try changing them or clear filters.';
+
+  @override
   String get zoneWarmUpTitle => 'Warm Up';
 
   @override
