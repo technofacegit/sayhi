@@ -3,6 +3,7 @@ import 'package:qr_dating_app/features/home/data/discovery_repository.dart';
 import 'package:qr_dating_app/features/home/data/story_repository.dart';
 import 'package:qr_dating_app/features/home/presentation/model/story_group.dart';
 import 'package:qr_dating_app/features/home/presentation/model/swipe_profile.dart';
+import 'package:qr_dating_app/features/home/presentation/widgets/discovery_filter_sheet.dart';
 import 'package:qr_dating_app/features/home/presentation/widgets/discovery_swipe_deck.dart';
 import 'package:qr_dating_app/features/home/presentation/widgets/home_story_strip.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
@@ -25,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<SwipeProfile> _deck = [];
   bool _loadingDeck = true;
   Object? _deckError;
+  ZoneLobbyFilters _discoveryFilters = ZoneLobbyFilters.none;
 
   @override
   void initState() {
@@ -45,7 +47,10 @@ class _HomeScreenState extends State<HomeScreen> {
       _deckError = null;
     });
     try {
-      final list = await _discoveryRepository.fetchProfiles(limit: 30);
+      final list = await _discoveryRepository.fetchProfiles(
+        limit: 30,
+        filters: _discoveryFilters,
+      );
       if (!mounted) return;
       setState(() {
         _deck = list;
@@ -62,7 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _prefetchMore() async {
     try {
-      final more = await _discoveryRepository.fetchProfiles(limit: 24);
+      final more = await _discoveryRepository.fetchProfiles(
+        limit: 24,
+        filters: _discoveryFilters,
+      );
       if (!mounted) return;
       final ids = _deck.map((e) => e.id).toSet();
       setState(() {
@@ -126,6 +134,19 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
+  Future<void> _openDiscoveryFilters() async {
+    final result = await showModalBottomSheet<ZoneLobbyFilters>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) => DiscoveryFilterSheet(initial: _discoveryFilters),
+    );
+    if (!mounted || result == null) return;
+    setState(() => _discoveryFilters = result);
+    await _loadDeck();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -144,12 +165,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 16),
-                  Text(
-                    l10n.homeTitle,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Row(
+                    children: [
+                      const SizedBox(width: 48),
+                      Expanded(
+                        child: Text(
+                          l10n.homeTitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 48,
+                        child: IconButton(
+                          tooltip: l10n.zoneLobbyFilterTooltip,
+                          onPressed: _openDiscoveryFilters,
+                          icon: Icon(
+                            _discoveryFilters.hasAny
+                                ? Icons.filter_alt_rounded
+                                : Icons.filter_alt_outlined,
+                            color: _discoveryFilters.hasAny
+                                ? colorScheme.primary
+                                : colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   HomeStoryStrip(

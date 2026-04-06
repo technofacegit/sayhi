@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:qr_dating_app/features/home/presentation/model/swipe_profile.dart';
+import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Loads profiles for the home discovery swipe deck.
@@ -10,10 +11,18 @@ class DiscoveryRepository {
 
   final SupabaseClient _client;
 
-  Future<List<SwipeProfile>> fetchProfiles({int limit = 24}) async {
+  Future<List<SwipeProfile>> fetchProfiles({
+    int limit = 24,
+    ZoneLobbyFilters filters = ZoneLobbyFilters.none,
+  }) async {
     final raw = await _client.rpc<dynamic>(
       'get_discovery_profiles',
-      params: {'p_limit': limit},
+      params: <String, dynamic>{
+        'p_limit': limit,
+        'p_gender_filter': filters.gender,
+        'p_min_age': filters.minAge,
+        'p_max_age': filters.maxAge,
+      },
     );
     final list = _decodeProfileJsonArray(raw);
     return list.map<SwipeProfile>((e) {

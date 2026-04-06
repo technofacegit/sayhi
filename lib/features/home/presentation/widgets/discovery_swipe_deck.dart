@@ -159,6 +159,7 @@ class _DiscoverySwipeDeckState extends State<DiscoverySwipeDeck>
     final rot = (_dragX * 0.0012).clamp(-0.2, 0.2);
     final borderColor = _borderForGender(colorScheme, p.gender);
     final title = p.age != null ? '${p.name}, ${p.age}' : p.name;
+    final hideBottomActions = _animating || _dragX.abs() > 0.01;
 
     return Column(
       children: [
@@ -226,25 +227,65 @@ class _DiscoverySwipeDeckState extends State<DiscoverySwipeDeck>
                             ),
                             if (urlCount > 1) ...[
                               Positioned(
-                                left: 0,
-                                top: 0,
-                                bottom: 100,
-                                width: 52,
-                                child: GestureDetector(
-                                  behavior: HitTestBehavior.translucent,
-                                  onTap: () => _stepPhoto(-1, urlCount),
-                                  child: const SizedBox.expand(),
+                                left: 8,
+                                top: 64,
+                                bottom: 120,
+                                width: 44,
+                                child: Center(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: _animating
+                                          ? null
+                                          : () => _stepPhoto(-1, urlCount),
+                                      customBorder: const CircleBorder(),
+                                      child: Ink(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.42),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(6),
+                                          child: Icon(
+                                            Icons.chevron_left_rounded,
+                                            color: Colors.white,
+                                            size: 30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                               Positioned(
-                                right: 0,
-                                top: 0,
-                                bottom: 100,
-                                width: 52,
-                                child: GestureDetector(
-                                  behavior: HitTestBehavior.translucent,
-                                  onTap: () => _stepPhoto(1, urlCount),
-                                  child: const SizedBox.expand(),
+                                right: 8,
+                                top: 64,
+                                bottom: 120,
+                                width: 44,
+                                child: Center(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: _animating
+                                          ? null
+                                          : () => _stepPhoto(1, urlCount),
+                                      customBorder: const CircleBorder(),
+                                      child: Ink(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(alpha: 0.42),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(6),
+                                          child: Icon(
+                                            Icons.chevron_right_rounded,
+                                            color: Colors.white,
+                                            size: 30,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
@@ -363,22 +404,35 @@ class _DiscoverySwipeDeckState extends State<DiscoverySwipeDeck>
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        // Left button = pass, right = like (matches swipe directions).
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _ActionCircle(
-              color: colorScheme.error,
-              icon: Icons.close_rounded,
-              onTap: _animating ? null : () => _commitFromButton('dislike'),
-            ),
-            _ActionCircle(
-              color: Colors.greenAccent.shade700,
-              icon: Icons.favorite_rounded,
-              onTap: _animating ? null : () => _commitFromButton('like'),
-            ),
-          ],
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          alignment: Alignment.topCenter,
+          child: hideBottomActions
+              ? const SizedBox.shrink()
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 16),
+                    // Left button = pass, right = like (matches swipe directions).
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _ActionCircle(
+                          color: colorScheme.error,
+                          icon: Icons.close_rounded,
+                          onTap: _animating ? null : () => _commitFromButton('dislike'),
+                        ),
+                        _ActionCircle(
+                          color: Colors.greenAccent.shade700,
+                          icon: Icons.favorite_rounded,
+                          onTap: _animating ? null : () => _commitFromButton('like'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
         ),
       ],
     );
