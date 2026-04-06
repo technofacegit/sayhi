@@ -2,6 +2,7 @@ import 'package:qr_dating_app/features/qr_zone/presentation/model/icebreaker_que
 import 'package:qr_dating_app/features/qr_zone/data/who_is_round_parser.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/model/who_is_game_round.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/model/zone_member_profile_detail.dart';
+import 'package:flutter/foundation.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/model/zone_member_preview.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -311,6 +312,7 @@ class ZoneRepository {
   }
 
   /// Like/dislike from lobby swipe; preserves [is_favorite] if a row already exists.
+  /// Uses RPC [save_profile_swipe] so writes succeed regardless of PostgREST upsert/RLS quirks.
   Future<void> setProfileSwipe({
     required String targetUserId,
     required String swipe,
@@ -318,22 +320,26 @@ class ZoneRepository {
     if (swipe != 'like' && swipe != 'dislike') {
       throw ArgumentError.value(swipe, 'swipe');
     }
-    final uid = _client.auth.currentUser?.id;
-    if (uid == null) {
+    if (_client.auth.currentUser?.id == null) {
       throw Exception('Not signed in');
     }
-    final existing = await _client
-        .from('profile_interactions')
-        .select('is_favorite')
-        .eq('viewer_id', uid)
-        .eq('target_id', targetUserId)
-        .maybeSingle();
-    final fav = existing != null && existing['is_favorite'] == true;
-    await upsertProfileInteraction(
-      targetUserId: targetUserId,
-      swipe: swipe,
-      isFavorite: fav,
+    final target = targetUserId.trim();
+    if (target.isEmpty) {
+      throw ArgumentError.value(targetUserId, 'targetUserId');
+    }
+    final viewer = _client.auth.currentUser!.id;
+    debugPrint(
+      '[ZoneRepository.setProfileSwipe] rpc=save_profile_swipe '
+      'p_target_id=$target p_swipe=$swipe viewer_id=$viewer',
     );
+    await _client.rpc<void>(
+      'save_profile_swipe',
+      params: {
+        'p_target_id': target,
+        'p_swipe': swipe,
+      },
+    );
+    debugPrint('[ZoneRepository.setProfileSwipe] ok target=$target swipe=$swipe');
   }
 
   /// Persists swipe + favorite for the current user toward [targetUserId].

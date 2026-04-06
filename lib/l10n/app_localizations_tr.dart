@@ -24,7 +24,26 @@ class AppLocalizationsTr extends AppLocalizations {
   String get navChats => 'Sohbetler';
 
   @override
+  String get navLikes => 'Beğeniler';
+
+  @override
+  String get navFavorites => 'Favoriler';
+
+  @override
   String get navProfile => 'Profil';
+
+  @override
+  String get likesTabTitle => 'Beğeniler';
+
+  @override
+  String get likesTabPlaceholder => 'Beğendiğin kişiler burada görünecek.';
+
+  @override
+  String get favoritesTabTitle => 'Favoriler';
+
+  @override
+  String get favoritesTabPlaceholder =>
+      'Kaydettiğin profiller burada görünecek.';
 
   @override
   String get commonCancel => 'İptal';
@@ -64,6 +83,13 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeTitle => 'Say Hi';
+
+  @override
+  String get homeDiscoveryEmpty =>
+      'Şimdilik başka profil yok. Yenilemek için aşağı çek.';
+
+  @override
+  String get homeDiscoveryLoadError => 'Profiller yüklenemedi.';
 
   @override
   String get zonePreviewActiveZone => 'Aktif bölge';

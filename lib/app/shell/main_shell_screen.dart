@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class MainShellScreen extends StatelessWidget {
@@ -44,31 +43,31 @@ class MainShellScreen extends StatelessWidget {
                   ),
                   _NavItem(
                     selected: navigationShell.currentIndex == 1,
-                    icon: Icons.place_outlined,
-                    selectedIcon: Icons.place_rounded,
-                    label: l10n.navZones,
-                    onTap: () => _onNavTap(context, 1),
-                  ),
-                  _NavItem(
-                    selected: false,
-                    icon: Icons.waving_hand_outlined,
-                    selectedIcon: Icons.waving_hand_rounded,
-                    label: l10n.navSayHi,
-                    onTap: () => context.go(AppRouter.qrJoinPath),
-                  ),
-                  _NavItem(
-                    selected: navigationShell.currentIndex == 2,
                     icon: Icons.chat_bubble_outline_rounded,
                     selectedIcon: Icons.chat_bubble_rounded,
                     label: l10n.navChats,
+                    onTap: () => _onNavTap(context, 1),
+                  ),
+                  _NavItem(
+                    selected: navigationShell.currentIndex == 2,
+                    icon: Icons.favorite_border_rounded,
+                    selectedIcon: Icons.favorite_rounded,
+                    label: l10n.navLikes,
                     onTap: () => _onNavTap(context, 2),
                   ),
                   _NavItem(
                     selected: navigationShell.currentIndex == 3,
+                    icon: Icons.bookmark_outline_rounded,
+                    selectedIcon: Icons.bookmark_rounded,
+                    label: l10n.navFavorites,
+                    onTap: () => _onNavTap(context, 3),
+                  ),
+                  _NavItem(
+                    selected: navigationShell.currentIndex == 4,
                     icon: Icons.person_outline_rounded,
                     selectedIcon: Icons.person_rounded,
                     label: l10n.navProfile,
-                    onTap: () => _onNavTap(context, 3),
+                    onTap: () => _onNavTap(context, 4),
                   ),
                 ],
               ),

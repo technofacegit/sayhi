@@ -9,6 +9,8 @@ class AppRouter {
   static const homePath = '/home';
   static const zonesPath = '/zones';
   static const chatsPath = '/chats';
+  static const likesPath = '/likes';
+  static const favoritesPath = '/favorites';
   static const profilePath = '/profile';
 
   /// Nested under [chatsPath].

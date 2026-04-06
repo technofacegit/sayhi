@@ -13,7 +13,9 @@ import 'package:qr_dating_app/app/shell/shell_tab_pages.dart';
 import 'package:qr_dating_app/features/chats/presentation/screens/chat_conversation_screen.dart';
 import 'package:qr_dating_app/features/chats/presentation/screens/chat_user_profile_screen.dart';
 import 'package:qr_dating_app/features/chats/presentation/screens/chats_tab_screen.dart';
+import 'package:qr_dating_app/features/favorites/presentation/screens/favorites_tab_screen.dart';
 import 'package:qr_dating_app/features/home/presentation/screens/home_screen.dart';
+import 'package:qr_dating_app/features/likes/presentation/screens/likes_tab_screen.dart';
 import 'package:qr_dating_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:qr_dating_app/core/active_zone_session.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
@@ -117,13 +119,7 @@ class AppGoRouter {
             routes: [
               GoRoute(
                 path: AppRouter.homePath,
-                builder: (context, state) {
-                  final z = ActiveZoneSession.current;
-                  return HomeScreen(
-                    activeZoneName: z?['name'] as String?,
-                    activeUserCount: z?['activeCount'] as int?,
-                  );
-                },
+                builder: (context, state) => const HomeScreen(),
                 routes: [
                   GoRoute(
                     path: 'join-zone',
@@ -134,14 +130,6 @@ class AppGoRouter {
                     },
                   ),
                 ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRouter.zonesPath,
-                builder: (context, state) => const ZonesTabScreen(),
               ),
             ],
           ),
@@ -174,12 +162,33 @@ class AppGoRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: AppRouter.likesPath,
+                builder: (context, state) => const LikesTabScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRouter.favoritesPath,
+                builder: (context, state) => const FavoritesTabScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: AppRouter.profilePath,
                 builder: (context, state) => const ProfileTabScreen(),
               ),
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRouter.zonesPath,
+        parentNavigatorKey: appRootNavigatorKey,
+        builder: (context, state) => const ZonesTabScreen(),
       ),
       GoRoute(
         path: AppRouter.activeZonePath,

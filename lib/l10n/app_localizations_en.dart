@@ -24,7 +24,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navChats => 'Chats';
 
   @override
+  String get navLikes => 'Likes';
+
+  @override
+  String get navFavorites => 'Favorites';
+
+  @override
   String get navProfile => 'Profile';
+
+  @override
+  String get likesTabTitle => 'Likes';
+
+  @override
+  String get likesTabPlaceholder => 'People you liked will appear here.';
+
+  @override
+  String get favoritesTabTitle => 'Favorites';
+
+  @override
+  String get favoritesTabPlaceholder => 'Profiles you save will appear here.';
 
   @override
   String get commonCancel => 'Cancel';
@@ -64,6 +82,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeTitle => 'Say Hi';
+
+  @override
+  String get homeDiscoveryEmpty =>
+      'You\'re all caught up. Pull to refresh to try again.';
+
+  @override
+  String get homeDiscoveryLoadError => 'Couldn\'t load profiles to show.';
 
   @override
   String get zonePreviewActiveZone => 'Active zone';

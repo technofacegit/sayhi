@@ -128,11 +128,47 @@ abstract class AppLocalizations {
   /// **'Chats'**
   String get navChats;
 
+  /// No description provided for @navLikes.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes'**
+  String get navLikes;
+
+  /// No description provided for @navFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get navFavorites;
+
   /// No description provided for @navProfile.
   ///
   /// In en, this message translates to:
   /// **'Profile'**
   String get navProfile;
+
+  /// No description provided for @likesTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes'**
+  String get likesTabTitle;
+
+  /// No description provided for @likesTabPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'People you liked will appear here.'**
+  String get likesTabPlaceholder;
+
+  /// No description provided for @favoritesTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favoritesTabTitle;
+
+  /// No description provided for @favoritesTabPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Profiles you save will appear here.'**
+  String get favoritesTabPlaceholder;
 
   /// No description provided for @commonCancel.
   ///
@@ -211,6 +247,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Say Hi'**
   String get homeTitle;
+
+  /// No description provided for @homeDiscoveryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all caught up. Pull to refresh to try again.'**
+  String get homeDiscoveryEmpty;
+
+  /// No description provided for @homeDiscoveryLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load profiles to show.'**
+  String get homeDiscoveryLoadError;
 
   /// No description provided for @zonePreviewActiveZone.
   ///
