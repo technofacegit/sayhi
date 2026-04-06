@@ -261,6 +261,35 @@ class ZoneRepository {
     );
   }
 
+  /// Say Hi tab lobby: paginated previews without zone (same shape as [fetchZoneMemberPreviewsPage]).
+  Future<ZoneMemberPreviewsPage> fetchSayHiMemberPreviewsPage({
+    int offset = 0,
+    int limit = lobbyMemberPageSize,
+    ZoneLobbyFilters filters = ZoneLobbyFilters.none,
+  }) async {
+    final raw = await _client.rpc<dynamic>(
+      'get_say_hi_member_previews_page',
+      params: {
+        'p_limit': limit,
+        'p_offset': offset,
+        'p_gender_filter': filters.gender,
+        'p_min_age': filters.minAge,
+        'p_max_age': filters.maxAge,
+      },
+    );
+    if (raw is! Map<String, dynamic>) {
+      throw Exception('Invalid Say Hi members page response');
+    }
+    final count = (raw['active_count'] as num?)?.toInt() ?? 0;
+    final list = raw['members'] as List? ?? const [];
+    final hasMore = raw['has_more'] == true;
+    return ZoneMemberPreviewsPage(
+      activeCount: count,
+      members: _parseZoneMemberPreviewList(list),
+      hasMore: hasMore,
+    );
+  }
+
   /// Profile detail for another member in [zoneId] (same active 24h membership).
   Future<ZoneMemberProfileDetail> fetchZoneMemberProfileDetail({
     required String zoneId,
@@ -362,6 +391,28 @@ class ZoneRepository {
       },
       onConflict: 'viewer_id,target_id',
     );
+  }
+
+  /// Current user's interaction toward [targetUserId], or null if no row exists.
+  Future<({String? swipe, bool isFavorite})?> fetchProfileInteractionForTarget(
+    String targetUserId,
+  ) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return null;
+    final target = targetUserId.trim();
+    if (target.isEmpty) return null;
+    final row = await _client
+        .from('profile_interactions')
+        .select('swipe, is_favorite')
+        .eq('viewer_id', uid)
+        .eq('target_id', target)
+        .maybeSingle();
+    if (row == null) return null;
+    final m = Map<String, dynamic>.from(row as Map);
+    final s = m['swipe'] as String?;
+    String? swipe;
+    if (s == 'like' || s == 'dislike') swipe = s;
+    return (swipe: swipe, isFavorite: m['is_favorite'] == true);
   }
 
   static List<ZoneMemberPreview> _parseZoneMemberPreviewList(List<dynamic> list) {

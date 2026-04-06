@@ -33,6 +33,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navProfile => 'Profile';
 
   @override
+  String get sayHiLobbyBrowseEmpty =>
+      'No profiles to show yet. Check back soon.';
+
+  @override
   String get likesTabTitle => 'Likes';
 
   @override
@@ -255,6 +259,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zoneMemberProfileSaveError => 'Could not save. Try again.';
+
+  @override
+  String get discoveryProfileDescription => 'Description';
 
   @override
   String get zoneWarmUpTitle => 'Warm Up';

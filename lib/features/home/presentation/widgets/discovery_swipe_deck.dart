@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:qr_dating_app/features/home/presentation/model/swipe_profile.dart';
+import 'package:qr_dating_app/features/home/presentation/widgets/discovery_action_circle.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
 
 /// Full-width card with horizontal swipe (like / pass) and optional action buttons.
@@ -10,10 +11,14 @@ class DiscoverySwipeDeck extends StatefulWidget {
     super.key,
     required this.profile,
     required this.onSwiped,
+    this.onPhotoTap,
   });
 
   final SwipeProfile profile;
   final Future<void> Function(String swipe) onSwiped;
+
+  /// Opens full profile (e.g. from root navigator). Card swipe uses horizontal drag.
+  final VoidCallback? onPhotoTap;
 
   @override
   State<DiscoverySwipeDeck> createState() => _DiscoverySwipeDeckState();
@@ -199,8 +204,9 @@ class _DiscoverySwipeDeckState extends State<DiscoverySwipeDeck>
                             Builder(
                               builder: (context) {
                                 final url = urls[photoI];
+                                Widget photo;
                                 if (url.isEmpty) {
-                                  return ColoredBox(
+                                  photo = ColoredBox(
                                     color: colorScheme.surfaceContainerHigh,
                                     child: Icon(
                                       Icons.person_rounded,
@@ -208,20 +214,30 @@ class _DiscoverySwipeDeckState extends State<DiscoverySwipeDeck>
                                       color: colorScheme.outline,
                                     ),
                                   );
-                                }
-                                return Image.network(
-                                  url,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  errorBuilder: (_, __, ___) => ColoredBox(
-                                    color: colorScheme.surfaceContainerHigh,
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      size: 48,
-                                      color: colorScheme.outline,
+                                } else {
+                                  photo = Image.network(
+                                    url,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    errorBuilder: (_, __, ___) => ColoredBox(
+                                      color: colorScheme.surfaceContainerHigh,
+                                      child: Icon(
+                                        Icons.broken_image_outlined,
+                                        size: 48,
+                                        color: colorScheme.outline,
+                                      ),
                                     ),
-                                  ),
+                                  );
+                                }
+                                final tap = widget.onPhotoTap;
+                                if (tap == null || _animating) {
+                                  return photo;
+                                }
+                                return GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: tap,
+                                  child: photo,
                                 );
                               },
                             ),
@@ -419,12 +435,12 @@ class _DiscoverySwipeDeckState extends State<DiscoverySwipeDeck>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _ActionCircle(
+                        DiscoveryActionCircle(
                           color: colorScheme.error,
                           icon: Icons.close_rounded,
                           onTap: _animating ? null : () => _commitFromButton('dislike'),
                         ),
-                        _ActionCircle(
+                        DiscoveryActionCircle(
                           color: Colors.greenAccent.shade700,
                           icon: Icons.favorite_rounded,
                           onTap: _animating ? null : () => _commitFromButton('like'),
@@ -466,31 +482,3 @@ class _Stamp extends StatelessWidget {
   }
 }
 
-class _ActionCircle extends StatelessWidget {
-  const _ActionCircle({
-    required this.color,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final Color color;
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color.withValues(alpha: 0.15),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 64,
-          height: 64,
-          child: Icon(icon, color: color, size: 32),
-        ),
-      ),
-    );
-  }
-}

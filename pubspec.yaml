@@ -48,6 +48,7 @@ dependencies:
   supabase_flutter: ^2.12.2
   app_links: ^6.4.1
   crypto: ^3.0.7
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:

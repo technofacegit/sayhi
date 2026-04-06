@@ -9,6 +9,8 @@ class AppRouter {
   static const homePath = '/home';
   static const zonesPath = '/zones';
   static const chatsPath = '/chats';
+  /// Zones map / QR — middle tab ("Say Hi").
+  static const sayHiPath = '/say-hi';
   static const likesPath = '/likes';
   static const favoritesPath = '/favorites';
   static const profilePath = '/profile';
@@ -31,4 +33,7 @@ class AppRouter {
 
   /// Full profile for another member in the active zone (from lobby grid).
   static String zoneMemberProfilePath(String userId) => '/zone-member-profile/$userId';
+
+  /// Home discovery: full profile when tapping the card photo ([SwipeProfile] as [extra]).
+  static const discoveryProfilePath = '/discovery-profile';
 }

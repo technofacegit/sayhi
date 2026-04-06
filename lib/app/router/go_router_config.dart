@@ -13,7 +13,8 @@ import 'package:qr_dating_app/app/shell/shell_tab_pages.dart';
 import 'package:qr_dating_app/features/chats/presentation/screens/chat_conversation_screen.dart';
 import 'package:qr_dating_app/features/chats/presentation/screens/chat_user_profile_screen.dart';
 import 'package:qr_dating_app/features/chats/presentation/screens/chats_tab_screen.dart';
-import 'package:qr_dating_app/features/favorites/presentation/screens/favorites_tab_screen.dart';
+import 'package:qr_dating_app/features/home/presentation/model/swipe_profile.dart';
+import 'package:qr_dating_app/features/home/presentation/screens/discovery_profile_screen.dart';
 import 'package:qr_dating_app/features/home/presentation/screens/home_screen.dart';
 import 'package:qr_dating_app/features/likes/presentation/screens/likes_tab_screen.dart';
 import 'package:qr_dating_app/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -26,7 +27,6 @@ import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_member_
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_main_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_warm_up_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_who_is_game_screen.dart';
-import 'package:qr_dating_app/features/qr_zone/presentation/screens/zones_tab_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Root stack for routes that must cover the tab shell (e.g. zone flows).
@@ -162,16 +162,17 @@ class AppGoRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRouter.likesPath,
-                builder: (context, state) => const LikesTabScreen(),
+                path: AppRouter.sayHiPath,
+                builder: (context, state) =>
+                    const ZoneLobbyScreen(standaloneSayHi: true),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRouter.favoritesPath,
-                builder: (context, state) => const FavoritesTabScreen(),
+                path: AppRouter.likesPath,
+                builder: (context, state) => const LikesTabScreen(),
               ),
             ],
           ),
@@ -187,8 +188,7 @@ class AppGoRouter {
       ),
       GoRoute(
         path: AppRouter.zonesPath,
-        parentNavigatorKey: appRootNavigatorKey,
-        builder: (context, state) => const ZonesTabScreen(),
+        redirect: (context, state) => AppRouter.sayHiPath,
       ),
       GoRoute(
         path: AppRouter.activeZonePath,
@@ -261,6 +261,27 @@ class AppGoRouter {
         builder: (context, state) {
           final userId = state.pathParameters['userId']!;
           return ZoneMemberProfileScreen(userId: userId);
+        },
+      ),
+      GoRoute(
+        path: AppRouter.discoveryProfilePath,
+        parentNavigatorKey: appRootNavigatorKey,
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is! SwipeProfile) {
+            return Scaffold(
+              appBar: AppBar(
+                leading: IconButton(
+                  onPressed: () => GoRouter.of(context).pop(),
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                ),
+              ),
+              body: Center(
+                child: Text(AppLocalizations.of(context)!.zoneMemberProfileLoadError),
+              ),
+            );
+          }
+          return DiscoveryProfileScreen(profile: extra);
         },
       ),
     ],

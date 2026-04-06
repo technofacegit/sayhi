@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/features/home/data/discovery_filters_storage.dart';
 import 'package:qr_dating_app/features/home/data/discovery_repository.dart';
 import 'package:qr_dating_app/features/home/data/story_repository.dart';
 import 'package:qr_dating_app/features/home/presentation/model/story_group.dart';
@@ -19,6 +22,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final StoryRepository _storyRepository = StoryRepository();
   final DiscoveryRepository _discoveryRepository = DiscoveryRepository();
+  final DiscoveryFiltersStorage _discoveryFiltersStorage = DiscoveryFiltersStorage();
   final ZoneRepository _zoneRepository = ZoneRepository();
 
   late Future<List<StoryGroup>> _storyFuture;
@@ -32,7 +36,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _storyFuture = _storyRepository.fetchStoryGroups();
-    _loadDeck();
+    _initDiscovery();
+  }
+
+  Future<void> _initDiscovery() async {
+    final stored = await _discoveryFiltersStorage.load();
+    if (!mounted) return;
+    setState(() => _discoveryFilters = stored);
+    await _loadDeck();
   }
 
   void _reloadStoriesOnly() {
@@ -144,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (!mounted || result == null) return;
     setState(() => _discoveryFilters = result);
+    await _discoveryFiltersStorage.save(result);
     await _loadDeck();
   }
 
@@ -179,16 +191,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       SizedBox(
                         width: 48,
-                        child: IconButton(
-                          tooltip: l10n.zoneLobbyFilterTooltip,
-                          onPressed: _openDiscoveryFilters,
-                          icon: Icon(
-                            _discoveryFilters.hasAny
-                                ? Icons.filter_alt_rounded
-                                : Icons.filter_alt_outlined,
-                            color: _discoveryFilters.hasAny
-                                ? colorScheme.primary
-                                : colorScheme.onSurface,
+                        child: Badge(
+                          isLabelVisible: _discoveryFilters.hasAny,
+                          smallSize: 8,
+                          child: IconButton(
+                            tooltip: l10n.zoneLobbyFilterTooltip,
+                            onPressed: _openDiscoveryFilters,
+                            icon: const Icon(Icons.tune_rounded, size: 22),
+                            style: IconButton.styleFrom(
+                              foregroundColor: colorScheme.onSurface.withValues(alpha: 0.85),
+                            ),
                           ),
                         ),
                       ),
@@ -290,6 +302,9 @@ class _HomeScreenState extends State<HomeScreen> {
       key: ValueKey(_deck.first.id),
       profile: _deck.first,
       onSwiped: _onSwiped,
+      onPhotoTap: () {
+        context.push(AppRouter.discoveryProfilePath, extra: _deck.first);
+      },
     );
   }
 }

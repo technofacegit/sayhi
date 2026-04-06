@@ -50,16 +50,16 @@ class MainShellScreen extends StatelessWidget {
                   ),
                   _NavItem(
                     selected: navigationShell.currentIndex == 2,
-                    icon: Icons.favorite_border_rounded,
-                    selectedIcon: Icons.favorite_rounded,
-                    label: l10n.navLikes,
+                    icon: Icons.waving_hand_outlined,
+                    selectedIcon: Icons.waving_hand_rounded,
+                    label: l10n.navSayHi,
                     onTap: () => _onNavTap(context, 2),
                   ),
                   _NavItem(
                     selected: navigationShell.currentIndex == 3,
-                    icon: Icons.bookmark_outline_rounded,
-                    selectedIcon: Icons.bookmark_rounded,
-                    label: l10n.navFavorites,
+                    icon: Icons.favorite_border_rounded,
+                    selectedIcon: Icons.favorite_rounded,
+                    label: l10n.navLikes,
                     onTap: () => _onNavTap(context, 3),
                   ),
                   _NavItem(

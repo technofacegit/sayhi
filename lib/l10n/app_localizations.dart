@@ -146,6 +146,12 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get navProfile;
 
+  /// No description provided for @sayHiLobbyBrowseEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No profiles to show yet. Check back soon.'**
+  String get sayHiLobbyBrowseEmpty;
+
   /// No description provided for @likesTabTitle.
   ///
   /// In en, this message translates to:
@@ -559,6 +565,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not save. Try again.'**
   String get zoneMemberProfileSaveError;
+
+  /// No description provided for @discoveryProfileDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get discoveryProfileDescription;
 
   /// No description provided for @zoneWarmUpTitle.
   ///

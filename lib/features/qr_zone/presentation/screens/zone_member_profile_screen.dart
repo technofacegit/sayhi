@@ -217,7 +217,10 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
             onPressed: _saving ? null : _onFavorite,
             icon: Icon(
               d.isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-              color: d.isFavorite ? colorScheme.primary : null,
+              size: 26,
+              color: d.isFavorite
+                  ? const Color(0xFF29B6F6)
+                  : colorScheme.onSurface.withValues(alpha: 0.55),
             ),
           ),
         ],
@@ -287,8 +290,11 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
                   child: FilledButton.tonalIcon(
                     onPressed: _saving ? null : _onLike,
                     icon: Icon(
-                      Icons.thumb_up_rounded,
-                      color: d.swipe == 'like' ? colorScheme.primary : null,
+                      Icons.favorite_rounded,
+                      size: 22,
+                      color: d.swipe == 'like'
+                          ? const Color(0xFFE91E63)
+                          : colorScheme.onSurface.withValues(alpha: 0.55),
                     ),
                     label: Text(l10n.zoneMemberProfileLike),
                     style: FilledButton.styleFrom(
@@ -304,8 +310,11 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
                   child: FilledButton.tonalIcon(
                     onPressed: _saving ? null : _onDislike,
                     icon: Icon(
-                      Icons.thumb_down_rounded,
-                      color: d.swipe == 'dislike' ? colorScheme.error : null,
+                      Icons.close_rounded,
+                      size: 24,
+                      color: d.swipe == 'dislike'
+                          ? colorScheme.error
+                          : colorScheme.onSurface.withValues(alpha: 0.55),
                     ),
                     label: Text(l10n.zoneMemberProfileDislike),
                     style: FilledButton.styleFrom(

@@ -33,6 +33,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get navProfile => 'Profil';
 
   @override
+  String get sayHiLobbyBrowseEmpty =>
+      'Şu an gösterilecek profil yok. Daha sonra tekrar deneyin.';
+
+  @override
   String get likesTabTitle => 'Beğeniler';
 
   @override
@@ -257,6 +261,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get zoneMemberProfileSaveError => 'Kaydedilemedi. Tekrar deneyin.';
+
+  @override
+  String get discoveryProfileDescription => 'Açıklama';
 
   @override
   String get zoneWarmUpTitle => 'Isınma';
