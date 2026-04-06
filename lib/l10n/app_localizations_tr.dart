@@ -208,6 +208,31 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu filtrelere uyan kimse yok. Filtreleri değiştirin veya temizleyin.';
 
   @override
+  String get zoneMemberProfileAbout => 'Hakkında';
+
+  @override
+  String get zoneMemberProfileLoadError => 'Profil yüklenemedi.';
+
+  @override
+  String get zoneMemberProfileLike => 'Beğen';
+
+  @override
+  String get zoneMemberProfileDislike => 'Beğenme';
+
+  @override
+  String get zoneMemberProfileFavoriteTooltip => 'Favorilere ekle';
+
+  @override
+  String get zoneMemberProfileSendMessage => 'Mesaj gönder';
+
+  @override
+  String get zoneMemberProfileMessageSoon =>
+      'Mesajlaşma çok yakında. Sohbetler sekmesi açıldı.';
+
+  @override
+  String get zoneMemberProfileSaveError => 'Kaydedilemedi. Tekrar deneyin.';
+
+  @override
   String get zoneWarmUpTitle => 'Isınma';
 
   @override

@@ -1,6 +1,7 @@
 import 'package:qr_dating_app/features/qr_zone/presentation/model/icebreaker_question.dart';
 import 'package:qr_dating_app/features/qr_zone/data/who_is_round_parser.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/model/who_is_game_round.dart';
+import 'package:qr_dating_app/features/qr_zone/presentation/model/zone_member_profile_detail.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/model/zone_member_preview.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -256,6 +257,104 @@ class ZoneRepository {
       activeCount: count,
       members: _parseZoneMemberPreviewList(list),
       hasMore: hasMore,
+    );
+  }
+
+  /// Profile detail for another member in [zoneId] (same active 24h membership).
+  Future<ZoneMemberProfileDetail> fetchZoneMemberProfileDetail({
+    required String zoneId,
+    required String targetUserId,
+  }) async {
+    final raw = await _client.rpc<dynamic>(
+      'get_zone_member_profile_detail',
+      params: {
+        'p_zone_id': zoneId,
+        'p_target_user_id': targetUserId,
+      },
+    );
+    if (raw is! Map<String, dynamic>) {
+      throw Exception('Invalid profile detail response');
+    }
+    final p = raw['profile'];
+    if (p is! Map<String, dynamic>) {
+      throw Exception('Invalid profile detail response');
+    }
+    final uid = p['user_id'] as String? ?? '';
+    final avatar = p['avatar_url'] as String? ?? '';
+    final galleryRaw = p['gallery_urls'];
+    final gallery = <String>[];
+    if (galleryRaw is List) {
+      for (final e in galleryRaw) {
+        final s = e?.toString() ?? '';
+        if (s.isNotEmpty) gallery.add(s);
+      }
+    }
+    String? swipe;
+    var favorite = false;
+    final i = raw['interaction'];
+    if (i is Map<String, dynamic>) {
+      final s = i['swipe'] as String?;
+      if (s == 'like' || s == 'dislike') swipe = s;
+      favorite = i['is_favorite'] == true;
+    }
+    return ZoneMemberProfileDetail(
+      userId: uid,
+      name: p['display_name'] as String? ?? '',
+      bio: p['bio'] as String? ?? '',
+      age: (p['age'] as num?)?.toInt(),
+      gender: p['gender'] as String?,
+      avatarUrl: avatar,
+      galleryUrls: gallery,
+      swipe: swipe,
+      isFavorite: favorite,
+    );
+  }
+
+  /// Like/dislike from lobby swipe; preserves [is_favorite] if a row already exists.
+  Future<void> setProfileSwipe({
+    required String targetUserId,
+    required String swipe,
+  }) async {
+    if (swipe != 'like' && swipe != 'dislike') {
+      throw ArgumentError.value(swipe, 'swipe');
+    }
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) {
+      throw Exception('Not signed in');
+    }
+    final existing = await _client
+        .from('profile_interactions')
+        .select('is_favorite')
+        .eq('viewer_id', uid)
+        .eq('target_id', targetUserId)
+        .maybeSingle();
+    final fav = existing != null && existing['is_favorite'] == true;
+    await upsertProfileInteraction(
+      targetUserId: targetUserId,
+      swipe: swipe,
+      isFavorite: fav,
+    );
+  }
+
+  /// Persists swipe + favorite for the current user toward [targetUserId].
+  Future<void> upsertProfileInteraction({
+    required String targetUserId,
+    String? swipe,
+    required bool isFavorite,
+  }) async {
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) {
+      throw Exception('Not signed in');
+    }
+    await _client.from('profile_interactions').upsert(
+      <String, dynamic>{
+        'viewer_id': uid,
+        'target_id': targetUserId,
+        'swipe': swipe,
+        'is_favorite': isFavorite,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      },
+      onConflict: 'viewer_id,target_id',
     );
   }
 

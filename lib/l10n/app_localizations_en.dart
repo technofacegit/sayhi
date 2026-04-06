@@ -207,6 +207,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'No one matches these filters. Try changing them or clear filters.';
 
   @override
+  String get zoneMemberProfileAbout => 'About';
+
+  @override
+  String get zoneMemberProfileLoadError => 'Could not load this profile.';
+
+  @override
+  String get zoneMemberProfileLike => 'Like';
+
+  @override
+  String get zoneMemberProfileDislike => 'Dislike';
+
+  @override
+  String get zoneMemberProfileFavoriteTooltip => 'Favorite';
+
+  @override
+  String get zoneMemberProfileSendMessage => 'Send message';
+
+  @override
+  String get zoneMemberProfileMessageSoon =>
+      'Messaging will be available soon. Chats tab opened.';
+
+  @override
+  String get zoneMemberProfileSaveError => 'Could not save. Try again.';
+
+  @override
   String get zoneWarmUpTitle => 'Warm Up';
 
   @override

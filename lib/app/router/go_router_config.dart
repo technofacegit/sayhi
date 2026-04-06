@@ -20,6 +20,7 @@ import 'package:qr_dating_app/core/auth_session.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/active_zone_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/qr_join_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_lobby_screen.dart';
+import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_member_profile_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_main_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_warm_up_screen.dart';
 import 'package:qr_dating_app/features/qr_zone/presentation/screens/zone_who_is_game_screen.dart';
@@ -238,6 +239,20 @@ class AppGoRouter {
           return null;
         },
         builder: (context, state) => const ZoneLobbyScreen(),
+      ),
+      GoRoute(
+        path: '/zone-member-profile/:userId',
+        parentNavigatorKey: appRootNavigatorKey,
+        redirect: (context, state) {
+          if (ActiveZoneSession.current == null) {
+            return AppRouter.homePath;
+          }
+          return null;
+        },
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ZoneMemberProfileScreen(userId: userId);
+        },
       ),
     ],
   );

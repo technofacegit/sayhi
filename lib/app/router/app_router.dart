@@ -26,4 +26,7 @@ class AppRouter {
   static const zoneWarmUpPath = '/zone-warm-up';
   static const zoneWhoIsPath = '/zone-who-is';
   static const zoneLobbyPath = '/zone-lobby';
+
+  /// Full profile for another member in the active zone (from lobby grid).
+  static String zoneMemberProfilePath(String userId) => '/zone-member-profile/$userId';
 }

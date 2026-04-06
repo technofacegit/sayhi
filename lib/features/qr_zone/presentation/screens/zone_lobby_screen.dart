@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
@@ -186,6 +188,23 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
       _fetchingProfilesAfterIcebreaker = true;
     });
     _loadFirstPage(zoneId);
+  }
+
+  Future<void> _onMemberSwipeCommitted(
+    String memberId,
+    String swipe,
+  ) async {
+    try {
+      await _repo.setProfileSwipe(targetUserId: memberId, swipe: swipe);
+      if (!mounted) return;
+      setState(() => _members.removeWhere((e) => e.id == memberId));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.zoneMemberProfileSaveError)),
+      );
+      rethrow;
+    }
   }
 
   Future<void> _openFilterSheet(String zoneId) async {
@@ -473,10 +492,13 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final m = _members[index];
-                  return _MemberCard(
+                  return _SwipeableMemberCard(
+                    key: ValueKey(m.id),
                     member: m,
                     surfaceCard: surfaceCard,
                     onSurfaceMuted: onSurfaceMuted,
+                    onOpenProfile: () => context.push(AppRouter.zoneMemberProfilePath(m.id)),
+                    onSwipeCommitted: (swipe) => _onMemberSwipeCommitted(m.id, swipe),
                   );
                 },
                 childCount: _members.length,
@@ -497,6 +519,210 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _SwipeableMemberCard extends StatefulWidget {
+  const _SwipeableMemberCard({
+    super.key,
+    required this.member,
+    required this.surfaceCard,
+    required this.onSurfaceMuted,
+    required this.onOpenProfile,
+    required this.onSwipeCommitted,
+  });
+
+  final ZoneMemberPreview member;
+  final Color surfaceCard;
+  final Color onSurfaceMuted;
+  final VoidCallback onOpenProfile;
+  final Future<void> Function(String swipe) onSwipeCommitted;
+
+  @override
+  State<_SwipeableMemberCard> createState() => _SwipeableMemberCardState();
+}
+
+class _SwipeableMemberCardState extends State<_SwipeableMemberCard>
+    with SingleTickerProviderStateMixin {
+  static const double _kCommitThreshold = 56;
+  static const double _kVelocity = 650;
+
+  double _dragX = 0;
+  late AnimationController _anim;
+  Animation<double>? _tween;
+  bool _animating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(vsync: this, duration: const Duration(milliseconds: 220));
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  Future<void> _snapBack() async {
+    if (_dragX == 0) return;
+    final start = _dragX;
+    _anim.duration = const Duration(milliseconds: 200);
+    _tween = Tween<double>(begin: start, end: 0).animate(
+      CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic),
+    );
+    _animating = true;
+    void tick() {
+      if (_tween != null) setState(() => _dragX = _tween!.value);
+    }
+
+    _tween!.addListener(tick);
+    await _anim.forward(from: 0);
+    _tween!.removeListener(tick);
+    _animating = false;
+    if (mounted) setState(() => _dragX = 0);
+  }
+
+  Future<void> _flyOffAndCommit(String swipe) async {
+    final dir = swipe == 'like' ? 1.0 : -1.0;
+    final start = _dragX;
+    final end = dir * 420;
+    _anim.duration = const Duration(milliseconds: 260);
+    _tween = Tween<double>(begin: start, end: end).animate(
+      CurvedAnimation(parent: _anim, curve: Curves.easeIn),
+    );
+    _animating = true;
+    void tick() {
+      if (_tween != null) setState(() => _dragX = _tween!.value);
+    }
+
+    _tween!.addListener(tick);
+    await _anim.forward(from: 0);
+    _tween!.removeListener(tick);
+    _animating = false;
+    try {
+      await widget.onSwipeCommitted(swipe);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _dragX = 0);
+      }
+    }
+  }
+
+  void _onDragEnd(DragEndDetails details) {
+    if (_animating) return;
+    final v = details.velocity.pixelsPerSecond.dx;
+    if (_dragX > _kCommitThreshold || v > _kVelocity) {
+      _flyOffAndCommit('like');
+    } else if (_dragX < -_kCommitThreshold || v < -_kVelocity) {
+      _flyOffAndCommit('dislike');
+    } else {
+      _snapBack();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final likeOpacity = (_dragX > 0 ? (_dragX / 90).clamp(0.0, 1.0) : 0.0);
+    final nopeOpacity = (_dragX < 0 ? (-_dragX / 90).clamp(0.0, 1.0) : 0.0);
+    final rot = (_dragX * 0.002).clamp(-0.22, 0.22);
+
+    return GestureDetector(
+      onTap: _animating ? null : widget.onOpenProfile,
+      onHorizontalDragUpdate: _animating
+          ? null
+          : (d) => setState(() => _dragX += d.delta.dx),
+      onHorizontalDragEnd: _animating ? null : _onDragEnd,
+      child: Transform.translate(
+        offset: Offset(_dragX, 0),
+        child: Transform.rotate(
+          angle: rot,
+          alignment: Alignment.center,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              _MemberCard(
+                member: widget.member,
+                surfaceCard: widget.surfaceCard,
+                onSurfaceMuted: widget.onSurfaceMuted,
+                onTap: null,
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Stack(
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: Transform.rotate(
+                            angle: -math.pi / 18,
+                            child: Opacity(
+                              opacity: nopeOpacity,
+                              child: _SwipeStamp(
+                                label: 'NOPE',
+                                color: colorScheme.error,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Transform.rotate(
+                            angle: math.pi / 18,
+                            child: Opacity(
+                              opacity: likeOpacity,
+                              child: _SwipeStamp(
+                                label: 'LIKE',
+                                color: Colors.greenAccent.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SwipeStamp extends StatelessWidget {
+  const _SwipeStamp({
+    required this.label,
+    required this.color,
+  });
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color, width: 3),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+          color: color,
+        ),
       ),
     );
   }
@@ -787,11 +1013,13 @@ class _MemberCard extends StatelessWidget {
     required this.member,
     required this.surfaceCard,
     required this.onSurfaceMuted,
+    this.onTap,
   });
 
   final ZoneMemberPreview member;
   final Color surfaceCard;
   final Color onSurfaceMuted;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -801,24 +1029,15 @@ class _MemberCard extends StatelessWidget {
     final hasPhoto = member.photoUrl.isNotEmpty;
     final borderColor = zoneMemberBorderColor(colorScheme, member.gender);
 
-    return Material(
-      color: surfaceCard,
-      elevation: 0,
-      shadowColor: Colors.transparent,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: () {},
+    final content = Ink(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        splashColor: colorScheme.primary.withValues(alpha: 0.08),
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: borderColor,
-              width: 2,
-            ),
-          ),
-          child: Column(
+        border: Border.all(
+          color: borderColor,
+          width: 2,
+        ),
+      ),
+      child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
@@ -908,8 +1127,21 @@ class _MemberCard extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
+    );
+
+    return Material(
+      color: surfaceCard,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      child: onTap == null
+          ? content
+          : InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(20),
+              splashColor: colorScheme.primary.withValues(alpha: 0.08),
+              child: content,
+            ),
     );
   }
 }

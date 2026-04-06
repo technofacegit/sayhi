@@ -464,6 +464,54 @@ abstract class AppLocalizations {
   /// **'No one matches these filters. Try changing them or clear filters.'**
   String get zoneLobbyFilterEmpty;
 
+  /// No description provided for @zoneMemberProfileAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get zoneMemberProfileAbout;
+
+  /// No description provided for @zoneMemberProfileLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this profile.'**
+  String get zoneMemberProfileLoadError;
+
+  /// No description provided for @zoneMemberProfileLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Like'**
+  String get zoneMemberProfileLike;
+
+  /// No description provided for @zoneMemberProfileDislike.
+  ///
+  /// In en, this message translates to:
+  /// **'Dislike'**
+  String get zoneMemberProfileDislike;
+
+  /// No description provided for @zoneMemberProfileFavoriteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get zoneMemberProfileFavoriteTooltip;
+
+  /// No description provided for @zoneMemberProfileSendMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Send message'**
+  String get zoneMemberProfileSendMessage;
+
+  /// No description provided for @zoneMemberProfileMessageSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Messaging will be available soon. Chats tab opened.'**
+  String get zoneMemberProfileMessageSoon;
+
+  /// No description provided for @zoneMemberProfileSaveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save. Try again.'**
+  String get zoneMemberProfileSaveError;
+
   /// No description provided for @zoneWarmUpTitle.
   ///
   /// In en, this message translates to:
