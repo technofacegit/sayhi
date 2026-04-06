@@ -16,7 +16,6 @@ import 'package:qr_dating_app/features/chats/presentation/screens/chats_tab_scre
 import 'package:qr_dating_app/features/home/presentation/model/swipe_profile.dart';
 import 'package:qr_dating_app/features/home/presentation/screens/discovery_profile_screen.dart';
 import 'package:qr_dating_app/features/home/presentation/screens/home_screen.dart';
-import 'package:qr_dating_app/features/likes/presentation/screens/likes_tab_screen.dart';
 import 'package:qr_dating_app/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:qr_dating_app/core/active_zone_session.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
@@ -163,8 +162,9 @@ class AppGoRouter {
             routes: [
               GoRoute(
                 path: AppRouter.sayHiPath,
-                builder: (context, state) =>
-                    const ZoneLobbyScreen(standaloneSayHi: true),
+                builder: (context, state) => const ZoneLobbyScreen(
+                  variant: ZoneLobbyVariant.sayHi,
+                ),
               ),
             ],
           ),
@@ -172,7 +172,9 @@ class AppGoRouter {
             routes: [
               GoRoute(
                 path: AppRouter.likesPath,
-                builder: (context, state) => const LikesTabScreen(),
+                builder: (context, state) => const ZoneLobbyScreen(
+                  variant: ZoneLobbyVariant.likes,
+                ),
               ),
             ],
           ),

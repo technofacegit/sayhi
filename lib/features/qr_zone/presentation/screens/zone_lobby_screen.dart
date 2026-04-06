@@ -13,13 +13,23 @@ import 'package:qr_dating_app/features/qr_zone/presentation/widgets/zone_icebrea
 import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Lobby: member grid with lazy loading, icebreaker when empty, realtime updates.
-///
-/// [standaloneSayHi]: Say Hi tab — same UI and filters, no zone session (global browse).
-class ZoneLobbyScreen extends StatefulWidget {
-  const ZoneLobbyScreen({super.key, this.standaloneSayHi = false});
+/// Data source and chrome for [ZoneLobbyScreen].
+enum ZoneLobbyVariant {
+  /// Active zone session (venue lobby).
+  inZone,
 
-  final bool standaloneSayHi;
+  /// Say Hi tab: global browse + discovery filters.
+  sayHi,
+
+  /// Likes tab: profiles the viewer has liked.
+  likes,
+}
+
+/// Lobby: member grid with lazy loading, icebreaker when empty, realtime updates.
+class ZoneLobbyScreen extends StatefulWidget {
+  const ZoneLobbyScreen({super.key, this.variant = ZoneLobbyVariant.inZone});
+
+  final ZoneLobbyVariant variant;
 
   @override
   State<ZoneLobbyScreen> createState() => _ZoneLobbyScreenState();
@@ -55,14 +65,20 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
 
     _scrollController.addListener(_onScroll);
 
-    if (widget.standaloneSayHi) {
-      _initStandaloneSayHi();
-    } else {
-      final zoneId = ActiveZoneSession.current?['id'] as String?;
-      if (zoneId != null && zoneId.isNotEmpty) {
-        _loadFirstPage(zoneId);
-        _attachRealtime(zoneId);
-      }
+    switch (widget.variant) {
+      case ZoneLobbyVariant.sayHi:
+        _initStandaloneSayHi();
+        break;
+      case ZoneLobbyVariant.likes:
+        _loadFirstPageLikes();
+        break;
+      case ZoneLobbyVariant.inZone:
+        final zoneId = ActiveZoneSession.current?['id'] as String?;
+        if (zoneId != null && zoneId.isNotEmpty) {
+          _loadFirstPage(zoneId);
+          _attachRealtime(zoneId);
+        }
+        break;
     }
   }
 
@@ -80,13 +96,19 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
     }
     final pos = _scrollController.position;
     if (pos.maxScrollExtent - pos.pixels < 420) {
-      if (widget.standaloneSayHi) {
-        _loadMoreStandalone();
-      } else {
-        final zoneId = ActiveZoneSession.current?['id'] as String?;
-        if (zoneId != null && zoneId.isNotEmpty) {
-          _loadMore(zoneId);
-        }
+      switch (widget.variant) {
+        case ZoneLobbyVariant.sayHi:
+          _loadMoreStandalone();
+          break;
+        case ZoneLobbyVariant.likes:
+          _loadMoreLikes();
+          break;
+        case ZoneLobbyVariant.inZone:
+          final zoneId = ActiveZoneSession.current?['id'] as String?;
+          if (zoneId != null && zoneId.isNotEmpty) {
+            _loadMore(zoneId);
+          }
+          break;
       }
     }
   }
@@ -177,6 +199,50 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
     }
   }
 
+  Future<void> _loadFirstPageLikes() async {
+    setState(() => _loadError = null);
+    try {
+      final page = await _repo.fetchLikedMemberPreviewsPage(offset: 0);
+      if (!mounted) return;
+      setState(() {
+        _members
+          ..clear()
+          ..addAll(page.members);
+        _activeCount = page.activeCount;
+        _hasMore = page.hasMore;
+        _loadingInitial = false;
+        _fetchingProfilesAfterIcebreaker = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e;
+        _loadingInitial = false;
+        _fetchingProfilesAfterIcebreaker = false;
+      });
+    }
+  }
+
+  Future<void> _loadMoreLikes() async {
+    if (_loadingMore || !_hasMore) return;
+    setState(() => _loadingMore = true);
+    try {
+      final page = await _repo.fetchLikedMemberPreviewsPage(
+        offset: _members.length,
+      );
+      if (!mounted) return;
+      setState(() {
+        _members.addAll(page.members);
+        _activeCount = page.activeCount;
+        _hasMore = page.hasMore;
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingMore = false);
+    }
+  }
+
   Future<void> _loadMore(String zoneId) async {
     if (_loadingMore || !_hasMore) return;
     setState(() => _loadingMore = true);
@@ -251,10 +317,18 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
 
   Future<void> _onRefresh(String? zoneId) async {
     setState(() => _fetchingProfilesAfterIcebreaker = false);
-    if (widget.standaloneSayHi) {
-      await _loadFirstPageStandalone();
-    } else if (zoneId != null && zoneId.isNotEmpty) {
-      await _loadFirstPage(zoneId);
+    switch (widget.variant) {
+      case ZoneLobbyVariant.sayHi:
+        await _loadFirstPageStandalone();
+        break;
+      case ZoneLobbyVariant.likes:
+        await _loadFirstPageLikes();
+        break;
+      case ZoneLobbyVariant.inZone:
+        if (zoneId != null && zoneId.isNotEmpty) {
+          await _loadFirstPage(zoneId);
+        }
+        break;
     }
   }
 
@@ -284,7 +358,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
   }
 
   Future<void> _openFilterSheet() async {
-    if (widget.standaloneSayHi) {
+    if (widget.variant == ZoneLobbyVariant.sayHi) {
       final result = await showModalBottomSheet<ZoneLobbyFilters>(
         context: context,
         useRootNavigator: true,
@@ -333,7 +407,94 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
     final onSurfaceMuted = colorScheme.onSurface.withValues(alpha: 0.62);
     final surfaceCard = colorScheme.surfaceContainerHighest.withValues(alpha: 0.35);
 
-    if (widget.standaloneSayHi) {
+    if (widget.variant == ZoneLobbyVariant.likes) {
+      final headerCount = _loadingInitial ? 0 : _activeCount;
+      return Scaffold(
+        backgroundColor: colorScheme.surface,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.likesTabTitle,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.6,
+                                height: 1.15,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                FadeTransition(
+                                  opacity: Tween<double>(begin: 0.45, end: 1).animate(
+                                    CurvedAnimation(
+                                      parent: _pulseController,
+                                      curve: Curves.easeInOut,
+                                    ),
+                                  ),
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.greenAccent.shade400,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.greenAccent.withValues(alpha: 0.45),
+                                          blurRadius: 6,
+                                          spreadRadius: 0,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.zoneMainActiveNow(headerCount),
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: onSurfaceMuted,
+                                    letterSpacing: 0.2,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _buildBody(
+                  context,
+                  zoneId: null,
+                  theme: theme,
+                  onSurfaceMuted: onSurfaceMuted,
+                  surfaceCard: surfaceCard,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (widget.variant == ZoneLobbyVariant.sayHi) {
       final headerCount = _loadingInitial ? 0 : _activeCount;
       return Scaffold(
         backgroundColor: colorScheme.surface,
@@ -620,17 +781,23 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
             _loadingInitial = true;
             _loadError = null;
           });
-          if (standalone) {
-            _loadFirstPageStandalone();
-          } else {
-            _loadFirstPage(zoneId);
+          switch (widget.variant) {
+            case ZoneLobbyVariant.sayHi:
+              _loadFirstPageStandalone();
+              break;
+            case ZoneLobbyVariant.likes:
+              _loadFirstPageLikes();
+              break;
+            case ZoneLobbyVariant.inZone:
+              _loadFirstPage(zoneId!);
+              break;
           }
         },
       );
     }
 
     if (_members.isEmpty) {
-      if (_appliedFilters.hasAny) {
+      if (_appliedFilters.hasAny && widget.variant == ZoneLobbyVariant.sayHi) {
         return RefreshIndicator(
           onRefresh: () => _onRefresh(zoneId),
           child: CustomScrollView(
@@ -643,11 +810,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
                   onSurfaceMuted: onSurfaceMuted,
                   onClearFilters: () {
                     setState(() => _appliedFilters = ZoneLobbyFilters.none);
-                    if (standalone) {
-                      _loadFirstPageStandalone();
-                    } else {
-                      _loadFirstPage(zoneId);
-                    }
+                    _loadFirstPageStandalone();
                   },
                 ),
               ),
@@ -655,7 +818,22 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
           ),
         );
       }
-      if (standalone) {
+      if (widget.variant == ZoneLobbyVariant.likes) {
+        return RefreshIndicator(
+          onRefresh: () => _onRefresh(zoneId),
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: true,
+                child: _LikesEmptyState(onSurfaceMuted: onSurfaceMuted),
+              ),
+            ],
+          ),
+        );
+      }
+      if (widget.variant == ZoneLobbyVariant.sayHi) {
         return RefreshIndicator(
           onRefresh: () => _onRefresh(zoneId),
           child: CustomScrollView(
@@ -685,7 +863,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
                         onSurfaceMuted: onSurfaceMuted,
                       )
                     : ZoneIcebreakerGame(
-                        zoneId: zoneId,
+                        zoneId: zoneId!,
                         repository: _repo,
                         onIcebreakerComplete: () => _onIcebreakerComplete(zoneId),
                       ),
@@ -1118,6 +1296,38 @@ class _LobbyFilterSheetState extends State<_LobbyFilterSheet> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LikesEmptyState extends StatelessWidget {
+  const _LikesEmptyState({required this.onSurfaceMuted});
+
+  final Color onSurfaceMuted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.favorite_border_rounded, size: 56, color: onSurfaceMuted),
+            const SizedBox(height: 16),
+            Text(
+              l10n.likesTabPlaceholder,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: onSurfaceMuted,
+                height: 1.4,
+              ),
+            ),
+          ],
         ),
       ),
     );
