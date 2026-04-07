@@ -146,6 +146,18 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get navProfile;
 
+  /// No description provided for @whoLikedMeTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who Liked Me'**
+  String get whoLikedMeTabTitle;
+
+  /// No description provided for @whoLikedMeEmptyPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'No one has liked you yet.'**
+  String get whoLikedMeEmptyPlaceholder;
+
   /// No description provided for @sayHiLobbyBrowseEmpty.
   ///
   /// In en, this message translates to:
@@ -157,6 +169,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Likes'**
   String get likesTabTitle;
+
+  /// No description provided for @myLikesTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Likes'**
+  String get myLikesTabTitle;
 
   /// No description provided for @likesTabPlaceholder.
   ///

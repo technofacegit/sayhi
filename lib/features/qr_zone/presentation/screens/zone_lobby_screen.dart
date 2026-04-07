@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -24,6 +25,9 @@ enum ZoneLobbyVariant {
   /// Likes tab: profiles the viewer has liked.
   likes,
 
+  /// Likes tab: profiles who liked the viewer.
+  whoLikedMe,
+
   /// Favorites tab: profiles the viewer marked as favorite.
   favorites,
 }
@@ -46,6 +50,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
   final ScrollController _scrollController = ScrollController();
 
   RealtimeChannel? _realtimeChannel;
+  Timer? _realtimeReloadDebounce;
   bool _fetchingProfilesAfterIcebreaker = false;
   bool _icebreakerSessionComplete = false;
 
@@ -72,11 +77,17 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
       case ZoneLobbyVariant.sayHi:
         _initStandaloneSayHi();
         break;
+      case ZoneLobbyVariant.whoLikedMe:
+        _loadFirstPageWhoLikedMe();
+        _attachWhoLikedMeRealtime();
+        break;
       case ZoneLobbyVariant.likes:
         _loadFirstPageLikes();
+        _attachMyLikesRealtime();
         break;
       case ZoneLobbyVariant.favorites:
         _loadFirstPageFavorites();
+        _attachFavoritesRealtime();
         break;
       case ZoneLobbyVariant.inZone:
         final zoneId = ActiveZoneSession.current?['id'] as String?;
@@ -105,6 +116,9 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
       switch (widget.variant) {
         case ZoneLobbyVariant.sayHi:
           _loadMoreStandalone();
+          break;
+        case ZoneLobbyVariant.whoLikedMe:
+          _loadMoreWhoLikedMe();
           break;
         case ZoneLobbyVariant.likes:
           _loadMoreLikes();
@@ -194,6 +208,50 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
       final page = await _repo.fetchSayHiMemberPreviewsPage(
         offset: _members.length,
         filters: _appliedFilters,
+      );
+      if (!mounted) return;
+      setState(() {
+        _members.addAll(page.members);
+        _activeCount = page.activeCount;
+        _hasMore = page.hasMore;
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingMore = false);
+    }
+  }
+
+  Future<void> _loadFirstPageWhoLikedMe() async {
+    setState(() => _loadError = null);
+    try {
+      final page = await _repo.fetchWhoLikedMePreviewsPage(offset: 0);
+      if (!mounted) return;
+      setState(() {
+        _members
+          ..clear()
+          ..addAll(page.members);
+        _activeCount = page.activeCount;
+        _hasMore = page.hasMore;
+        _loadingInitial = false;
+        _fetchingProfilesAfterIcebreaker = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e;
+        _loadingInitial = false;
+        _fetchingProfilesAfterIcebreaker = false;
+      });
+    }
+  }
+
+  Future<void> _loadMoreWhoLikedMe() async {
+    if (_loadingMore || !_hasMore) return;
+    setState(() => _loadingMore = true);
+    try {
+      final page = await _repo.fetchWhoLikedMePreviewsPage(
+        offset: _members.length,
       );
       if (!mounted) return;
       setState(() {
@@ -339,10 +397,152 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
       ..subscribe();
   }
 
+  void _scheduleRealtimeListReload(Future<void> Function() reload) {
+    _realtimeReloadDebounce?.cancel();
+    _realtimeReloadDebounce = Timer(const Duration(milliseconds: 250), () {
+      if (!mounted) return;
+      reload();
+    });
+  }
+
+  bool _payloadAffectsIncomingLikesList(PostgresChangePayload p, String uid) {
+    bool isLike(Object? v) => v?.toString() == 'like';
+    bool towardMeLike(Map<String, dynamic>? r) =>
+        r != null &&
+        r['target_id']?.toString() == uid &&
+        isLike(r['swipe']);
+    switch (p.eventType) {
+      case PostgresChangeEvent.insert:
+        return towardMeLike(p.newRecord);
+      case PostgresChangeEvent.delete:
+        return towardMeLike(p.oldRecord);
+      case PostgresChangeEvent.update:
+        return towardMeLike(p.oldRecord) || towardMeLike(p.newRecord);
+      case PostgresChangeEvent.all:
+        return false;
+    }
+  }
+
+  bool _payloadAffectsMyLikesList(PostgresChangePayload p, String uid) {
+    bool isLike(Object? v) => v?.toString() == 'like';
+    bool myLike(Map<String, dynamic>? r) =>
+        r != null &&
+        r['viewer_id']?.toString() == uid &&
+        isLike(r['swipe']);
+    switch (p.eventType) {
+      case PostgresChangeEvent.insert:
+        return myLike(p.newRecord);
+      case PostgresChangeEvent.delete:
+        return myLike(p.oldRecord);
+      case PostgresChangeEvent.update:
+        return myLike(p.oldRecord) || myLike(p.newRecord);
+      case PostgresChangeEvent.all:
+        return false;
+    }
+  }
+
+  bool _payloadAffectsFavoritesList(PostgresChangePayload p, String uid) {
+    bool fav(Map<String, dynamic>? r) =>
+        r != null &&
+        r['viewer_id']?.toString() == uid &&
+        r['is_favorite'] == true;
+    switch (p.eventType) {
+      case PostgresChangeEvent.insert:
+        return fav(p.newRecord);
+      case PostgresChangeEvent.delete:
+        return fav(p.oldRecord);
+      case PostgresChangeEvent.update:
+        final oldMine = p.oldRecord['viewer_id']?.toString() == uid;
+        final newMine = p.newRecord['viewer_id']?.toString() == uid;
+        if (!oldMine && !newMine) return false;
+        return p.oldRecord['is_favorite'] != p.newRecord['is_favorite'] ||
+            fav(p.newRecord) ||
+            fav(p.oldRecord);
+      case PostgresChangeEvent.all:
+        return false;
+    }
+  }
+
+  void _attachWhoLikedMeRealtime() {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+    _realtimeChannel?.unsubscribe();
+    _realtimeChannel = Supabase.instance.client
+        .channel('lobby_who_liked_me_$uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'profile_interactions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'target_id',
+            value: uid,
+          ),
+          callback: (payload) {
+            if (!mounted) return;
+            if (widget.variant != ZoneLobbyVariant.whoLikedMe) return;
+            if (!_payloadAffectsIncomingLikesList(payload, uid)) return;
+            _scheduleRealtimeListReload(_loadFirstPageWhoLikedMe);
+          },
+        )
+      ..subscribe();
+  }
+
+  void _attachMyLikesRealtime() {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+    _realtimeChannel?.unsubscribe();
+    _realtimeChannel = Supabase.instance.client
+        .channel('lobby_my_likes_$uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'profile_interactions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'viewer_id',
+            value: uid,
+          ),
+          callback: (payload) {
+            if (!mounted) return;
+            if (widget.variant != ZoneLobbyVariant.likes) return;
+            if (!_payloadAffectsMyLikesList(payload, uid)) return;
+            _scheduleRealtimeListReload(_loadFirstPageLikes);
+          },
+        )
+      ..subscribe();
+  }
+
+  void _attachFavoritesRealtime() {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+    _realtimeChannel?.unsubscribe();
+    _realtimeChannel = Supabase.instance.client
+        .channel('lobby_favorites_$uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'profile_interactions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'viewer_id',
+            value: uid,
+          ),
+          callback: (payload) {
+            if (!mounted) return;
+            if (widget.variant != ZoneLobbyVariant.favorites) return;
+            if (!_payloadAffectsFavoritesList(payload, uid)) return;
+            _scheduleRealtimeListReload(_loadFirstPageFavorites);
+          },
+        )
+      ..subscribe();
+  }
+
   @override
   void dispose() {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _realtimeReloadDebounce?.cancel();
     _realtimeChannel?.unsubscribe();
     _pulseController.dispose();
     super.dispose();
@@ -373,6 +573,9 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
     switch (widget.variant) {
       case ZoneLobbyVariant.sayHi:
         await _loadFirstPageStandalone();
+        break;
+      case ZoneLobbyVariant.whoLikedMe:
+        await _loadFirstPageWhoLikedMe();
         break;
       case ZoneLobbyVariant.likes:
         await _loadFirstPageLikes();
@@ -538,7 +741,94 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l10n.likesTabTitle,
+                              l10n.myLikesTabTitle,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.6,
+                                height: 1.15,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                FadeTransition(
+                                  opacity: Tween<double>(begin: 0.45, end: 1).animate(
+                                    CurvedAnimation(
+                                      parent: _pulseController,
+                                      curve: Curves.easeInOut,
+                                    ),
+                                  ),
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.greenAccent.shade400,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.greenAccent.withValues(alpha: 0.45),
+                                          blurRadius: 6,
+                                          spreadRadius: 0,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.zoneMainActiveNow(headerCount),
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: onSurfaceMuted,
+                                    letterSpacing: 0.2,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _buildBody(
+                  context,
+                  zoneId: null,
+                  theme: theme,
+                  onSurfaceMuted: onSurfaceMuted,
+                  surfaceCard: surfaceCard,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (widget.variant == ZoneLobbyVariant.whoLikedMe) {
+      final headerCount = _loadingInitial ? 0 : _activeCount;
+      return Scaffold(
+        backgroundColor: colorScheme.surface,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.whoLikedMeTabTitle,
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: -0.6,
@@ -983,6 +1273,9 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
             case ZoneLobbyVariant.sayHi:
               _loadFirstPageStandalone();
               break;
+            case ZoneLobbyVariant.whoLikedMe:
+              _loadFirstPageWhoLikedMe();
+              break;
             case ZoneLobbyVariant.likes:
               _loadFirstPageLikes();
               break;
@@ -1029,6 +1322,21 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
               SliverFillRemaining(
                 hasScrollBody: true,
                 child: _LikesEmptyState(onSurfaceMuted: onSurfaceMuted),
+              ),
+            ],
+          ),
+        );
+      }
+      if (widget.variant == ZoneLobbyVariant.whoLikedMe) {
+        return RefreshIndicator(
+          onRefresh: () => _onRefresh(zoneId),
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: true,
+                child: _WhoLikedMeEmptyState(onSurfaceMuted: onSurfaceMuted),
               ),
             ],
           ),
@@ -1520,6 +1828,38 @@ class _LikesEmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               l10n.likesTabPlaceholder,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: onSurfaceMuted,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WhoLikedMeEmptyState extends StatelessWidget {
+  const _WhoLikedMeEmptyState({required this.onSurfaceMuted});
+
+  final Color onSurfaceMuted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.favorite_outline_rounded, size: 56, color: onSurfaceMuted),
+            const SizedBox(height: 16),
+            Text(
+              l10n.whoLikedMeEmptyPlaceholder,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: onSurfaceMuted,

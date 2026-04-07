@@ -33,11 +33,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get navProfile => 'Profil';
 
   @override
+  String get whoLikedMeTabTitle => 'Beni Beğenenler';
+
+  @override
+  String get whoLikedMeEmptyPlaceholder => 'Henüz sizi beğenen kimse yok.';
+
+  @override
   String get sayHiLobbyBrowseEmpty =>
       'Şu an gösterilecek profil yok. Daha sonra tekrar deneyin.';
 
   @override
   String get likesTabTitle => 'Beğeniler';
+
+  @override
+  String get myLikesTabTitle => 'Beğendiklerim';
 
   @override
   String get likesTabPlaceholder => 'Beğendiğin kişiler burada görünecek.';

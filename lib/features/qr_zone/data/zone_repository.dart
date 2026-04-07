@@ -62,6 +62,7 @@ class ZoneRepository {
 
   /// Page size for [fetchZoneMemberPreviewsPage] (server caps at 100).
   static const int lobbyMemberPageSize = 20;
+  static const bool _enableTestAutoMatch = true;
 
   /// Returns a list of maps shaped like UI expectations.
   Future<List<Map<String, dynamic>>> fetchZones() async {
@@ -286,6 +287,31 @@ class ZoneRepository {
     );
   }
 
+  /// Likes tab: profiles who liked the viewer (`target_id = me` and swipe = like).
+  Future<ZoneMemberPreviewsPage> fetchWhoLikedMePreviewsPage({
+    int offset = 0,
+    int limit = lobbyMemberPageSize,
+  }) async {
+    final raw = await _client.rpc<dynamic>(
+      'get_who_liked_me_page',
+      params: {
+        'p_limit': limit,
+        'p_offset': offset,
+      },
+    );
+    if (raw is! Map<String, dynamic>) {
+      throw Exception('Invalid who-liked-me page response');
+    }
+    final count = (raw['active_count'] as num?)?.toInt() ?? 0;
+    final list = raw['members'] as List? ?? const [];
+    final hasMore = raw['has_more'] == true;
+    return ZoneMemberPreviewsPage(
+      activeCount: count,
+      members: _parseZoneMemberPreviewList(list),
+      hasMore: hasMore,
+    );
+  }
+
   /// Favorites tab: profiles the viewer marked as favorite (`is_favorite = true`).
   Future<ZoneMemberPreviewsPage> fetchFavoritedMemberPreviewsPage({
     int offset = 0,
@@ -416,6 +442,7 @@ class ZoneRepository {
       params: {
         'p_target_id': target,
         'p_swipe': swipe,
+        'p_enable_test_auto_match': _enableTestAutoMatch,
       },
     );
     debugPrint('[ZoneRepository.setProfileSwipe] ok target=$target swipe=$swipe');

@@ -33,11 +33,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navProfile => 'Profile';
 
   @override
+  String get whoLikedMeTabTitle => 'Who Liked Me';
+
+  @override
+  String get whoLikedMeEmptyPlaceholder => 'No one has liked you yet.';
+
+  @override
   String get sayHiLobbyBrowseEmpty =>
       'No profiles to show yet. Check back soon.';
 
   @override
   String get likesTabTitle => 'Likes';
+
+  @override
+  String get myLikesTabTitle => 'My Likes';
 
   @override
   String get likesTabPlaceholder => 'People you liked will appear here.';

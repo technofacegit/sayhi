@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
-import 'package:qr_dating_app/features/chats/data/mock_chat_threads.dart';
+import 'package:qr_dating_app/features/chats/data/chat_threads_repository.dart';
 import 'package:qr_dating_app/features/chats/presentation/model/chat_thread.dart';
 import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
-import 'package:qr_dating_app/l10n/app_localizations.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class ChatsTabScreen extends StatefulWidget {
@@ -17,6 +16,17 @@ class ChatsTabScreen extends StatefulWidget {
 
 class _ChatsTabScreenState extends State<ChatsTabScreen> {
   final TextEditingController _search = TextEditingController();
+  final ChatThreadsRepository _repo = ChatThreadsRepository();
+  List<ChatThread> _threads = const [];
+  List<ChatThread> _newMatches = const [];
+  bool _loading = true;
+  Object? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThreads();
+  }
 
   @override
   void dispose() {
@@ -24,9 +34,34 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
     super.dispose();
   }
 
-  List<ChatThread> _filtered(AppLocalizations l10n) {
+  Future<void> _loadThreads() async {
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
+    try {
+      final results = await Future.wait<List<ChatThread>>([
+        _repo.fetchThreads(limit: 60),
+        _repo.fetchNewMatches(limit: 30),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _threads = results[0];
+        _newMatches = results[1];
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e;
+        _loading = false;
+      });
+    }
+  }
+
+  List<ChatThread> _filtered() {
     final q = _search.text.trim().toLowerCase();
-    final list = MockChatThreads.all(l10n);
+    final list = _threads;
     if (q.isEmpty) return list;
     return list
         .where((t) =>
@@ -55,7 +90,10 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
             return ListenableBuilder(
               listenable: _search,
               builder: (context, _) {
-                final items = _filtered(l10n);
+                final items = _filtered();
+                final chatItems = items
+                    .where((t) => t.lastMessage.trim().isNotEmpty)
+                    .toList(growable: false);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -69,6 +107,27 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                         ),
                       ),
                     ),
+                    if (_newMatches.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        height: 98,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: _newMatches.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 14),
+                          itemBuilder: (context, index) {
+                            final m = _newMatches[index];
+                            return _NewMatchCircle(
+                              thread: m,
+                              onTap: () => context.push(
+                                AppRouter.chatConversationPath(m.id),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: SearchBar(
@@ -94,7 +153,40 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                     ),
                     const SizedBox(height: 8),
                     Expanded(
-                      child: items.isEmpty
+                      child: _loading
+                          ? const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : _loadError != null
+                              ? Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.cloud_off_outlined,
+                                          size: 42,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          l10n.homeDiscoveryLoadError,
+                                          textAlign: TextAlign.center,
+                                          style: theme.textTheme.bodyMedium?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 14),
+                                        FilledButton.tonal(
+                                          onPressed: _loadThreads,
+                                          child: Text(l10n.commonRetry),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              : chatItems.isEmpty
                           ? Center(
                               child: Text(
                                 _search.text.trim().isEmpty
@@ -107,7 +199,7 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                             )
                           : ListView.separated(
                               padding: const EdgeInsets.only(bottom: 100),
-                              itemCount: items.length,
+                              itemCount: chatItems.length,
                               separatorBuilder: (_, __) => Divider(
                                 height: 1,
                                 indent: 88,
@@ -115,7 +207,7 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                                     .withValues(alpha: 0.35),
                               ),
                               itemBuilder: (context, index) {
-                                final thread = items[index];
+                                final thread = chatItems[index];
                                 return _ChatThreadTile(
                                   thread: thread,
                                   onTap: () => context.push(
@@ -236,7 +328,14 @@ class _ChatThreadTile extends StatelessWidget {
                     radius: 28,
                     backgroundColor: colorScheme.surfaceContainerHighest
                         .withValues(alpha: 0.9),
-                    backgroundImage: NetworkImage(thread.avatarUrl),
+                    backgroundImage:
+                        thread.avatarUrl.isEmpty ? null : NetworkImage(thread.avatarUrl),
+                    child: thread.avatarUrl.isEmpty
+                        ? Icon(
+                            Icons.person_rounded,
+                            color: colorScheme.onSurfaceVariant,
+                          )
+                        : null,
                   ),
                   if (thread.unreadCount > 0)
                     Positioned(
@@ -323,6 +422,54 @@ class _ChatThreadTile extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NewMatchCircle extends StatelessWidget {
+  const _NewMatchCircle({
+    required this.thread,
+    required this.onTap,
+  });
+
+  final ChatThread thread;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 72,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.9),
+              backgroundImage:
+                  thread.avatarUrl.isEmpty ? null : NetworkImage(thread.avatarUrl),
+              child: thread.avatarUrl.isEmpty
+                  ? Icon(Icons.person_rounded, color: colorScheme.onSurfaceVariant)
+                  : null,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              thread.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

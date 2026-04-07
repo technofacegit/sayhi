@@ -136,6 +136,24 @@ class AppGoRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: AppRouter.likesPath,
+                builder: (context, state) => const LikesTabScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRouter.sayHiPath,
+                builder: (context, state) => const ZoneLobbyScreen(
+                  variant: ZoneLobbyVariant.sayHi,
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: AppRouter.chatsPath,
                 builder: (context, state) => const ChatsTabScreen(),
                 routes: [
@@ -156,24 +174,6 @@ class AppGoRouter {
                     ],
                   ),
                 ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRouter.sayHiPath,
-                builder: (context, state) => const ZoneLobbyScreen(
-                  variant: ZoneLobbyVariant.sayHi,
-                ),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRouter.likesPath,
-                builder: (context, state) => const LikesTabScreen(),
               ),
             ],
           ),

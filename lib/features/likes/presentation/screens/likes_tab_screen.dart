@@ -12,7 +12,7 @@ class LikesTabScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         body: SafeArea(
           child: Column(
@@ -21,7 +21,8 @@ class LikesTabScreen extends StatelessWidget {
                 color: colorScheme.surface,
                 child: TabBar(
                   tabs: [
-                    Tab(text: l10n.navLikes),
+                    Tab(text: l10n.whoLikedMeTabTitle),
+                    Tab(text: l10n.myLikesTabTitle),
                     Tab(text: l10n.navFavorites),
                   ],
                 ),
@@ -29,6 +30,7 @@ class LikesTabScreen extends StatelessWidget {
               const Expanded(
                 child: TabBarView(
                   children: [
+                    ZoneLobbyScreen(variant: ZoneLobbyVariant.whoLikedMe),
                     ZoneLobbyScreen(variant: ZoneLobbyVariant.likes),
                     ZoneLobbyScreen(variant: ZoneLobbyVariant.favorites),
                   ],
