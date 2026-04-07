@@ -118,11 +118,7 @@ class _DiscoverySwipeDeckState extends State<DiscoverySwipeDeck>
 
   Future<void> _commitFromButton(String swipe) async {
     if (_animating) return;
-    try {
-      await widget.onSwiped(swipe);
-    } catch (_) {
-      // Parent shows snackbar
-    }
+    await _flyOffAndCommit(swipe);
   }
 
   /// Release after dragging: right → like (Tinder-style), left → dislike.

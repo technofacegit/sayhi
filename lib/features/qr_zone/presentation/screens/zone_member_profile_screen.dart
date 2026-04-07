@@ -70,7 +70,7 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
     }
   }
 
-  Future<void> _persist(ZoneMemberProfileDetail next) async {
+  Future<void> _persist(ZoneMemberProfileDetail next, {bool popOnSuccess = false}) async {
     setState(() {
       _detail = next;
       _saving = true;
@@ -81,6 +81,9 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
         swipe: next.swipe,
         isFavorite: next.isFavorite,
       );
+      if (popOnSuccess && mounted) {
+        context.pop();
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -106,7 +109,7 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
       galleryUrls: d.galleryUrls,
       swipe: nextSwipe,
       isFavorite: d.isFavorite,
-    ));
+    ), popOnSuccess: true);
   }
 
   void _onDislike() {
@@ -123,7 +126,7 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
       galleryUrls: d.galleryUrls,
       swipe: nextSwipe,
       isFavorite: d.isFavorite,
-    ));
+    ), popOnSuccess: true);
   }
 
   void _onFavorite() {

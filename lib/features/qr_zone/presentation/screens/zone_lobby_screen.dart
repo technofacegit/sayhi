@@ -23,6 +23,9 @@ enum ZoneLobbyVariant {
 
   /// Likes tab: profiles the viewer has liked.
   likes,
+
+  /// Favorites tab: profiles the viewer marked as favorite.
+  favorites,
 }
 
 /// Lobby: member grid with lazy loading, icebreaker when empty, realtime updates.
@@ -72,6 +75,9 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
       case ZoneLobbyVariant.likes:
         _loadFirstPageLikes();
         break;
+      case ZoneLobbyVariant.favorites:
+        _loadFirstPageFavorites();
+        break;
       case ZoneLobbyVariant.inZone:
         final zoneId = ActiveZoneSession.current?['id'] as String?;
         if (zoneId != null && zoneId.isNotEmpty) {
@@ -102,6 +108,9 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
           break;
         case ZoneLobbyVariant.likes:
           _loadMoreLikes();
+          break;
+        case ZoneLobbyVariant.favorites:
+          _loadMoreFavorites();
           break;
         case ZoneLobbyVariant.inZone:
           final zoneId = ActiveZoneSession.current?['id'] as String?;
@@ -243,6 +252,50 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
     }
   }
 
+  Future<void> _loadFirstPageFavorites() async {
+    setState(() => _loadError = null);
+    try {
+      final page = await _repo.fetchFavoritedMemberPreviewsPage(offset: 0);
+      if (!mounted) return;
+      setState(() {
+        _members
+          ..clear()
+          ..addAll(page.members);
+        _activeCount = page.activeCount;
+        _hasMore = page.hasMore;
+        _loadingInitial = false;
+        _fetchingProfilesAfterIcebreaker = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e;
+        _loadingInitial = false;
+        _fetchingProfilesAfterIcebreaker = false;
+      });
+    }
+  }
+
+  Future<void> _loadMoreFavorites() async {
+    if (_loadingMore || !_hasMore) return;
+    setState(() => _loadingMore = true);
+    try {
+      final page = await _repo.fetchFavoritedMemberPreviewsPage(
+        offset: _members.length,
+      );
+      if (!mounted) return;
+      setState(() {
+        _members.addAll(page.members);
+        _activeCount = page.activeCount;
+        _hasMore = page.hasMore;
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingMore = false);
+    }
+  }
+
   Future<void> _loadMore(String zoneId) async {
     if (_loadingMore || !_hasMore) return;
     setState(() => _loadingMore = true);
@@ -324,6 +377,9 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
       case ZoneLobbyVariant.likes:
         await _loadFirstPageLikes();
         break;
+      case ZoneLobbyVariant.favorites:
+        await _loadFirstPageFavorites();
+        break;
       case ZoneLobbyVariant.inZone:
         if (zoneId != null && zoneId.isNotEmpty) {
           await _loadFirstPage(zoneId);
@@ -354,6 +410,61 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
         SnackBar(content: Text(context.l10n.zoneMemberProfileSaveError)),
       );
       rethrow;
+    }
+  }
+
+  Future<void> _openMemberProfile(ZoneMemberPreview member, {required bool standalone}) async {
+    if (standalone) {
+      await context.push(
+        AppRouter.discoveryProfilePath,
+        extra: SwipeProfile(
+          id: member.id,
+          photoUrl: member.photoUrl,
+          name: member.name,
+          age: member.age,
+          bio: member.bio,
+          gender: member.gender,
+          galleryUrls: const [],
+        ),
+      );
+    } else {
+      await context.push(AppRouter.zoneMemberProfilePath(member.id));
+    }
+
+    if (!mounted) return;
+    if (widget.variant != ZoneLobbyVariant.likes &&
+        widget.variant != ZoneLobbyVariant.favorites) {
+      return;
+    }
+
+    try {
+      final interaction = await _repo.fetchProfileInteractionForTarget(member.id);
+      if (!mounted) return;
+      final idx = _members.indexWhere((e) => e.id == member.id);
+      if (idx < 0) return;
+
+      final shouldRemove = switch (widget.variant) {
+        ZoneLobbyVariant.likes => interaction?.swipe != 'like',
+        ZoneLobbyVariant.favorites => interaction?.isFavorite != true,
+        _ => false,
+      };
+      if (!shouldRemove) return;
+
+      setState(() => _members.removeAt(idx));
+      if (_members.isEmpty && _hasMore) {
+        switch (widget.variant) {
+          case ZoneLobbyVariant.likes:
+            await _loadFirstPageLikes();
+            break;
+          case ZoneLobbyVariant.favorites:
+            await _loadFirstPageFavorites();
+            break;
+          default:
+            break;
+        }
+      }
+    } catch (_) {
+      // Keep list as-is if interaction check fails.
     }
   }
 
@@ -428,6 +539,93 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
                           children: [
                             Text(
                               l10n.likesTabTitle,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.6,
+                                height: 1.15,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                FadeTransition(
+                                  opacity: Tween<double>(begin: 0.45, end: 1).animate(
+                                    CurvedAnimation(
+                                      parent: _pulseController,
+                                      curve: Curves.easeInOut,
+                                    ),
+                                  ),
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.greenAccent.shade400,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.greenAccent.withValues(alpha: 0.45),
+                                          blurRadius: 6,
+                                          spreadRadius: 0,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.zoneMainActiveNow(headerCount),
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: onSurfaceMuted,
+                                    letterSpacing: 0.2,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: _buildBody(
+                  context,
+                  zoneId: null,
+                  theme: theme,
+                  onSurfaceMuted: onSurfaceMuted,
+                  surfaceCard: surfaceCard,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (widget.variant == ZoneLobbyVariant.favorites) {
+      final headerCount = _loadingInitial ? 0 : _activeCount;
+      return Scaffold(
+        backgroundColor: colorScheme.surface,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.favoritesTabTitle,
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: -0.6,
@@ -788,6 +986,9 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
             case ZoneLobbyVariant.likes:
               _loadFirstPageLikes();
               break;
+            case ZoneLobbyVariant.favorites:
+              _loadFirstPageFavorites();
+              break;
             case ZoneLobbyVariant.inZone:
               _loadFirstPage(zoneId!);
               break;
@@ -828,6 +1029,21 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
               SliverFillRemaining(
                 hasScrollBody: true,
                 child: _LikesEmptyState(onSurfaceMuted: onSurfaceMuted),
+              ),
+            ],
+          ),
+        );
+      }
+      if (widget.variant == ZoneLobbyVariant.favorites) {
+        return RefreshIndicator(
+          onRefresh: () => _onRefresh(zoneId),
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverFillRemaining(
+                hasScrollBody: true,
+                child: _FavoritesEmptyState(onSurfaceMuted: onSurfaceMuted),
               ),
             ],
           ),
@@ -897,24 +1113,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
                     member: m,
                     surfaceCard: surfaceCard,
                     onSurfaceMuted: onSurfaceMuted,
-                    onOpenProfile: () {
-                      if (standalone) {
-                        context.push(
-                          AppRouter.discoveryProfilePath,
-                          extra: SwipeProfile(
-                            id: m.id,
-                            photoUrl: m.photoUrl,
-                            name: m.name,
-                            age: m.age,
-                            bio: m.bio,
-                            gender: m.gender,
-                            galleryUrls: const [],
-                          ),
-                        );
-                      } else {
-                        context.push(AppRouter.zoneMemberProfilePath(m.id));
-                      }
-                    },
+                    onOpenProfile: () => _openMemberProfile(m, standalone: standalone),
                     onSwipeCommitted: (swipe) => _onMemberSwipeCommitted(m.id, swipe),
                   );
                 },
@@ -1321,6 +1520,38 @@ class _LikesEmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               l10n.likesTabPlaceholder,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: onSurfaceMuted,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FavoritesEmptyState extends StatelessWidget {
+  const _FavoritesEmptyState({required this.onSurfaceMuted});
+
+  final Color onSurfaceMuted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.star_outline_rounded, size: 56, color: onSurfaceMuted),
+            const SizedBox(height: 16),
+            Text(
+              l10n.favoritesTabPlaceholder,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: onSurfaceMuted,

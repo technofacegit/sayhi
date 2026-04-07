@@ -159,6 +159,37 @@ class _HomeScreenState extends State<HomeScreen> {
     await _loadDeck();
   }
 
+  Future<void> _openCurrentProfileDetail() async {
+    if (_deck.isEmpty) return;
+    final opened = _deck.first;
+    final openedId = opened.id;
+    await context.push(AppRouter.discoveryProfilePath, extra: opened);
+    if (!mounted || _deck.isEmpty) return;
+    if (_deck.first.id != openedId) return;
+
+    try {
+      final interaction = await _zoneRepository.fetchProfileInteractionForTarget(openedId);
+      if (!mounted || _deck.isEmpty) return;
+      if (_deck.first.id != openedId) return;
+      if (interaction?.swipe != null) {
+        setState(() {
+          _deck.removeAt(0);
+          if (_deck.isEmpty) _loadingDeck = true;
+        });
+        if (_deck.isEmpty) {
+          await _loadDeck();
+          return;
+        }
+        if (_deck.length < 8) {
+          // ignore: unawaited_futures
+          _prefetchMore();
+        }
+      }
+    } catch (_) {
+      // If we can't read interaction, keep current card unchanged.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -302,9 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
       key: ValueKey(_deck.first.id),
       profile: _deck.first,
       onSwiped: _onSwiped,
-      onPhotoTap: () {
-        context.push(AppRouter.discoveryProfilePath, extra: _deck.first);
-      },
+      onPhotoTap: _openCurrentProfileDetail,
     );
   }
 }

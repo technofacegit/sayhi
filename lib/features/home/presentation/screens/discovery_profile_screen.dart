@@ -62,7 +62,11 @@ class _DiscoveryProfileScreenState extends State<DiscoveryProfileScreen> {
     }
   }
 
-  Future<void> _persist({required String? swipe, required bool isFavorite}) async {
+  Future<void> _persist({
+    required String? swipe,
+    required bool isFavorite,
+    bool popOnSuccess = false,
+  }) async {
     setState(() {
       _swipe = swipe;
       _isFavorite = isFavorite;
@@ -74,6 +78,9 @@ class _DiscoveryProfileScreenState extends State<DiscoveryProfileScreen> {
         swipe: swipe,
         isFavorite: isFavorite,
       );
+      if (popOnSuccess && mounted) {
+        context.pop();
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -88,13 +95,13 @@ class _DiscoveryProfileScreenState extends State<DiscoveryProfileScreen> {
   void _onLike() {
     if (_saving || _loadingInteraction) return;
     final nextSwipe = _swipe == 'like' ? null : 'like';
-    _persist(swipe: nextSwipe, isFavorite: _isFavorite);
+    _persist(swipe: nextSwipe, isFavorite: _isFavorite, popOnSuccess: true);
   }
 
   void _onDislike() {
     if (_saving || _loadingInteraction) return;
     final nextSwipe = _swipe == 'dislike' ? null : 'dislike';
-    _persist(swipe: nextSwipe, isFavorite: _isFavorite);
+    _persist(swipe: nextSwipe, isFavorite: _isFavorite, popOnSuccess: true);
   }
 
   void _onFavorite() {
@@ -127,6 +134,18 @@ class _DiscoveryProfileScreenState extends State<DiscoveryProfileScreen> {
           title,
           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         ),
+        actions: [
+          IconButton(
+            tooltip: l10n.zoneMemberProfileFavoriteTooltip,
+            onPressed: busy ? null : _onFavorite,
+            icon: Icon(
+              _isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
+              color: _isFavorite
+                  ? const Color(0xFF29B6F6)
+                  : colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -221,7 +240,7 @@ class _DiscoveryProfileScreenState extends State<DiscoveryProfileScreen> {
                 padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
+                  children: <Widget>[
                     Tooltip(
                       message: l10n.zoneMemberProfileDislike,
                       child: DiscoveryActionCircle(
@@ -231,24 +250,16 @@ class _DiscoveryProfileScreenState extends State<DiscoveryProfileScreen> {
                         emphasized: _swipe == 'dislike',
                       ),
                     ),
-                    Tooltip(
-                      message: l10n.zoneMemberProfileLike,
-                      child: DiscoveryActionCircle(
-                        color: Colors.greenAccent.shade700,
-                        icon: Icons.favorite_rounded,
-                        onTap: busy ? null : _onLike,
-                        emphasized: _swipe == 'like',
+                    if (_swipe != 'like')
+                      Tooltip(
+                        message: l10n.zoneMemberProfileLike,
+                        child: DiscoveryActionCircle(
+                          color: Colors.greenAccent.shade700,
+                          icon: Icons.favorite_rounded,
+                          onTap: busy ? null : _onLike,
+                          emphasized: _swipe == 'like',
+                        ),
                       ),
-                    ),
-                    Tooltip(
-                      message: l10n.zoneMemberProfileFavoriteTooltip,
-                      child: DiscoveryActionCircle(
-                        color: const Color(0xFF29B6F6),
-                        icon: _isFavorite ? Icons.star_rounded : Icons.star_outline_rounded,
-                        onTap: busy ? null : _onFavorite,
-                        emphasized: _isFavorite,
-                      ),
-                    ),
                   ],
                 ),
               ),

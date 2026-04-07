@@ -286,6 +286,31 @@ class ZoneRepository {
     );
   }
 
+  /// Favorites tab: profiles the viewer marked as favorite (`is_favorite = true`).
+  Future<ZoneMemberPreviewsPage> fetchFavoritedMemberPreviewsPage({
+    int offset = 0,
+    int limit = lobbyMemberPageSize,
+  }) async {
+    final raw = await _client.rpc<dynamic>(
+      'get_favorited_profiles_page',
+      params: {
+        'p_limit': limit,
+        'p_offset': offset,
+      },
+    );
+    if (raw is! Map<String, dynamic>) {
+      throw Exception('Invalid favorited profiles page response');
+    }
+    final count = (raw['active_count'] as num?)?.toInt() ?? 0;
+    final list = raw['members'] as List? ?? const [];
+    final hasMore = raw['has_more'] == true;
+    return ZoneMemberPreviewsPage(
+      activeCount: count,
+      members: _parseZoneMemberPreviewList(list),
+      hasMore: hasMore,
+    );
+  }
+
   /// Say Hi tab lobby: paginated previews without zone (same shape as [fetchZoneMemberPreviewsPage]).
   Future<ZoneMemberPreviewsPage> fetchSayHiMemberPreviewsPage({
     int offset = 0,
