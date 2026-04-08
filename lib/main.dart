@@ -1,10 +1,24 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-import 'app/app.dart';
+import 'package:flutter/material.dart';
+import 'package:qr_dating_app/core/perf_log.dart';
+
+import 'app/app_startup.dart';
 import 'bootstrap.dart';
 
-Future<void> main() async {
+void main() {
+  final sw = Stopwatch()..start();
+  perfLog(
+    'main',
+    'ensureInitialized + bootstrap (camera warmup from chat)',
+    sw,
+  );
   WidgetsFlutterBinding.ensureInitialized();
-  await bootstrap();
-  runApp(const App());
+  final bootstrapFuture = bootstrap();
+  unawaited(
+    bootstrapFuture.then((_) {
+      perfLog('main', 'bootstrap() Future complete', sw);
+    }),
+  );
+  runApp(AppStartup(bootstrapFuture: bootstrapFuture));
 }

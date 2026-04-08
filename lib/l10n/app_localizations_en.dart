@@ -674,6 +674,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMessageHint => 'Message…';
 
   @override
+  String get chatPreparingCameraSession => 'Preparing camera…';
+
+  @override
+  String get chatCameraFirstRecordingHint =>
+      'First recording may take a moment…';
+
+  @override
+  String get chatCameraUnavailable => 'Camera unavailable';
+
+  @override
   String get chatProfileNotFound => 'Profile not found';
 
   @override

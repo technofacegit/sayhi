@@ -159,6 +159,7 @@ class AppGoRouter {
                 routes: [
                   GoRoute(
                     path: 'conversation/:chatId',
+                    parentNavigatorKey: appRootNavigatorKey,
                     builder: (context, state) {
                       final id = state.pathParameters['chatId']!;
                       return ChatConversationScreen(chatId: id);
@@ -166,6 +167,7 @@ class AppGoRouter {
                     routes: [
                       GoRoute(
                         path: 'profile',
+                        parentNavigatorKey: appRootNavigatorKey,
                         builder: (context, state) {
                           final id = state.pathParameters['chatId']!;
                           return ChatUserProfileScreen(chatId: id);

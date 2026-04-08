@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:qr_dating_app/features/chats/presentation/model/chat_message.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,6 +29,7 @@ class ChatMessagesRepository {
       : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
+  static const _chatMediaBucket = 'chat-media';
 
   String? get _myId => _client.auth.currentUser?.id;
 
@@ -105,10 +107,47 @@ class ChatMessagesRepository {
     return _parseMessage(m, myId);
   }
 
+  Future<ChatMessage?> sendVideoNote(
+    String recipientId, {
+    required String filePath,
+    int? durationSec,
+  }) async {
+    final myId = _myId;
+    if (myId == null) return null;
+
+    final file = File(filePath);
+    if (!await file.exists()) return null;
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) return null;
+
+    final objectPath =
+        '$myId/video_notes/${DateTime.now().millisecondsSinceEpoch}.mp4';
+    await _client.storage.from(_chatMediaBucket).uploadBinary(
+          objectPath,
+          bytes,
+          fileOptions: const FileOptions(contentType: 'video/mp4'),
+        );
+    final mediaUrl = _client.storage.from(_chatMediaBucket).getPublicUrl(objectPath);
+
+    final raw = await _client.rpc<dynamic>(
+      'send_chat_video_note',
+      params: {
+        'p_recipient_id': recipientId,
+        'p_media_url': mediaUrl,
+        'p_media_duration_sec': durationSec,
+      },
+    );
+    final m = _asMap(raw);
+    return _parseMessage(m, myId);
+  }
+
   ChatMessage _parseMessage(Map<String, dynamic> m, String myId) {
     final id = m['id']?.toString() ?? '';
     final text = (m['body'] as String? ?? '').trim();
     final senderId = m['sender_id']?.toString() ?? '';
+    final type = (m['message_type']?.toString() ?? 'text').trim();
+    final mediaUrl = (m['media_url']?.toString() ?? '').trim();
+    final duration = (m['media_duration_sec'] as num?)?.toInt();
     final tsRaw = m['created_at']?.toString();
     final sentAt = tsRaw == null
         ? DateTime.now()
@@ -118,6 +157,9 @@ class ChatMessagesRepository {
       text: text,
       isMe: senderId == myId,
       sentAt: sentAt,
+      type: type.isEmpty ? 'text' : type,
+      mediaUrl: mediaUrl,
+      mediaDurationSec: duration,
     );
   }
 

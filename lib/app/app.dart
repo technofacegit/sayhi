@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'package:qr_dating_app/core/perf_log.dart';
 import 'package:qr_dating_app/features/auth/presentation/deep_link/auth_deep_link_coordinator.dart';
 import 'package:qr_dating_app/l10n/app_localizations.dart';
 
@@ -22,6 +23,7 @@ class _AppState extends State<App> {
     super.initState();
     _deepLinks = AuthDeepLinkCoordinator();
     SchedulerBinding.instance.addPostFrameCallback((_) {
+      perfLog('App', 'first frame (MaterialApp.router mounted)');
       _deepLinks?.init();
     });
   }
@@ -35,7 +37,8 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'Say Hi',
+      onGenerateTitle: (context) =>
+          AppLocalizations.of(context)?.appTitle ?? 'Say Hi',
       theme: buildAppTheme(),
       routerConfig: AppGoRouter.router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -43,4 +46,3 @@ class _AppState extends State<App> {
     );
   }
 }
-

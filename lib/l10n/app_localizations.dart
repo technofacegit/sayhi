@@ -1322,6 +1322,24 @@ abstract class AppLocalizations {
   /// **'Message…'**
   String get chatMessageHint;
 
+  /// No description provided for @chatPreparingCameraSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing camera…'**
+  String get chatPreparingCameraSession;
+
+  /// No description provided for @chatCameraFirstRecordingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'First recording may take a moment…'**
+  String get chatCameraFirstRecordingHint;
+
+  /// No description provided for @chatCameraUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera unavailable'**
+  String get chatCameraUnavailable;
+
   /// No description provided for @chatProfileNotFound.
   ///
   /// In en, this message translates to:

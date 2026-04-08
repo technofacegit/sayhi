@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
+import 'package:qr_dating_app/core/perf_log.dart';
 import 'package:qr_dating_app/features/home/data/discovery_filters_storage.dart';
 import 'package:qr_dating_app/features/home/data/discovery_repository.dart';
 import 'package:qr_dating_app/features/home/data/story_repository.dart';
@@ -22,7 +23,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final StoryRepository _storyRepository = StoryRepository();
   final DiscoveryRepository _discoveryRepository = DiscoveryRepository();
-  final DiscoveryFiltersStorage _discoveryFiltersStorage = DiscoveryFiltersStorage();
+  final DiscoveryFiltersStorage _discoveryFiltersStorage =
+      DiscoveryFiltersStorage();
   final ZoneRepository _zoneRepository = ZoneRepository();
 
   late Future<List<StoryGroup>> _storyFuture;
@@ -35,15 +37,33 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _storyFuture = _storyRepository.fetchStoryGroups();
-    _initDiscovery();
+    final sw = Stopwatch()..start();
+    perfLog('HomeScreen', 'initState', sw);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      perfLog('HomeScreen', 'first frame painted (after initState)', sw);
+    });
+    _storyFuture = _storyRepository.fetchStoryGroups().then((groups) {
+      perfLog(
+        'HomeScreen',
+        'fetchStoryGroups completed (count=${groups.length})',
+        sw,
+      );
+      return groups;
+    });
+    _initDiscovery(sw);
   }
 
-  Future<void> _initDiscovery() async {
+  Future<void> _initDiscovery(Stopwatch homeSw) async {
+    final seg = Stopwatch()..start();
     final stored = await _discoveryFiltersStorage.load();
+    perfLog(
+      'HomeScreen',
+      'DiscoveryFiltersStorage.load ${seg.elapsedMilliseconds}ms',
+      homeSw,
+    );
     if (!mounted) return;
     setState(() => _discoveryFilters = stored);
-    await _loadDeck();
+    await _loadDeck(homeSw);
   }
 
   void _reloadStoriesOnly() {
@@ -52,22 +72,34 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadDeck() async {
+  Future<void> _loadDeck([Stopwatch? homeSw]) async {
     setState(() {
       _loadingDeck = true;
       _deckError = null;
     });
+    final seg = Stopwatch()..start();
     try {
       final list = await _discoveryRepository.fetchProfiles(
         limit: 30,
         filters: _discoveryFilters,
+      );
+      perfLog(
+        'HomeScreen',
+        'fetchProfiles(limit:30) ${seg.elapsedMilliseconds}ms → ${list.length} profiles',
+        homeSw,
       );
       if (!mounted) return;
       setState(() {
         _deck = list;
         _loadingDeck = false;
       });
+      perfLog('HomeScreen', 'deck UI ready (_loadingDeck=false)', homeSw);
     } catch (e) {
+      perfLog(
+        'HomeScreen',
+        'fetchProfiles failed after ${seg.elapsedMilliseconds}ms: $e',
+        homeSw,
+      );
       if (!mounted) return;
       setState(() {
         _deckError = e;
@@ -134,15 +166,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onRefresh() async {
+    final sw = Stopwatch()..start();
+    perfLog('HomeScreen', 'pull-to-refresh start', sw);
     final story = _storyRepository.fetchStoryGroups();
     // Block body: arrow + assignment returns the Future from `=`, which breaks setState.
     setState(() {
       _storyFuture = story;
     });
-    await Future.wait<void>([
-      story.then((_) {}),
-      _loadDeck(),
-    ]);
+    await Future.wait<void>([story.then((_) {}), _loadDeck(sw)]);
+    perfLog('HomeScreen', 'pull-to-refresh done', sw);
   }
 
   Future<void> _openDiscoveryFilters() async {
@@ -168,7 +200,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_deck.first.id != openedId) return;
 
     try {
-      final interaction = await _zoneRepository.fetchProfileInteractionForTarget(openedId);
+      final interaction = await _zoneRepository
+          .fetchProfileInteractionForTarget(openedId);
       if (!mounted || _deck.isEmpty) return;
       if (_deck.first.id != openedId) return;
       if (interaction?.swipe != null) {
@@ -230,7 +263,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             onPressed: _openDiscoveryFilters,
                             icon: const Icon(Icons.tune_rounded, size: 22),
                             style: IconButton.styleFrom(
-                              foregroundColor: colorScheme.onSurface.withValues(alpha: 0.85),
+                              foregroundColor: colorScheme.onSurface.withValues(
+                                alpha: 0.85,
+                              ),
                             ),
                           ),
                         ),
@@ -321,7 +356,10 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 l10n.homeDiscoveryEmpty,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(color: muted, height: 1.4),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: muted,
+                  height: 1.4,
+                ),
               ),
             ],
           ),

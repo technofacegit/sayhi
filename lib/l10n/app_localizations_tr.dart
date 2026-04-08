@@ -673,6 +673,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatMessageHint => 'Mesaj…';
 
   @override
+  String get chatPreparingCameraSession => 'Kamera hazırlanıyor…';
+
+  @override
+  String get chatCameraFirstRecordingHint => 'İlk kayıt biraz sürebilir…';
+
+  @override
+  String get chatCameraUnavailable => 'Kamera kullanılamıyor';
+
+  @override
   String get chatProfileNotFound => 'Profil bulunamadı';
 
   @override
