@@ -48,7 +48,9 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   bool _preparingCamera = false;
   bool _recordingVideoNote = false;
   bool _processingVideoNote = false;
-  int _recordingSec = 0;
+  DateTime? _recordingStartedAt;
+  Duration _recordingPausedTotal = Duration.zero;
+  DateTime? _recordingPausedAt;
   bool _videoNoteWillCancel = false;
   bool _videoNoteLocked = false;
   bool _videoNotePaused = false;
@@ -182,15 +184,38 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     }
   }
 
+  Duration _recordingElapsed() {
+    final start = _recordingStartedAt;
+    if (start == null) return Duration.zero;
+    if (_recordingPausedAt != null) {
+      return _recordingPausedAt!.difference(start) - _recordingPausedTotal;
+    }
+    return DateTime.now().difference(start) - _recordingPausedTotal;
+  }
+
+  String _formatRecordingElapsedLabel() {
+    final d = _recordingElapsed();
+    final sec = d.inSeconds;
+    final cs = (d.inMilliseconds % 1000) ~/ 10;
+    return '${sec.toString().padLeft(2, '0')}.${cs.toString().padLeft(2, '0')} s';
+  }
+
+  void _resetRecordingClock() {
+    _recordingStartedAt = null;
+    _recordingPausedTotal = Duration.zero;
+    _recordingPausedAt = null;
+  }
+
   void _startRecordingTicker() {
     _recordingTicker?.cancel();
-    _recordingTicker = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted || !_recordingVideoNote || _videoNotePaused) {
-        if (!mounted || !_recordingVideoNote) t.cancel();
+    _recordingTicker = Timer.periodic(const Duration(milliseconds: 50), (t) {
+      if (!mounted || !_recordingVideoNote) {
+        t.cancel();
         return;
       }
-      setState(() => _recordingSec += 1);
-      if (_recordingSec >= 60) {
+      if (_videoNotePaused) return;
+      setState(() {});
+      if (_recordingElapsed().inMilliseconds >= 60000) {
         _stopAndSendVideoNote();
       }
     });
@@ -380,7 +405,9 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         _recordingVideoNote = true;
         _preparingCamera = false;
         _recordButtonPressed = false;
-        _recordingSec = 0;
+        _recordingStartedAt = DateTime.now();
+        _recordingPausedTotal = Duration.zero;
+        _recordingPausedAt = null;
         _videoNoteWillCancel = false;
         _videoNoteLocked = false;
         _videoNotePaused = false;
@@ -401,12 +428,18 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     if (!_recordingVideoNote || _camera == null) return;
     final trace = Stopwatch()..start();
     perfLog('ChatVideoNote', '_stopAndSendVideoNote begin', trace);
+    final elapsedForUpload = _recordingElapsed();
+    final durationSec = (elapsedForUpload.inMilliseconds / 1000).round().clamp(
+      1,
+      60,
+    );
     _recordingTicker?.cancel();
     _triggerRecordHaptic(isStart: false);
     setState(() {
       _recordingVideoNote = false;
       _sending = true;
       _processingVideoNote = true;
+      _resetRecordingClock();
     });
     try {
       var seg = Stopwatch()..start();
@@ -427,7 +460,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       final msg = await _repo.sendVideoNote(
         widget.chatId,
         filePath: file.path,
-        durationSec: _recordingSec,
+        durationSec: durationSec,
       );
       perfLog(
         'ChatVideoNote',
@@ -447,7 +480,6 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
           _messages = [..._messages, msg];
           _sending = false;
           _processingVideoNote = false;
-          _recordingSec = 0;
           _videoNoteWillCancel = false;
           _videoNoteLocked = false;
           _videoNotePaused = false;
@@ -500,7 +532,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     if (!mounted) return;
     setState(() {
       _recordingVideoNote = false;
-      _recordingSec = 0;
+      _resetRecordingClock();
       _videoNoteWillCancel = false;
       _videoNoteLocked = false;
       _videoNotePaused = false;
@@ -515,11 +547,21 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       if (_videoNotePaused) {
         await _camera!.resumeVideoRecording();
         if (!mounted) return;
-        setState(() => _videoNotePaused = false);
+        setState(() {
+          final p = _recordingPausedAt;
+          if (p != null) {
+            _recordingPausedTotal += DateTime.now().difference(p);
+          }
+          _recordingPausedAt = null;
+          _videoNotePaused = false;
+        });
       } else {
         await _camera!.pauseVideoRecording();
         if (!mounted) return;
-        setState(() => _videoNotePaused = true);
+        setState(() {
+          _recordingPausedAt = DateTime.now();
+          _videoNotePaused = true;
+        });
       }
     } catch (e) {
       if (!mounted) return;
@@ -894,7 +936,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          '$_recordingSec s',
+                                          _formatRecordingElapsedLabel(),
                                           style: const TextStyle(
                                             color: Colors.white,
                                           ),
