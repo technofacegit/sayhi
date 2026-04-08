@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
-import 'package:qr_dating_app/features/chats/data/mock_chat_messages.dart';
-import 'package:qr_dating_app/features/chats/data/mock_chat_threads.dart';
+import 'package:qr_dating_app/features/chats/data/chat_messages_repository.dart';
 import 'package:qr_dating_app/features/chats/presentation/model/chat_message.dart';
 import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
@@ -21,22 +20,57 @@ class ChatConversationScreen extends StatefulWidget {
 
 class _ChatConversationScreenState extends State<ChatConversationScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _composer = TextEditingController();
+  final FocusNode _composerFocus = FocusNode();
+  final ChatMessagesRepository _repo = ChatMessagesRepository();
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
+  ChatPartnerPreview? _partner;
+  List<ChatMessage> _messages = const [];
+  bool _loading = true;
+  bool _sending = false;
+  Object? _loadError;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToEnd();
-      Future<void>.delayed(const Duration(milliseconds: 80), () {
-        if (mounted) _scrollToEnd();
-      });
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _composer.dispose();
+    _composerFocus.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _loadError = null;
     });
+    try {
+      final partner = await _repo.fetchPartnerPreview(widget.chatId);
+      final messages = await _repo.fetchMessages(widget.chatId);
+      if (!mounted) return;
+      setState(() {
+        _partner = partner;
+        _messages = messages;
+        _loading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToEnd();
+        Future<void>.delayed(const Duration(milliseconds: 80), () {
+          if (mounted) _scrollToEnd();
+        });
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e;
+        _loading = false;
+      });
+    }
   }
 
   void _scrollToEnd() {
@@ -44,15 +78,51 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
 
+  Future<void> _send() async {
+    final text = _composer.text.trim();
+    if (text.isEmpty || _sending || _partner == null) return;
+    setState(() => _sending = true);
+    try {
+      final msg = await _repo.sendMessage(widget.chatId, text);
+      if (!mounted) return;
+      if (msg != null) {
+        setState(() {
+          _messages = [..._messages, msg];
+          _composer.clear();
+          _sending = false;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+      } else {
+        setState(() => _sending = false);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _sending = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final thread = MockChatThreads.byId(l10n, widget.chatId);
-    final messages = MockChatMessages.forChat(l10n, widget.chatId);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (thread == null) {
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+
+    if (_loadError != null || _partner == null) {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -63,6 +133,8 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         body: Center(child: Text(l10n.chatNotFound)),
       );
     }
+
+    final thread = _partner!;
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -83,7 +155,18 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundImage: NetworkImage(thread.avatarUrl),
+                  backgroundColor:
+                      colorScheme.surfaceContainerHighest.withValues(alpha: 0.9),
+                  backgroundImage: thread.avatarUrl.isEmpty
+                      ? null
+                      : NetworkImage(thread.avatarUrl),
+                  child: thread.avatarUrl.isEmpty
+                      ? Icon(
+                          Icons.person_rounded,
+                          color: colorScheme.onSurfaceVariant,
+                          size: 22,
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -108,17 +191,21 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final msg = messages[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _MessageBubble(message: msg),
-                );
-              },
+            child: RefreshIndicator(
+              onRefresh: _load,
+              child: ListView.builder(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final msg = _messages[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _MessageBubble(message: msg),
+                  );
+                },
+              ),
             ),
           ),
           SafeArea(
@@ -126,11 +213,16 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: _composer,
+                      focusNode: _composerFocus,
                       minLines: 1,
                       maxLines: 4,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _send(),
                       decoration: InputDecoration(
                         hintText: l10n.chatMessageHint,
                         filled: true,
@@ -149,8 +241,14 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    onPressed: () {},
-                    icon: const Icon(Icons.send_rounded, size: 22),
+                    onPressed: _sending ? null : _send,
+                    icon: _sending
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.send_rounded, size: 22),
                   ),
                 ],
               ),

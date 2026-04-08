@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
@@ -6,6 +8,7 @@ import 'package:qr_dating_app/features/chats/data/chat_threads_repository.dart';
 import 'package:qr_dating_app/features/chats/presentation/model/chat_thread.dart';
 import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ChatsTabScreen extends StatefulWidget {
   const ChatsTabScreen({super.key});
@@ -17,21 +20,109 @@ class ChatsTabScreen extends StatefulWidget {
 class _ChatsTabScreenState extends State<ChatsTabScreen> {
   final TextEditingController _search = TextEditingController();
   final ChatThreadsRepository _repo = ChatThreadsRepository();
+  RealtimeChannel? _messagesSenderChannel;
+  RealtimeChannel? _messagesRecipientChannel;
+  RealtimeChannel? _matchViewerChannel;
+  RealtimeChannel? _matchTargetChannel;
+  Timer? _reloadDebounce;
+  Timer? _updatedIndicatorTimer;
   List<ChatThread> _threads = const [];
   List<ChatThread> _newMatches = const [];
   bool _loading = true;
+  bool _justUpdated = false;
   Object? _loadError;
 
   @override
   void initState() {
     super.initState();
+    _attachRealtime();
     _loadThreads();
   }
 
   @override
   void dispose() {
+    _messagesSenderChannel?.unsubscribe();
+    _messagesRecipientChannel?.unsubscribe();
+    _matchViewerChannel?.unsubscribe();
+    _matchTargetChannel?.unsubscribe();
+    _reloadDebounce?.cancel();
+    _updatedIndicatorTimer?.cancel();
     _search.dispose();
     super.dispose();
+  }
+
+  void _attachRealtime() {
+    final uid = Supabase.instance.client.auth.currentUser?.id;
+    if (uid == null) return;
+
+    void onAnyEvent(PostgresChangePayload _) {
+      if (!mounted) return;
+      _reloadDebounce?.cancel();
+      _reloadDebounce = Timer(const Duration(milliseconds: 250), () {
+        if (!mounted) return;
+        _loadThreads();
+      });
+    }
+
+    _messagesSenderChannel = Supabase.instance.client
+        .channel('chats_msg_sender_$uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'chat_messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'sender_id',
+            value: uid,
+          ),
+          callback: onAnyEvent,
+        )
+      ..subscribe();
+
+    _messagesRecipientChannel = Supabase.instance.client
+        .channel('chats_msg_recipient_$uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'chat_messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'recipient_id',
+            value: uid,
+          ),
+          callback: onAnyEvent,
+        )
+      ..subscribe();
+
+    _matchViewerChannel = Supabase.instance.client
+        .channel('chats_match_viewer_$uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'profile_interactions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'viewer_id',
+            value: uid,
+          ),
+          callback: onAnyEvent,
+        )
+      ..subscribe();
+
+    _matchTargetChannel = Supabase.instance.client
+        .channel('chats_match_target_$uid')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'profile_interactions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'target_id',
+            value: uid,
+          ),
+          callback: onAnyEvent,
+        )
+      ..subscribe();
   }
 
   Future<void> _loadThreads() async {
@@ -45,10 +136,23 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
         _repo.fetchNewMatches(limit: 30),
       ]);
       if (!mounted) return;
+      final withMessages = results[0]
+          .where((t) => t.lastMessage.trim().isNotEmpty)
+          .map((t) => t.id)
+          .toSet();
+      final topMatches = results[1]
+          .where((m) => !withMessages.contains(m.id))
+          .toList(growable: false);
       setState(() {
         _threads = results[0];
-        _newMatches = results[1];
+        _newMatches = topMatches;
         _loading = false;
+        _justUpdated = true;
+      });
+      _updatedIndicatorTimer?.cancel();
+      _updatedIndicatorTimer = Timer(const Duration(milliseconds: 900), () {
+        if (!mounted) return;
+        setState(() => _justUpdated = false);
       });
     } catch (e) {
       if (!mounted) return;
@@ -99,12 +203,45 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-                      child: Text(
-                        l10n.chatsTitle,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
-                        ),
+                      child: Row(
+                        children: [
+                          Text(
+                            l10n.chatsTitle,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOut,
+                            switchOutCurve: Curves.easeIn,
+                            child: _justUpdated
+                                ? TweenAnimationBuilder<double>(
+                                    key: const ValueKey('updated-dot'),
+                                    tween: Tween(begin: 0.55, end: 1),
+                                    duration: const Duration(milliseconds: 600),
+                                    curve: Curves.easeInOut,
+                                    builder: (context, value, child) {
+                                      return Opacity(opacity: value, child: child);
+                                    },
+                                    child: Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox(
+                                    key: ValueKey('updated-dot-empty'),
+                                    width: 8,
+                                    height: 8,
+                                  ),
+                          ),
+                        ],
                       ),
                     ),
                     if (_newMatches.isNotEmpty) ...[
@@ -120,9 +257,13 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                             final m = _newMatches[index];
                             return _NewMatchCircle(
                               thread: m,
-                              onTap: () => context.push(
-                                AppRouter.chatConversationPath(m.id),
-                              ),
+                              onTap: () async {
+                                await context.push(
+                                  AppRouter.chatConversationPath(m.id),
+                                );
+                                if (!mounted) return;
+                                _loadThreads();
+                              },
                             );
                           },
                         ),
@@ -210,9 +351,13 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                                 final thread = chatItems[index];
                                 return _ChatThreadTile(
                                   thread: thread,
-                                  onTap: () => context.push(
-                                    AppRouter.chatConversationPath(thread.id),
-                                  ),
+                                  onTap: () async {
+                                    await context.push(
+                                      AppRouter.chatConversationPath(thread.id),
+                                    );
+                                    if (!mounted) return;
+                                    _loadThreads();
+                                  },
                                 );
                               },
                             ),
