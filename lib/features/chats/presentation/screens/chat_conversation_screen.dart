@@ -50,8 +50,10 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       _loadError = null;
     });
     try {
+      await _repo.touchMyPresence();
       final partner = await _repo.fetchPartnerPreview(widget.chatId);
       final messages = await _repo.fetchMessages(widget.chatId);
+      await _repo.markChatRead(widget.chatId);
       if (!mounted) return;
       setState(() {
         _partner = partner;
@@ -84,6 +86,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     setState(() => _sending = true);
     try {
       final msg = await _repo.sendMessage(widget.chatId, text);
+      await _repo.touchMyPresence();
       if (!mounted) return;
       if (msg != null) {
         setState(() {

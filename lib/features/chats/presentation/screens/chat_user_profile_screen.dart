@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/features/chats/data/chat_messages_repository.dart';
+import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
 
 class ChatUserProfileScreen extends StatefulWidget {
@@ -108,6 +109,9 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
         }
 
         final photos = _mosaicUrls(profile);
+        final lastOnline = profile.lastOnlineAt == null
+            ? null
+            : formatChatListTimestamp(profile.lastOnlineAt!, l10n);
 
         return Scaffold(
           backgroundColor: colorScheme.surface,
@@ -130,6 +134,26 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
               children: [
                 _PhotoGrid(photos: photos),
                 const SizedBox(height: 24),
+                if (lastOnline != null && lastOnline.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Last online: $lastOnline',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Text(
                   l10n.chatAbout,
                   style: theme.textTheme.titleMedium?.copyWith(

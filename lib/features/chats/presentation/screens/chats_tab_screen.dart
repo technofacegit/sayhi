@@ -458,6 +458,21 @@ class _ChatThreadTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    String formatLastOnline(DateTime? t) {
+      if (t == null) return '';
+      return formatChatListTimestamp(t, context.l10n);
+    }
+
+    String readStatus() {
+      if (!thread.lastMessageIsMine || thread.lastMessage.trim().isEmpty) {
+        return '';
+      }
+      return thread.lastMessageReadAt == null ? 'Sent' : 'Seen';
+    }
+
+    final readMeta = readStatus();
+    final onlineMeta = formatLastOnline(thread.lastOnlineAt);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -562,6 +577,58 @@ class _ChatThreadTile extends StatelessWidget {
                         height: 1.25,
                       ),
                     ),
+                    if (readMeta.isNotEmpty || onlineMeta.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (readMeta.isNotEmpty) ...[
+                            Icon(
+                              thread.lastMessageReadAt == null
+                                  ? Icons.check_rounded
+                                  : Icons.done_all_rounded,
+                              size: 14,
+                              color: thread.lastMessageReadAt == null
+                                  ? colorScheme.onSurfaceVariant
+                                  : colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              readMeta,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: thread.lastMessageReadAt == null
+                                    ? colorScheme.onSurfaceVariant
+                                    : colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                          if (readMeta.isNotEmpty && onlineMeta.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                '•',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                          if (onlineMeta.isNotEmpty) ...[
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 13,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              onlineMeta,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

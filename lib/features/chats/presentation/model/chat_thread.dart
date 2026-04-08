@@ -5,6 +5,9 @@ class ChatThread {
   final String lastMessage;
   final DateTime lastMessageAt;
   final int unreadCount;
+  final DateTime? lastOnlineAt;
+  final bool lastMessageIsMine;
+  final DateTime? lastMessageReadAt;
 
   const ChatThread({
     required this.id,
@@ -13,5 +16,8 @@ class ChatThread {
     required this.lastMessage,
     required this.lastMessageAt,
     this.unreadCount = 0,
+    this.lastOnlineAt,
+    this.lastMessageIsMine = false,
+    this.lastMessageReadAt,
   });
 }

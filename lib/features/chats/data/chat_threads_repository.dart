@@ -27,6 +27,15 @@ class ChatThreadsRepository {
           ? DateTime.now()
           : (DateTime.tryParse(tsRaw)?.toLocal() ?? DateTime.now());
       final unread = (m['unread_count'] as num?)?.toInt() ?? 0;
+      final onlineRaw = m['last_online_at']?.toString();
+      final lastOnline = onlineRaw == null
+          ? null
+          : DateTime.tryParse(onlineRaw)?.toLocal();
+      final lastMessageIsMine = m['last_message_is_mine'] == true;
+      final readAtRaw = m['last_message_read_at']?.toString();
+      final readAt = readAtRaw == null
+          ? null
+          : DateTime.tryParse(readAtRaw)?.toLocal();
       return ChatThread(
         id: id,
         name: name.isEmpty ? 'Member' : name,
@@ -34,6 +43,9 @@ class ChatThreadsRepository {
         lastMessage: lastMessage,
         lastMessageAt: ts,
         unreadCount: unread < 0 ? 0 : unread,
+        lastOnlineAt: lastOnline,
+        lastMessageIsMine: lastMessageIsMine,
+        lastMessageReadAt: readAt,
       );
     }).where((t) => t.id.isNotEmpty).toList(growable: false);
   }
@@ -60,6 +72,9 @@ class ChatThreadsRepository {
         lastMessage: '',
         lastMessageAt: ts,
         unreadCount: 0,
+        lastOnlineAt: null,
+        lastMessageIsMine: false,
+        lastMessageReadAt: null,
       );
     }).where((t) => t.id.isNotEmpty).toList(growable: false);
   }

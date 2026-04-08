@@ -11,6 +11,7 @@ class ChatPartnerPreview {
     required this.avatarUrl,
     required this.bio,
     required this.galleryUrls,
+    required this.lastOnlineAt,
   });
 
   final String userId;
@@ -18,6 +19,7 @@ class ChatPartnerPreview {
   final String avatarUrl;
   final String bio;
   final List<String> galleryUrls;
+  final DateTime? lastOnlineAt;
 }
 
 /// Loads and sends 1:1 messages ([chatId] in routes = other user's id).
@@ -53,6 +55,9 @@ class ChatMessagesRepository {
         avatarUrl: (m['avatar_url'] as String? ?? '').trim(),
         bio: (m['bio'] as String? ?? '').trim(),
         galleryUrls: urls,
+        lastOnlineAt: DateTime.tryParse(
+          (m['last_online_at']?.toString() ?? '').trim(),
+        )?.toLocal(),
       );
     } catch (_) {
       return null;
@@ -72,6 +77,17 @@ class ChatMessagesRepository {
     );
     final list = _decodeJsonArray(raw);
     return list.map((e) => _parseMessage(Map<String, dynamic>.from(e as Map), myId)).toList();
+  }
+
+  Future<void> markChatRead(String otherUserId) async {
+    await _client.rpc<dynamic>(
+      'mark_chat_read',
+      params: {'p_other_user_id': otherUserId},
+    );
+  }
+
+  Future<void> touchMyPresence() async {
+    await _client.rpc<dynamic>('touch_my_presence');
   }
 
   Future<ChatMessage?> sendMessage(String recipientId, String body) async {
