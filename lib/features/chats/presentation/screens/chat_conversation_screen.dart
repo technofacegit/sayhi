@@ -12,6 +12,7 @@ import 'package:qr_dating_app/core/camera_session_state.dart';
 import 'package:qr_dating_app/core/camera_warmup_service.dart';
 import 'package:qr_dating_app/core/chat_translation_service.dart';
 import 'package:qr_dating_app/core/perf_log.dart';
+import 'package:qr_dating_app/core/video_transcription_service.dart';
 import 'package:qr_dating_app/features/chats/data/chat_messages_repository.dart';
 import 'package:qr_dating_app/features/chats/presentation/model/chat_message.dart';
 import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
@@ -67,6 +68,8 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   bool _isTranslatingMessages = false;
   final Map<String, String> _translatedByMessageId = <String, String>{};
   List<TranslationLanguage> _translationLanguages = const [];
+  final Map<String, bool> _transcriptionLoadingByMessageId = <String, bool>{};
+  final Map<String, String> _transcriptionTextByMessageId = <String, String>{};
 
   CameraSessionState _cameraSessionState = CameraSessionState.idle;
   bool _cameraSessionReady = false;
@@ -369,6 +372,39 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     );
   }
 
+  Future<void> _transcribeVideoMessage(ChatMessage msg) async {
+    if (!msg.isVideoNote) return;
+    setState(() {
+      _transcriptionLoadingByMessageId[msg.id] = true;
+      _transcriptionTextByMessageId.remove(msg.id);
+    });
+    try {
+      final transcript = await VideoTranscriptionService.instance
+          .transcribeVideoUrl(msg.mediaUrl);
+      if (!mounted) return;
+      setState(() {
+        _transcriptionLoadingByMessageId[msg.id] = false;
+        _transcriptionTextByMessageId[msg.id] = transcript.trim().isEmpty
+            ? context.l10n.chatTranscriptionFailed
+            : transcript.trim();
+      });
+    } on UnsupportedError {
+      if (!mounted) return;
+      setState(() {
+        _transcriptionLoadingByMessageId[msg.id] = false;
+        _transcriptionTextByMessageId[msg.id] =
+            context.l10n.chatTranscriptionUnavailable;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _transcriptionLoadingByMessageId[msg.id] = false;
+        _transcriptionTextByMessageId[msg.id] =
+            context.l10n.chatTranscriptionFailed;
+      });
+    }
+  }
+
   Future<void> _onMessageMenuTap(
     ChatMessage msg,
     TapDownDetails details,
@@ -383,6 +419,11 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       ),
       items: [
         PopupMenuItem<String>(
+          value: 'transcribe',
+          enabled: msg.isVideoNote,
+          child: Text(l10n.chatMenuTranscribe),
+        ),
+        PopupMenuItem<String>(
           value: 'translate',
           enabled: !msg.isVideoNote && msg.text.trim().isNotEmpty,
           child: Text(l10n.chatMenuTranslate),
@@ -394,6 +435,10 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       ],
     );
     if (!mounted || selected == null) return;
+    if (selected == 'transcribe') {
+      await _transcribeVideoMessage(msg);
+      return;
+    }
     if (selected == 'delete') {
       final isDebugLocal = msg.id.startsWith('debug-');
       if (!isDebugLocal) {
@@ -978,6 +1023,11 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                                 message: msg,
                                 onTapDown: (details) =>
                                     _onMessageMenuTap(msg, details),
+                                transcriptText:
+                                    _transcriptionTextByMessageId[msg.id],
+                                isTranscriptionLoading:
+                                    _transcriptionLoadingByMessageId[msg.id] ==
+                                    true,
                               )
                             : _MessageBubble(
                                 message: msg,
@@ -1455,10 +1505,17 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
 }
 
 class _VideoNoteBubble extends StatefulWidget {
-  const _VideoNoteBubble({required this.message, required this.onTapDown});
+  const _VideoNoteBubble({
+    required this.message,
+    required this.onTapDown,
+    required this.transcriptText,
+    required this.isTranscriptionLoading,
+  });
 
   final ChatMessage message;
   final ValueChanged<TapDownDetails> onTapDown;
+  final String? transcriptText;
+  final bool isTranscriptionLoading;
 
   @override
   State<_VideoNoteBubble> createState() => _VideoNoteBubbleState();
@@ -1588,6 +1645,40 @@ class _VideoNoteBubbleState extends State<_VideoNoteBubble> {
             ),
           ),
           const SizedBox(height: 4),
+          if (widget.isTranscriptionLoading)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    context.l10n.chatTranscriptionLoading,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ],
+              ),
+            ),
+          if (!widget.isTranscriptionLoading &&
+              widget.transcriptText != null &&
+              widget.transcriptText!.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.72,
+                ),
+                child: Text(
+                  widget.transcriptText!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ),
           Text(
             formatMessageTime(widget.message.sentAt),
             style: Theme.of(context).textTheme.labelSmall,

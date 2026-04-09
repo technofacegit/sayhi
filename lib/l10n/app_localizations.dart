@@ -1364,6 +1364,12 @@ abstract class AppLocalizations {
   /// **'Translated'**
   String get chatTranslatedBadge;
 
+  /// No description provided for @chatMenuTranscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe'**
+  String get chatMenuTranscribe;
+
   /// No description provided for @chatMenuTranslate.
   ///
   /// In en, this message translates to:
@@ -1375,6 +1381,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get chatMenuDelete;
+
+  /// No description provided for @chatTranscriptionLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing…'**
+  String get chatTranscriptionLoading;
+
+  /// No description provided for @chatTranscriptionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription is not available on this device'**
+  String get chatTranscriptionUnavailable;
+
+  /// No description provided for @chatTranscriptionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not transcribe this video'**
+  String get chatTranscriptionFailed;
 
   /// No description provided for @chatProfileNotFound.
   ///

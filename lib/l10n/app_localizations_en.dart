@@ -696,10 +696,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatTranslatedBadge => 'Translated';
 
   @override
+  String get chatMenuTranscribe => 'Transcribe';
+
+  @override
   String get chatMenuTranslate => 'Translate';
 
   @override
   String get chatMenuDelete => 'Delete';
+
+  @override
+  String get chatTranscriptionLoading => 'Transcribing…';
+
+  @override
+  String get chatTranscriptionUnavailable =>
+      'Transcription is not available on this device';
+
+  @override
+  String get chatTranscriptionFailed => 'Could not transcribe this video';
 
   @override
   String get chatProfileNotFound => 'Profile not found';

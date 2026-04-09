@@ -694,10 +694,23 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatTranslatedBadge => 'Çevrildi';
 
   @override
+  String get chatMenuTranscribe => 'Metne dök';
+
+  @override
   String get chatMenuTranslate => 'Çevir';
 
   @override
   String get chatMenuDelete => 'Sil';
+
+  @override
+  String get chatTranscriptionLoading => 'Metne dökülüyor…';
+
+  @override
+  String get chatTranscriptionUnavailable =>
+      'Bu cihazda metne dökme kullanılamıyor';
+
+  @override
+  String get chatTranscriptionFailed => 'Bu video metne dökülemedi';
 
   @override
   String get chatProfileNotFound => 'Profil bulunamadı';
