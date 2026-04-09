@@ -51,6 +51,10 @@
 	<string>Mekân QR kodunu okumak için kamera erişimi gereklidir.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Video mesaj gönderebilmek için mikrofon erişimi gereklidir.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Sohbette fotoğraf gönderebilmek için galeri erişimi gereklidir.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Video mesajı cihaz üzerinde metne dökebilmek için konuşma tanıma erişimi gereklidir.</string>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
 	<key>CFBundleURLTypes</key>

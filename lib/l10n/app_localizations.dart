@@ -1382,6 +1382,24 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get chatMenuDelete;
 
+  /// No description provided for @chatPhotoTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get chatPhotoTake;
+
+  /// No description provided for @chatPhotoFromLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from library'**
+  String get chatPhotoFromLibrary;
+
+  /// No description provided for @chatPhotoUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo...'**
+  String get chatPhotoUploading;
+
   /// No description provided for @chatTranscriptionLoading.
   ///
   /// In en, this message translates to:

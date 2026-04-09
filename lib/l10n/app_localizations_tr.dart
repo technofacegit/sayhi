@@ -703,6 +703,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatMenuDelete => 'Sil';
 
   @override
+  String get chatPhotoTake => 'Fotoğraf çek';
+
+  @override
+  String get chatPhotoFromLibrary => 'Galeriden seç';
+
+  @override
+  String get chatPhotoUploading => 'Fotoğraf yükleniyor...';
+
+  @override
   String get chatTranscriptionLoading => 'Metne dökülüyor…';
 
   @override

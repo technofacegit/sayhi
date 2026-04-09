@@ -18,4 +18,5 @@ class ChatMessage {
   });
 
   bool get isVideoNote => type == 'video_note' && mediaUrl.isNotEmpty;
+  bool get isImage => type == 'image' && mediaUrl.isNotEmpty;
 }

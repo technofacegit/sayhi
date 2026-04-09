@@ -705,6 +705,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMenuDelete => 'Delete';
 
   @override
+  String get chatPhotoTake => 'Take photo';
+
+  @override
+  String get chatPhotoFromLibrary => 'Choose from library';
+
+  @override
+  String get chatPhotoUploading => 'Uploading photo...';
+
+  @override
   String get chatTranscriptionLoading => 'Transcribing…';
 
   @override

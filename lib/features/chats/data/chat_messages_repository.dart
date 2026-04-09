@@ -141,6 +141,39 @@ class ChatMessagesRepository {
     return _parseMessage(m, myId);
   }
 
+  Future<ChatMessage?> sendImageMessage(
+    String recipientId, {
+    required String filePath,
+  }) async {
+    final myId = _myId;
+    if (myId == null) return null;
+
+    final file = File(filePath);
+    if (!await file.exists()) return null;
+    final bytes = await file.readAsBytes();
+    if (bytes.isEmpty) return null;
+
+    final objectPath =
+        '$myId/chat_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    await _client.storage
+        .from(_chatMediaBucket)
+        .uploadBinary(
+          objectPath,
+          bytes,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+    final mediaUrl = _client.storage
+        .from(_chatMediaBucket)
+        .getPublicUrl(objectPath);
+
+    final raw = await _client.rpc<dynamic>(
+      'send_chat_image',
+      params: {'p_recipient_id': recipientId, 'p_media_url': mediaUrl},
+    );
+    final m = _asMap(raw);
+    return _parseMessage(m, myId);
+  }
+
   Future<bool> deleteMessage(String messageId) async {
     final myId = _myId;
     if (myId == null) return false;

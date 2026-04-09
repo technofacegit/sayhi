@@ -6,6 +6,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/camera_diagnostics.dart';
 import 'package:qr_dating_app/core/camera_session_state.dart';
@@ -36,6 +37,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   final TextEditingController _composer = TextEditingController();
   final FocusNode _composerFocus = FocusNode();
   final ChatMessagesRepository _repo = ChatMessagesRepository();
+  final ImagePicker _imagePicker = ImagePicker();
   final Random _rnd = Random();
   CameraController? _camera;
   Timer? _recordingTicker;
@@ -55,6 +57,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   bool _preparingCamera = false;
   bool _recordingVideoNote = false;
   bool _processingVideoNote = false;
+  bool _uploadingPhoto = false;
   DateTime? _recordingStartedAt;
   Duration _recordingPausedTotal = Duration.zero;
   DateTime? _recordingPausedAt;
@@ -70,12 +73,15 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   List<TranslationLanguage> _translationLanguages = const [];
   final Map<String, bool> _transcriptionLoadingByMessageId = <String, bool>{};
   final Map<String, String> _transcriptionTextByMessageId = <String, String>{};
+  final Map<String, bool> _transcriptionErrorByMessageId = <String, bool>{};
+  final Map<String, String> _translatedTranscriptByMessageId =
+      <String, String>{};
 
   CameraSessionState _cameraSessionState = CameraSessionState.idle;
   bool _cameraSessionReady = false;
 
   // TEST ONLY: periodically inject local incoming messages to stress chat UI.
-  static const bool _enableDebugAutoIncoming = true;
+  static const bool _enableDebugAutoIncoming = false;
   static const Duration _debugIncomingInterval = Duration(seconds: 5);
   static const List<String> _debugIncomingSamples = <String>[
     'Hey 👋 nasilsin?',
@@ -104,6 +110,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   void initState() {
     super.initState();
     _composer.addListener(_onComposerChanged);
+    _composerFocus.addListener(_onComposerFocusChanged);
     _syncCameraSession();
     CameraWarmupService.instance.sessionState.addListener(
       _onCameraSessionChanged,
@@ -120,6 +127,20 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     setState(() {});
   }
 
+  void _onComposerFocusChanged() {
+    if (!mounted || !_composerFocus.hasFocus) return;
+    _scrollToEnd();
+    Future<void>.delayed(const Duration(milliseconds: 60), () {
+      if (mounted && _composerFocus.hasFocus) _scrollToEnd();
+    });
+    Future<void>.delayed(const Duration(milliseconds: 180), () {
+      if (mounted && _composerFocus.hasFocus) _scrollToEnd();
+    });
+    Future<void>.delayed(const Duration(milliseconds: 320), () {
+      if (mounted && _composerFocus.hasFocus) _scrollToEnd();
+    });
+  }
+
   @override
   void dispose() {
     CameraWarmupService.instance.sessionState.removeListener(
@@ -130,6 +151,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     _holdToRecordTimer?.cancel();
     _debugIncomingTimer?.cancel();
     _composer.removeListener(_onComposerChanged);
+    _composerFocus.removeListener(_onComposerFocusChanged);
     _composer.dispose();
     _composerFocus.dispose();
     _scrollController.dispose();
@@ -173,6 +195,20 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
 
+  void _appendMessageAndKeepBottom(ChatMessage msg) {
+    if (!mounted) return;
+    setState(() {
+      _messages = [..._messages, msg];
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _scrollToEnd();
+      Future<void>.delayed(const Duration(milliseconds: 40), () {
+        if (mounted) _scrollToEnd();
+      });
+    });
+  }
+
   void _startDebugIncomingMessages() {
     if (!_enableDebugAutoIncoming) return;
     _debugIncomingTimer?.cancel();
@@ -186,11 +222,8 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         isMe: false,
         sentAt: DateTime.now(),
       );
-      setState(() {
-        _messages = [..._messages, msg];
-      });
+      _appendMessageAndKeepBottom(msg);
       unawaited(_translateIncomingMessages());
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
     });
   }
 
@@ -377,16 +410,22 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     setState(() {
       _transcriptionLoadingByMessageId[msg.id] = true;
       _transcriptionTextByMessageId.remove(msg.id);
+      _transcriptionErrorByMessageId[msg.id] = false;
+      _translatedTranscriptByMessageId.remove(msg.id);
     });
     try {
       final transcript = await VideoTranscriptionService.instance
-          .transcribeVideoUrl(msg.mediaUrl);
+          .transcribeVideoUrl(
+            msg.mediaUrl,
+            localeCode: Localizations.localeOf(context).languageCode,
+          );
       if (!mounted) return;
       setState(() {
         _transcriptionLoadingByMessageId[msg.id] = false;
         _transcriptionTextByMessageId[msg.id] = transcript.trim().isEmpty
             ? context.l10n.chatTranscriptionFailed
             : transcript.trim();
+        _transcriptionErrorByMessageId[msg.id] = transcript.trim().isEmpty;
       });
     } on UnsupportedError {
       if (!mounted) return;
@@ -394,6 +433,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         _transcriptionLoadingByMessageId[msg.id] = false;
         _transcriptionTextByMessageId[msg.id] =
             context.l10n.chatTranscriptionUnavailable;
+        _transcriptionErrorByMessageId[msg.id] = true;
       });
     } catch (_) {
       if (!mounted) return;
@@ -401,20 +441,78 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         _transcriptionLoadingByMessageId[msg.id] = false;
         _transcriptionTextByMessageId[msg.id] =
             context.l10n.chatTranscriptionFailed;
+        _transcriptionErrorByMessageId[msg.id] = true;
       });
     }
+  }
+
+  String? _displayTranscriptFor(String messageId) {
+    return _translatedTranscriptByMessageId[messageId] ??
+        _transcriptionTextByMessageId[messageId];
+  }
+
+  bool _canTranslateTranscript(String messageId) {
+    final txt = _transcriptionTextByMessageId[messageId]?.trim() ?? '';
+    final hasError = _transcriptionErrorByMessageId[messageId] == true;
+    return txt.isNotEmpty && !hasError;
+  }
+
+  Future<void> _onTranscriptMenuTap(
+    ChatMessage msg,
+    TapDownDetails details,
+  ) async {
+    final l10n = context.l10n;
+    if (!_canTranslateTranscript(msg.id)) return;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(details.globalPosition, details.globalPosition),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          value: 'translate',
+          child: Text(l10n.chatMenuTranslate),
+        ),
+      ],
+    );
+    if (!mounted || selected != 'translate') return;
+    final target = await _pickTranslateLanguageForMessage();
+    if (!mounted || target == null) return;
+    final source = _transcriptionTextByMessageId[msg.id];
+    if (source == null || source.trim().isEmpty) return;
+    final translated = await ChatTranslationService.instance.translate(
+      text: source,
+      toLanguageCode: target,
+    );
+    if (!mounted) return;
+    setState(() {
+      _translatedTranscriptByMessageId[msg.id] = translated;
+    });
   }
 
   Future<void> _onMessageMenuTap(
     ChatMessage msg,
     TapDownDetails details,
   ) async {
+    await _showMessageMenu(msg, details.globalPosition);
+  }
+
+  Future<void> _onMessageMenuLongPress(
+    ChatMessage msg,
+    LongPressStartDetails details,
+  ) async {
+    await _showMessageMenu(msg, details.globalPosition);
+  }
+
+  Future<void> _showMessageMenu(ChatMessage msg, Offset globalPosition) async {
     final l10n = context.l10n;
     final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final selected = await showMenu<String>(
       context: context,
       position: RelativeRect.fromRect(
-        Rect.fromPoints(details.globalPosition, details.globalPosition),
+        Rect.fromPoints(globalPosition, globalPosition),
         Offset.zero & overlay.size,
       ),
       items: [
@@ -570,11 +668,10 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       if (!mounted) return;
       if (msg != null) {
         setState(() {
-          _messages = [..._messages, msg];
           _composer.clear();
           _sending = false;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+        _appendMessageAndKeepBottom(msg);
       } else {
         setState(() => _sending = false);
       }
@@ -584,6 +681,77 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<ImageSource?> _pickImageSource() async {
+    final l10n = context.l10n;
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_rounded),
+                title: Text(l10n.chatPhotoTake),
+                onTap: () => Navigator.of(context).pop(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded),
+                title: Text(l10n.chatPhotoFromLibrary),
+                onTap: () => Navigator.of(context).pop(ImageSource.gallery),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAndSendImage() async {
+    if (_sending || _partner == null) return;
+    try {
+      final source = await _pickImageSource();
+      if (source == null) return;
+      final picked = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: 82,
+      );
+      if (picked == null) return;
+      if (!mounted) return;
+      setState(() {
+        _sending = true;
+        _uploadingPhoto = true;
+      });
+      final msg = await _repo.sendImageMessage(
+        widget.chatId,
+        filePath: picked.path,
+      );
+      await _repo.touchMyPresence();
+      if (!mounted) return;
+      if (msg != null) {
+        setState(() {
+          _sending = false;
+          _uploadingPhoto = false;
+        });
+        _appendMessageAndKeepBottom(msg);
+      } else {
+        setState(() {
+          _sending = false;
+          _uploadingPhoto = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _uploadingPhoto = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     }
   }
 
@@ -816,7 +984,6 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       if (!mounted) return;
       if (msg != null) {
         setState(() {
-          _messages = [..._messages, msg];
           _sending = false;
           _processingVideoNote = false;
           _videoNoteWillCancel = false;
@@ -825,7 +992,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
           _videoNoteDragDx = 0;
           _videoNoteDragDy = 0;
         });
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+        _appendMessageAndKeepBottom(msg);
         perfLog(
           'ChatVideoNote',
           '_stopAndSendVideoNote success (message added)',
@@ -1018,16 +1185,32 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                       final msg = _messages[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
-                        child: msg.isVideoNote
-                            ? _VideoNoteBubble(
+                        child: msg.isImage
+                            ? _ImageBubble(
                                 message: msg,
                                 onTapDown: (details) =>
                                     _onMessageMenuTap(msg, details),
-                                transcriptText:
-                                    _transcriptionTextByMessageId[msg.id],
+                                onImageReady: () {
+                                  _scrollToEnd();
+                                  Future<void>.delayed(
+                                    const Duration(milliseconds: 40),
+                                    _scrollToEnd,
+                                  );
+                                },
+                              )
+                            : msg.isVideoNote
+                            ? _VideoNoteBubble(
+                                message: msg,
+                                onLongPressStart: (details) =>
+                                    _onMessageMenuLongPress(msg, details),
+                                transcriptText: _displayTranscriptFor(msg.id),
                                 isTranscriptionLoading:
                                     _transcriptionLoadingByMessageId[msg.id] ==
                                     true,
+                                transcriptIsTranslatable:
+                                    _canTranslateTranscript(msg.id),
+                                onTranscriptTapDown: (details) =>
+                                    _onTranscriptMenuTap(msg, details),
                               )
                             : _MessageBubble(
                                 message: msg,
@@ -1087,6 +1270,11 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
+                          IconButton(
+                            onPressed: _sending ? null : _pickAndSendImage,
+                            icon: const Icon(Icons.photo_rounded),
+                            tooltip: 'Photo',
+                          ),
                           Expanded(
                             child: TextField(
                               controller: _composer,
@@ -1498,6 +1686,42 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                 ),
               ),
             ),
+          if (_uploadingPhoto)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black.withValues(alpha: 0.45),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          l10n.chatPhotoUploading,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -1507,15 +1731,19 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
 class _VideoNoteBubble extends StatefulWidget {
   const _VideoNoteBubble({
     required this.message,
-    required this.onTapDown,
+    required this.onLongPressStart,
     required this.transcriptText,
     required this.isTranscriptionLoading,
+    required this.transcriptIsTranslatable,
+    required this.onTranscriptTapDown,
   });
 
   final ChatMessage message;
-  final ValueChanged<TapDownDetails> onTapDown;
+  final ValueChanged<LongPressStartDetails> onLongPressStart;
   final String? transcriptText;
   final bool isTranscriptionLoading;
+  final bool transcriptIsTranslatable;
+  final ValueChanged<TapDownDetails> onTranscriptTapDown;
 
   @override
   State<_VideoNoteBubble> createState() => _VideoNoteBubbleState();
@@ -1585,7 +1813,7 @@ class _VideoNoteBubbleState extends State<_VideoNoteBubble> {
             : CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onTapDown: widget.onTapDown,
+            onLongPressStart: widget.onLongPressStart,
             onTap: () {
               final c = _controller;
               if (c == null || !c.value.isInitialized) return;
@@ -1673,12 +1901,116 @@ class _VideoNoteBubbleState extends State<_VideoNoteBubble> {
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.sizeOf(context).width * 0.72,
                 ),
-                child: Text(
-                  widget.transcriptText!,
-                  style: Theme.of(context).textTheme.bodySmall,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: widget.transcriptIsTranslatable
+                      ? widget.onTranscriptTapDown
+                      : null,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.95),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Text(
+                        widget.transcriptText!,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
+          Text(
+            formatMessageTime(widget.message.sentAt),
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImageBubble extends StatefulWidget {
+  const _ImageBubble({
+    required this.message,
+    required this.onTapDown,
+    required this.onImageReady,
+  });
+
+  final ChatMessage message;
+  final ValueChanged<TapDownDetails> onTapDown;
+  final VoidCallback onImageReady;
+
+  @override
+  State<_ImageBubble> createState() => _ImageBubbleState();
+}
+
+class _ImageBubbleState extends State<_ImageBubble> {
+  bool _didNotifyReady = false;
+
+  void _notifyImageReady() {
+    if (_didNotifyReady) return;
+    _didNotifyReady = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onImageReady();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMe = widget.message.isMe;
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: widget.onTapDown,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.68,
+                  maxHeight: 320,
+                ),
+                child: Image.network(
+                  widget.message.mediaUrl,
+                  fit: BoxFit.cover,
+                  frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                    if (wasSynchronouslyLoaded || frame != null) {
+                      _notifyImageReady();
+                    }
+                    return child;
+                  },
+                  errorBuilder: (context, _, __) {
+                    _notifyImageReady();
+                    return Container(
+                      width: 220,
+                      height: 180,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.broken_image_rounded),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
           Text(
             formatMessageTime(widget.message.sentAt),
             style: Theme.of(context).textTheme.labelSmall,
