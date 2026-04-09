@@ -328,6 +328,7 @@
   "chatPhotoTake": "Fotoğraf çek",
   "chatPhotoFromLibrary": "Galeriden seç",
   "chatPhotoUploading": "Fotoğraf yükleniyor...",
+  "chatCameraSwitching": "Kamera değiştiriliyor...",
   "chatTranscriptionLoading": "Metne dökülüyor…",
   "chatTranscriptionUnavailable": "Bu cihazda metne dökme kullanılamıyor",
   "chatTranscriptionFailed": "Bu video metne dökülemedi",

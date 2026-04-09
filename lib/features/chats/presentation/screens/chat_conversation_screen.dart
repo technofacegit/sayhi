@@ -55,6 +55,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   bool _loading = true;
   bool _sending = false;
   bool _preparingCamera = false;
+  bool _switchingCamera = false;
   bool _recordingVideoNote = false;
   bool _processingVideoNote = false;
   bool _uploadingPhoto = false;
@@ -931,6 +932,62 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     }
   }
 
+  Future<void> _switchVideoCameraLens() async {
+    if (_switchingCamera ||
+        _sending ||
+        _processingVideoNote ||
+        _preparingCamera ||
+        !_cameraSessionReady) {
+      return;
+    }
+    setState(() => _switchingCamera = true);
+    try {
+      final oldCamera = _camera;
+      if (mounted) {
+        // Prevent rendering a controller that is being disposed.
+        setState(() => _camera = null);
+      }
+      if (_recordingVideoNote && oldCamera != null) {
+        // Camera plugin does not support lens change during an active recording.
+        // We stop/discard current clip and immediately restart with the new lens.
+        try {
+          await oldCamera.stopVideoRecording();
+        } catch (_) {}
+      }
+
+      final switched = await CameraWarmupService.instance.switchLens();
+      if (!mounted) return;
+      _camera = CameraWarmupService.instance.controller;
+      if (!switched) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No alternative camera found')),
+        );
+      } else if (_recordingVideoNote) {
+        if (_camera != null) {
+          await _camera!.startVideoRecording();
+          if (!mounted) return;
+          setState(() {
+            _recordingStartedAt = DateTime.now();
+            _recordingPausedTotal = Duration.zero;
+            _recordingPausedAt = null;
+            _videoNotePaused = false;
+            _videoNoteWillCancel = false;
+            _videoNoteLocked = false;
+            _videoNoteDragDx = 0;
+            _videoNoteDragDy = 0;
+          });
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+    } finally {
+      if (mounted) {
+        setState(() => _switchingCamera = false);
+      }
+    }
+  }
+
   Future<void> _stopAndSendVideoNote() async {
     if (!_recordingVideoNote || _camera == null) return;
     final trace = Stopwatch()..start();
@@ -1311,13 +1368,19 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                           else
                             Listener(
                               behavior: HitTestBehavior.opaque,
-                              onPointerDown: (_sending || !_cameraSessionReady)
+                              onPointerDown: (_sending ||
+                                      _switchingCamera ||
+                                      !_cameraSessionReady)
                                   ? null
                                   : _onRecordButtonPointerDown,
-                              onPointerMove: (_sending || !_cameraSessionReady)
+                              onPointerMove: (_sending ||
+                                      _switchingCamera ||
+                                      !_cameraSessionReady)
                                   ? null
                                   : _onRecordButtonPointerMove,
-                              onPointerUp: (_sending || !_cameraSessionReady)
+                              onPointerUp: (_sending ||
+                                      _switchingCamera ||
+                                      !_cameraSessionReady)
                                   ? null
                                   : (_) async {
                                       if (_recordingVideoNote) {
@@ -1327,7 +1390,9 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                                       _onPointerUpBeforeRecordingStarts();
                                     },
                               onPointerCancel:
-                                  (_sending || !_cameraSessionReady)
+                                  (_sending ||
+                                          _switchingCamera ||
+                                          !_cameraSessionReady)
                                   ? null
                                   : (_) async {
                                       if (_recordingVideoNote) {
@@ -1419,9 +1484,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               ),
             ],
           ),
-          if (_recordingVideoNote &&
-              _camera != null &&
-              _camera!.value.isInitialized)
+          if (_recordingVideoNote)
             Positioned.fill(
               child: Stack(
                 children: [
@@ -1439,23 +1502,72 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                               children: [
                                 ClipOval(
                                   child: SizedBox.expand(
-                                    child: FittedBox(
-                                      fit: BoxFit.cover,
-                                      child: SizedBox(
-                                        width:
-                                            _camera!
-                                                .value
-                                                .previewSize
-                                                ?.height ??
-                                            300,
-                                        height:
-                                            _camera!.value.previewSize?.width ??
-                                            300,
-                                        child: CameraPreview(_camera!),
+                                    child:
+                                        _camera != null &&
+                                            _camera!.value.isInitialized &&
+                                            !_switchingCamera
+                                        ? FittedBox(
+                                            fit: BoxFit.cover,
+                                            child: SizedBox(
+                                              width:
+                                                  _camera!
+                                                      .value
+                                                      .previewSize
+                                                      ?.height ??
+                                                  300,
+                                              height:
+                                                  _camera!
+                                                      .value
+                                                      .previewSize
+                                                      ?.width ??
+                                                  300,
+                                              child: CameraPreview(_camera!),
+                                            ),
+                                          )
+                                        : const ColoredBox(color: Colors.black),
+                                  ),
+                                ),
+                                if (_switchingCamera)
+                                  Positioned.fill(
+                                    child: ClipOval(
+                                      child: ColoredBox(
+                                        color: Colors.black.withValues(alpha: 0.36),
+                                        child: Center(
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black87,
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const SizedBox(
+                                                  width: 14,
+                                                  height: 14,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  l10n.chatCameraSwitching,
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
                                 Positioned(
                                   left: 8,
                                   right: 8,
@@ -1507,6 +1619,21 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                               IconButton.filledTonal(
                                 onPressed: _cancelVideoNote,
                                 icon: const Icon(Icons.close_rounded),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton.filledTonal(
+                                onPressed: _switchingCamera
+                                    ? null
+                                    : _switchVideoCameraLens,
+                                icon: _switchingCamera
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.cameraswitch_rounded),
                               ),
                               if (_videoNoteLocked) ...[
                                 const SizedBox(width: 8),

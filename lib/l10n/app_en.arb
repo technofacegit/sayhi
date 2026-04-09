@@ -328,6 +328,7 @@
   "chatPhotoTake": "Take photo",
   "chatPhotoFromLibrary": "Choose from library",
   "chatPhotoUploading": "Uploading photo...",
+  "chatCameraSwitching": "Switching camera...",
   "chatTranscriptionLoading": "Transcribing…",
   "chatTranscriptionUnavailable": "Transcription is not available on this device",
   "chatTranscriptionFailed": "Could not transcribe this video",

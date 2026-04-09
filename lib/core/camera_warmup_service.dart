@@ -111,6 +111,110 @@ class CameraWarmupService {
     );
   }
 
+  /// Switches between front/back lens for chat video notes.
+  ///
+  /// Returns `true` when a switch happened, `false` when the requested opposite
+  /// lens does not exist on this device.
+  Future<bool> switchLens() async {
+    final old = _controller;
+    if (old != null && old.value.isRecordingVideo) {
+      throw StateError('Cannot switch camera while recording');
+    }
+
+    final swTotal = Stopwatch()..start();
+    final swList = Stopwatch()..start();
+    final cameras = await availableCameras();
+    swList.stop();
+    cameraDiag(
+      'availableCameras',
+      elapsedMs: swList.elapsedMilliseconds,
+      preset: config.resolutionPreset,
+      enableAudio: config.enableAudio,
+      extra: 'switch_lens',
+    );
+
+    final currentLens = old?.description.lensDirection ?? CameraLensDirection.front;
+    final targetLens = currentLens == CameraLensDirection.front
+        ? CameraLensDirection.back
+        : CameraLensDirection.front;
+    final next = cameras.where((c) => c.lensDirection == targetLens).toList();
+    if (next.isEmpty) return false;
+
+    _configGeneration++;
+    final gen = _configGeneration;
+    _warmupFuture = null;
+    sessionState.value = CameraSessionState.warmingUp;
+
+    if (old != null) {
+      try {
+        await old.dispose();
+      } catch (_) {}
+      if (_controller == old) {
+        _controller = null;
+      }
+    }
+
+    final ctrl = CameraController(
+      next.first,
+      config.resolutionPreset,
+      enableAudio: config.enableAudio,
+    );
+    _controller = ctrl;
+
+    try {
+      final swInit = Stopwatch()..start();
+      await ctrl.initialize();
+      swInit.stop();
+      cameraDiag(
+        'controller.initialize',
+        elapsedMs: swInit.elapsedMilliseconds,
+        preset: config.resolutionPreset,
+        enableAudio: config.enableAudio,
+        controllerReused: false,
+        controllerRecreated: old != null,
+        extra: 'switch_lens',
+      );
+
+      if (gen != _configGeneration) {
+        await _disposeCtrlIfCurrent(ctrl);
+        return false;
+      }
+
+      final swPrep = Stopwatch()..start();
+      await ctrl.prepareForVideoRecording();
+      swPrep.stop();
+      cameraDiag(
+        'prepareForVideoRecording',
+        elapsedMs: swPrep.elapsedMilliseconds,
+        preset: config.resolutionPreset,
+        enableAudio: config.enableAudio,
+        controllerReused: false,
+        controllerRecreated: old != null,
+        extra: 'switch_lens',
+      );
+    } catch (_) {
+      await _disposeCtrlIfCurrent(ctrl);
+      sessionState.value = CameraSessionState.error;
+      rethrow;
+    }
+
+    if (gen != _configGeneration) {
+      await _disposeCtrlIfCurrent(ctrl);
+      return false;
+    }
+
+    swTotal.stop();
+    cameraDiag(
+      'switch_lens_total',
+      elapsedMs: swTotal.elapsedMilliseconds,
+      preset: config.resolutionPreset,
+      enableAudio: config.enableAudio,
+      extra: 'from=$currentLens to=$targetLens',
+    );
+    sessionState.value = CameraSessionState.ready;
+    return true;
+  }
+
   Future<void> _runWarmup(int gen) async {
     final swAll = Stopwatch()..start();
 

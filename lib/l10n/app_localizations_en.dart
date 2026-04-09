@@ -726,6 +726,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatPhotoUploading => 'Uploading photo...';
 
   @override
+  String get chatCameraSwitching => 'Switching camera...';
+
+  @override
   String get chatTranscriptionLoading => 'Transcribing…';
 
   @override

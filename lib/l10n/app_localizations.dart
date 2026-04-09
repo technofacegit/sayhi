@@ -1424,6 +1424,12 @@ abstract class AppLocalizations {
   /// **'Uploading photo...'**
   String get chatPhotoUploading;
 
+  /// No description provided for @chatCameraSwitching.
+  ///
+  /// In en, this message translates to:
+  /// **'Switching camera...'**
+  String get chatCameraSwitching;
+
   /// No description provided for @chatTranscriptionLoading.
   ///
   /// In en, this message translates to:
