@@ -1149,11 +1149,6 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  size: 22,
-                ),
               ],
             ),
           ),

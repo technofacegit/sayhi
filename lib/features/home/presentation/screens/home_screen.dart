@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/perf_log.dart';
@@ -50,7 +51,38 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       return groups;
     });
+    // ignore: unawaited_futures
+    _syncMyDiscoveryLocation();
     _initDiscovery(sw);
+  }
+
+  Future<void> _syncMyDiscoveryLocation() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
+      );
+      final country =
+          WidgetsBinding.instance.platformDispatcher.locale.countryCode;
+      await _discoveryRepository.updateMyLocation(
+        lat: pos.latitude,
+        lng: pos.longitude,
+        country: country,
+      );
+    } catch (_) {
+      // best effort only
+    }
   }
 
   Future<void> _initDiscovery(Stopwatch homeSw) async {

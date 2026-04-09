@@ -235,6 +235,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get zoneLobbyFilterAgeToggle => 'Limit by age';
 
   @override
+  String get discoveryFilterCountry => 'Country';
+
+  @override
+  String get discoveryFilterCountryHint => 'e.g. Turkey';
+
+  @override
+  String get discoveryFilterDistance => 'Distance';
+
+  @override
+  String get discoveryFilterDistanceToggle => 'Limit by distance';
+
+  @override
   String get zoneLobbyFilterApply => 'Apply';
 
   @override

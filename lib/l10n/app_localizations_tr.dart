@@ -237,6 +237,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get zoneLobbyFilterAgeToggle => 'Yaşa göre sınırla';
 
   @override
+  String get discoveryFilterCountry => 'Ülke';
+
+  @override
+  String get discoveryFilterCountryHint => 'örn. Türkiye';
+
+  @override
+  String get discoveryFilterDistance => 'Mesafe';
+
+  @override
+  String get discoveryFilterDistanceToggle => 'Mesafeye göre sınırla';
+
+  @override
   String get zoneLobbyFilterApply => 'Uygula';
 
   @override

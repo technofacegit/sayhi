@@ -10,11 +10,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// so they survive app reinstall after login. Local [SharedPreferences] is used
 /// as cache and for signed-out sessions.
 class DiscoveryFiltersStorage {
-  DiscoveryFiltersStorage({
-    SupabaseClient? client,
-    SharedPreferences? prefs,
-  })  : _client = client ?? Supabase.instance.client,
-        _prefsOverride = prefs;
+  DiscoveryFiltersStorage({SupabaseClient? client, SharedPreferences? prefs})
+    : _client = client ?? Supabase.instance.client,
+      _prefsOverride = prefs;
 
   static const _table = 'user_discovery_filters';
   static const _localKey = 'discovery_filters_v1';
@@ -32,7 +30,9 @@ class DiscoveryFiltersStorage {
       try {
         final row = await _client
             .from(_table)
-            .select('gender, min_age, max_age')
+            .select(
+              'gender, min_age, max_age, countries, country, max_distance_km',
+            )
             .eq('user_id', uid)
             .maybeSingle();
         if (_client.auth.currentUser?.id != uid) {
@@ -70,16 +70,15 @@ class DiscoveryFiltersStorage {
     if (uid == null) return;
 
     try {
-      await _client.from(_table).upsert(
-        <String, dynamic>{
-          'user_id': uid,
-          'gender': filters.gender,
-          'min_age': filters.minAge,
-          'max_age': filters.maxAge,
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        },
-        onConflict: 'user_id',
-      );
+      await _client.from(_table).upsert(<String, dynamic>{
+        'user_id': uid,
+        'gender': filters.gender,
+        'min_age': filters.minAge,
+        'max_age': filters.maxAge,
+        'countries': filters.countries,
+        'max_distance_km': filters.maxDistanceKm,
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+      }, onConflict: 'user_id');
     } catch (_) {}
   }
 
@@ -97,6 +96,10 @@ class DiscoveryFiltersStorage {
         gender: m['gender'] as String?,
         minAge: _readInt(m['minAge']),
         maxAge: _readInt(m['maxAge']),
+        countries:
+            _readStringList(m['countries']) ??
+            _readSingleCountryFallback(m['country']),
+        maxDistanceKm: _readInt(m['maxDistanceKm']),
       );
     } catch (_) {
       return ZoneLobbyFilters.none;
@@ -113,6 +116,9 @@ class DiscoveryFiltersStorage {
       if (filters.gender != null) 'gender': filters.gender,
       if (filters.minAge != null) 'minAge': filters.minAge,
       if (filters.maxAge != null) 'maxAge': filters.maxAge,
+      if (filters.countries != null && filters.countries!.isNotEmpty)
+        'countries': filters.countries,
+      if (filters.maxDistanceKm != null) 'maxDistanceKm': filters.maxDistanceKm,
     };
     await prefs.setString(_localKey, jsonEncode(payload));
   }
@@ -126,10 +132,16 @@ class DiscoveryFiltersStorage {
     final gender = row['gender'] as String?;
     final minAge = _readInt(row['min_age']);
     final maxAge = _readInt(row['max_age']);
+    final countries =
+        _readStringList(row['countries']) ??
+        _readSingleCountryFallback(row['country']);
+    final maxDistanceKm = _readInt(row['max_distance_km']);
     return ZoneLobbyFilters(
       gender: gender,
       minAge: minAge,
       maxAge: maxAge,
+      countries: countries,
+      maxDistanceKm: maxDistanceKm,
     );
   }
 
@@ -138,5 +150,21 @@ class DiscoveryFiltersStorage {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return null;
+  }
+
+  static List<String>? _readStringList(Object? value) {
+    if (value is! List) return null;
+    final out = <String>[];
+    for (final e in value) {
+      final s = e?.toString().trim() ?? '';
+      if (s.isNotEmpty) out.add(s);
+    }
+    return out.isEmpty ? null : out;
+  }
+
+  static List<String>? _readSingleCountryFallback(Object? value) {
+    final s = value?.toString().trim() ?? '';
+    if (s.isEmpty) return null;
+    return <String>[s];
   }
 }

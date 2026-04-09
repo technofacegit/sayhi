@@ -518,6 +518,30 @@ abstract class AppLocalizations {
   /// **'Limit by age'**
   String get zoneLobbyFilterAgeToggle;
 
+  /// No description provided for @discoveryFilterCountry.
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get discoveryFilterCountry;
+
+  /// No description provided for @discoveryFilterCountryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Turkey'**
+  String get discoveryFilterCountryHint;
+
+  /// No description provided for @discoveryFilterDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get discoveryFilterDistance;
+
+  /// No description provided for @discoveryFilterDistanceToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit by distance'**
+  String get discoveryFilterDistanceToggle;
+
   /// No description provided for @zoneLobbyFilterApply.
   ///
   /// In en, this message translates to:
