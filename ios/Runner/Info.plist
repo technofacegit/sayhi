@@ -45,6 +45,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Mesaj ve eşleşme bildirimleri göndermek için izin gerekir.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Haritada konumunuzu göstermek ve haritayı merkeze almak için gereklidir.</string>
 	<key>NSCameraUsageDescription</key>

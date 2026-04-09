@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
+import 'package:qr_dating_app/features/profile/presentation/screens/account_settings_screen.dart';
+import 'package:qr_dating_app/features/profile/presentation/screens/my_profile_screen.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -64,6 +66,36 @@ class ProfileTabScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.person_rounded),
+                title: const Text('Profilim'),
+                subtitle: const Text('Fotoğraflar, bio, yaş, lokasyon, ilgi alanları'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const MyProfileScreen(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.manage_accounts_rounded),
+                title: Text(l10n.accountSettingsTitle),
+                subtitle: Text(l10n.accountSettingsProfileMenuSubtitle),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AccountSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+              const Divider(height: 24),
               const Spacer(),
               OutlinedButton.icon(
                 onPressed: () => _confirmLogout(context),

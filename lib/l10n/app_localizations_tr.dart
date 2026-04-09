@@ -898,4 +898,97 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get defaultMemberName => 'Üye';
+
+  @override
+  String get accountSettingsTitle => 'Hesap ayarları';
+
+  @override
+  String get accountSettingsProfileMenuSubtitle =>
+      'E-posta, giriş, bildirimler, hesap silme';
+
+  @override
+  String get accountSettingsContactSection => 'E-posta ve telefon';
+
+  @override
+  String get accountSettingsEmailLabel => 'E-posta';
+
+  @override
+  String get accountSettingsPhoneLabel => 'Telefon';
+
+  @override
+  String get accountSettingsNotSet => 'Yok';
+
+  @override
+  String get accountSettingsSignInSection => 'Giriş';
+
+  @override
+  String get accountSettingsProviderApple => 'Apple';
+
+  @override
+  String get accountSettingsProviderGoogle => 'Google';
+
+  @override
+  String get accountSettingsProviderEmail => 'E-posta ve şifre';
+
+  @override
+  String get accountSettingsPasswordReset => 'Şifre sıfırlama e-postası gönder';
+
+  @override
+  String get accountSettingsPasswordResetSent =>
+      'Kayıtlıysa sıfırlama bağlantısı e-postana gönderilir.';
+
+  @override
+  String get accountSettingsAppleHint =>
+      'Apple ile giriş, Ayarlar → Apple ID → Şifre ve Güvenlik üzerinden yönetilir.';
+
+  @override
+  String get accountSettingsGoogleHint =>
+      'Google ile giriş bu uygulamada henüz yok.';
+
+  @override
+  String get accountSettingsNotificationsSection => 'Bildirimler';
+
+  @override
+  String get accountSettingsPushLabel => 'Anlık bildirimler';
+
+  @override
+  String get accountSettingsPushSubtitle =>
+      'Mesaj ve eşleşmeler için uyarı al.';
+
+  @override
+  String get accountSettingsOpenSettings => 'Sistem ayarlarını aç';
+
+  @override
+  String get accountSettingsDangerZone => 'Hesap verileri';
+
+  @override
+  String get accountSettingsDeleteTitle => 'Hesabı sil';
+
+  @override
+  String get accountSettingsDeleteSubtitle =>
+      'Hesabını ve profil verilerini kalıcı olarak kaldır. Geri alınamaz.';
+
+  @override
+  String get accountSettingsDeleteConfirmTitle => 'Hesabın silinsin mi?';
+
+  @override
+  String get accountSettingsDeleteConfirmBody =>
+      'Profilin, beğenilerin, sohbetlerin ve diğer verilerin silinir. Bu işlem kalıcıdır.';
+
+  @override
+  String get accountSettingsDeleteTypeLabel => 'Onaylamak için DELETE yaz';
+
+  @override
+  String get accountSettingsDeleteTypeHint => 'DELETE';
+
+  @override
+  String get accountSettingsDeleteMismatch =>
+      'Onay için tam olarak DELETE yaz.';
+
+  @override
+  String get accountSettingsDeleteFailed =>
+      'Hesap silinemedi. Tekrar dene veya destekle iletişime geç.';
+
+  @override
+  String get accountSettingsDeleting => 'Siliniyor…';
 }

@@ -901,4 +901,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get defaultMemberName => 'Member';
+
+  @override
+  String get accountSettingsTitle => 'Account settings';
+
+  @override
+  String get accountSettingsProfileMenuSubtitle =>
+      'Email, sign-in, notifications, delete account';
+
+  @override
+  String get accountSettingsContactSection => 'Email & phone';
+
+  @override
+  String get accountSettingsEmailLabel => 'Email';
+
+  @override
+  String get accountSettingsPhoneLabel => 'Phone';
+
+  @override
+  String get accountSettingsNotSet => 'Not set';
+
+  @override
+  String get accountSettingsSignInSection => 'Sign-in';
+
+  @override
+  String get accountSettingsProviderApple => 'Apple';
+
+  @override
+  String get accountSettingsProviderGoogle => 'Google';
+
+  @override
+  String get accountSettingsProviderEmail => 'Email & password';
+
+  @override
+  String get accountSettingsPasswordReset => 'Send password reset email';
+
+  @override
+  String get accountSettingsPasswordResetSent =>
+      'If this email is registered, you will receive a reset link.';
+
+  @override
+  String get accountSettingsAppleHint =>
+      'Apple sign-in is managed in Settings → Apple ID → Password & Security.';
+
+  @override
+  String get accountSettingsGoogleHint =>
+      'Google sign-in is not enabled in this app yet.';
+
+  @override
+  String get accountSettingsNotificationsSection => 'Notifications';
+
+  @override
+  String get accountSettingsPushLabel => 'Push notifications';
+
+  @override
+  String get accountSettingsPushSubtitle =>
+      'Allow the app to send alerts for messages and matches.';
+
+  @override
+  String get accountSettingsOpenSettings => 'Open system settings';
+
+  @override
+  String get accountSettingsDangerZone => 'Account data';
+
+  @override
+  String get accountSettingsDeleteTitle => 'Delete account';
+
+  @override
+  String get accountSettingsDeleteSubtitle =>
+      'Permanently remove your account and profile data. This cannot be undone.';
+
+  @override
+  String get accountSettingsDeleteConfirmTitle => 'Delete your account?';
+
+  @override
+  String get accountSettingsDeleteConfirmBody =>
+      'Your profile, likes, chats, and other data will be removed. This action is permanent.';
+
+  @override
+  String get accountSettingsDeleteTypeLabel => 'Type DELETE to confirm';
+
+  @override
+  String get accountSettingsDeleteTypeHint => 'DELETE';
+
+  @override
+  String get accountSettingsDeleteMismatch => 'Type DELETE exactly to confirm.';
+
+  @override
+  String get accountSettingsDeleteFailed =>
+      'Could not delete account. Try again or contact support.';
+
+  @override
+  String get accountSettingsDeleting => 'Deleting…';
 }

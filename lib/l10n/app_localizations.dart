@@ -1747,6 +1747,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Member'**
   String get defaultMemberName;
+
+  /// No description provided for @accountSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account settings'**
+  String get accountSettingsTitle;
+
+  /// No description provided for @accountSettingsProfileMenuSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Email, sign-in, notifications, delete account'**
+  String get accountSettingsProfileMenuSubtitle;
+
+  /// No description provided for @accountSettingsContactSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Email & phone'**
+  String get accountSettingsContactSection;
+
+  /// No description provided for @accountSettingsEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get accountSettingsEmailLabel;
+
+  /// No description provided for @accountSettingsPhoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get accountSettingsPhoneLabel;
+
+  /// No description provided for @accountSettingsNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get accountSettingsNotSet;
+
+  /// No description provided for @accountSettingsSignInSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in'**
+  String get accountSettingsSignInSection;
+
+  /// No description provided for @accountSettingsProviderApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple'**
+  String get accountSettingsProviderApple;
+
+  /// No description provided for @accountSettingsProviderGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google'**
+  String get accountSettingsProviderGoogle;
+
+  /// No description provided for @accountSettingsProviderEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email & password'**
+  String get accountSettingsProviderEmail;
+
+  /// No description provided for @accountSettingsPasswordReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Send password reset email'**
+  String get accountSettingsPasswordReset;
+
+  /// No description provided for @accountSettingsPasswordResetSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If this email is registered, you will receive a reset link.'**
+  String get accountSettingsPasswordResetSent;
+
+  /// No description provided for @accountSettingsAppleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple sign-in is managed in Settings → Apple ID → Password & Security.'**
+  String get accountSettingsAppleHint;
+
+  /// No description provided for @accountSettingsGoogleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in is not enabled in this app yet.'**
+  String get accountSettingsGoogleHint;
+
+  /// No description provided for @accountSettingsNotificationsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get accountSettingsNotificationsSection;
+
+  /// No description provided for @accountSettingsPushLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications'**
+  String get accountSettingsPushLabel;
+
+  /// No description provided for @accountSettingsPushSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the app to send alerts for messages and matches.'**
+  String get accountSettingsPushSubtitle;
+
+  /// No description provided for @accountSettingsOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open system settings'**
+  String get accountSettingsOpenSettings;
+
+  /// No description provided for @accountSettingsDangerZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Account data'**
+  String get accountSettingsDangerZone;
+
+  /// No description provided for @accountSettingsDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get accountSettingsDeleteTitle;
+
+  /// No description provided for @accountSettingsDeleteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently remove your account and profile data. This cannot be undone.'**
+  String get accountSettingsDeleteSubtitle;
+
+  /// No description provided for @accountSettingsDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete your account?'**
+  String get accountSettingsDeleteConfirmTitle;
+
+  /// No description provided for @accountSettingsDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile, likes, chats, and other data will be removed. This action is permanent.'**
+  String get accountSettingsDeleteConfirmBody;
+
+  /// No description provided for @accountSettingsDeleteTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm'**
+  String get accountSettingsDeleteTypeLabel;
+
+  /// No description provided for @accountSettingsDeleteTypeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE'**
+  String get accountSettingsDeleteTypeHint;
+
+  /// No description provided for @accountSettingsDeleteMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE exactly to confirm.'**
+  String get accountSettingsDeleteMismatch;
+
+  /// No description provided for @accountSettingsDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete account. Try again or contact support.'**
+  String get accountSettingsDeleteFailed;
+
+  /// No description provided for @accountSettingsDeleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get accountSettingsDeleting;
 }
 
 class _AppLocalizationsDelegate
