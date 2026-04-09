@@ -684,6 +684,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatCameraUnavailable => 'Camera unavailable';
 
   @override
+  String get chatTranslateSettingsTitle => 'Translate';
+
+  @override
+  String get chatTranslateTargetTitle => 'Translate message to';
+
+  @override
+  String get chatTranslateOff => 'Off';
+
+  @override
+  String get chatTranslatedBadge => 'Translated';
+
+  @override
+  String get chatMenuTranslate => 'Translate';
+
+  @override
+  String get chatMenuDelete => 'Delete';
+
+  @override
   String get chatProfileNotFound => 'Profile not found';
 
   @override
@@ -721,6 +739,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatDeleteSuccess => 'Conversation deleted.';
+
+  @override
+  String get chatDeleteFailed => 'Message could not be deleted.';
 
   @override
   String get chatReportSubmitted =>

@@ -1340,6 +1340,42 @@ abstract class AppLocalizations {
   /// **'Camera unavailable'**
   String get chatCameraUnavailable;
 
+  /// No description provided for @chatTranslateSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get chatTranslateSettingsTitle;
+
+  /// No description provided for @chatTranslateTargetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate message to'**
+  String get chatTranslateTargetTitle;
+
+  /// No description provided for @chatTranslateOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get chatTranslateOff;
+
+  /// No description provided for @chatTranslatedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Translated'**
+  String get chatTranslatedBadge;
+
+  /// No description provided for @chatMenuTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate'**
+  String get chatMenuTranslate;
+
+  /// No description provided for @chatMenuDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get chatMenuDelete;
+
   /// No description provided for @chatProfileNotFound.
   ///
   /// In en, this message translates to:
@@ -1405,6 +1441,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Conversation deleted.'**
   String get chatDeleteSuccess;
+
+  /// No description provided for @chatDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Message could not be deleted.'**
+  String get chatDeleteFailed;
 
   /// No description provided for @chatReportSubmitted.
   ///

@@ -26,7 +26,7 @@ class ChatPartnerPreview {
 /// Loads and sends 1:1 messages ([chatId] in routes = other user's id).
 class ChatMessagesRepository {
   ChatMessagesRepository({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
   static const _chatMediaBucket = 'chat-media';
@@ -72,13 +72,12 @@ class ChatMessagesRepository {
 
     final raw = await _client.rpc<dynamic>(
       'get_chat_messages',
-      params: {
-        'p_other_user_id': otherUserId,
-        'p_limit': 200,
-      },
+      params: {'p_other_user_id': otherUserId, 'p_limit': 200},
     );
     final list = _decodeJsonArray(raw);
-    return list.map((e) => _parseMessage(Map<String, dynamic>.from(e as Map), myId)).toList();
+    return list
+        .map((e) => _parseMessage(Map<String, dynamic>.from(e as Map), myId))
+        .toList();
   }
 
   Future<void> markChatRead(String otherUserId) async {
@@ -98,10 +97,7 @@ class ChatMessagesRepository {
 
     final raw = await _client.rpc<dynamic>(
       'send_chat_message',
-      params: {
-        'p_recipient_id': recipientId,
-        'p_body': body,
-      },
+      params: {'p_recipient_id': recipientId, 'p_body': body},
     );
     final m = _asMap(raw);
     return _parseMessage(m, myId);
@@ -122,12 +118,16 @@ class ChatMessagesRepository {
 
     final objectPath =
         '$myId/video_notes/${DateTime.now().millisecondsSinceEpoch}.mp4';
-    await _client.storage.from(_chatMediaBucket).uploadBinary(
+    await _client.storage
+        .from(_chatMediaBucket)
+        .uploadBinary(
           objectPath,
           bytes,
           fileOptions: const FileOptions(contentType: 'video/mp4'),
         );
-    final mediaUrl = _client.storage.from(_chatMediaBucket).getPublicUrl(objectPath);
+    final mediaUrl = _client.storage
+        .from(_chatMediaBucket)
+        .getPublicUrl(objectPath);
 
     final raw = await _client.rpc<dynamic>(
       'send_chat_video_note',
@@ -139,6 +139,19 @@ class ChatMessagesRepository {
     );
     final m = _asMap(raw);
     return _parseMessage(m, myId);
+  }
+
+  Future<bool> deleteMessage(String messageId) async {
+    final myId = _myId;
+    if (myId == null) return false;
+    final id = messageId.trim();
+    if (id.isEmpty) return false;
+    final ok = await _client.rpc<dynamic>(
+      'delete_chat_message',
+      params: {'p_message_id': id},
+    );
+    if (ok is bool) return ok;
+    return ok?.toString().toLowerCase() == 'true';
   }
 
   ChatMessage _parseMessage(Map<String, dynamic> m, String myId) {

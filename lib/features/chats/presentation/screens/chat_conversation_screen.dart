@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +10,13 @@ import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/camera_diagnostics.dart';
 import 'package:qr_dating_app/core/camera_session_state.dart';
 import 'package:qr_dating_app/core/camera_warmup_service.dart';
+import 'package:qr_dating_app/core/chat_translation_service.dart';
 import 'package:qr_dating_app/core/perf_log.dart';
 import 'package:qr_dating_app/features/chats/data/chat_messages_repository.dart';
 import 'package:qr_dating_app/features/chats/presentation/model/chat_message.dart';
 import 'package:qr_dating_app/features/chats/presentation/utils/chat_time_format.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 import 'package:video_player/video_player.dart';
 
@@ -27,13 +30,16 @@ class ChatConversationScreen extends StatefulWidget {
 }
 
 class _ChatConversationScreenState extends State<ChatConversationScreen> {
+  static const String _translatePrefKey = 'chat.translate.targetLanguage';
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _composer = TextEditingController();
   final FocusNode _composerFocus = FocusNode();
   final ChatMessagesRepository _repo = ChatMessagesRepository();
+  final Random _rnd = Random();
   CameraController? _camera;
   Timer? _recordingTicker;
   Timer? _holdToRecordTimer;
+  Timer? _debugIncomingTimer;
 
   /// Global position where the video-note gesture started (for drag deltas).
   Offset? _videoNoteDragOriginGlobal;
@@ -57,9 +63,27 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   double _videoNoteDragDx = 0;
   double _videoNoteDragDy = 0;
   Object? _loadError;
+  String _translateTargetLanguage = 'off';
+  bool _isTranslatingMessages = false;
+  final Map<String, String> _translatedByMessageId = <String, String>{};
+  List<TranslationLanguage> _translationLanguages = const [];
 
   CameraSessionState _cameraSessionState = CameraSessionState.idle;
   bool _cameraSessionReady = false;
+
+  // TEST ONLY: periodically inject local incoming messages to stress chat UI.
+  static const bool _enableDebugAutoIncoming = true;
+  static const Duration _debugIncomingInterval = Duration(seconds: 5);
+  static const List<String> _debugIncomingSamples = <String>[
+    'Hey 👋 nasilsin?',
+    'Kafe tarafindayim, gelmek ister misin?',
+    'Az once seni gordum sanirim :)',
+    'Bugun planin var mi?',
+    'Muzik zevkin efsane bu arada',
+    '5 dk sonra musaitsen bir kahve?',
+    'Ben geldim, sen neredesin?',
+    'Konusmak cok keyifliydi ✨',
+  ];
 
   void _syncCameraSession() {
     final s = CameraWarmupService.instance.sessionState.value;
@@ -82,7 +106,10 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
       _onCameraSessionChanged,
     );
     unawaited(CameraWarmupService.instance.beginChatSession());
+    unawaited(_loadSupportedTranslateLanguages());
+    unawaited(_loadTranslatePreference());
     _load();
+    _startDebugIncomingMessages();
   }
 
   void _onComposerChanged() {
@@ -98,6 +125,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     unawaited(CameraWarmupService.instance.releaseChatSession());
     _recordingTicker?.cancel();
     _holdToRecordTimer?.cancel();
+    _debugIncomingTimer?.cancel();
     _composer.removeListener(_onComposerChanged);
     _composer.dispose();
     _composerFocus.dispose();
@@ -121,6 +149,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         _messages = messages;
         _loading = false;
       });
+      unawaited(_translateIncomingMessages());
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _scrollToEnd();
         Future<void>.delayed(const Duration(milliseconds: 80), () {
@@ -139,6 +168,271 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
   void _scrollToEnd() {
     if (!_scrollController.hasClients) return;
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+  }
+
+  void _startDebugIncomingMessages() {
+    if (!_enableDebugAutoIncoming) return;
+    _debugIncomingTimer?.cancel();
+    _debugIncomingTimer = Timer.periodic(_debugIncomingInterval, (_) {
+      if (!mounted || _loading || _partner == null) return;
+      final samples = _debugIncomingSamples;
+      final text = samples[_rnd.nextInt(samples.length)];
+      final msg = ChatMessage(
+        id: 'debug-${DateTime.now().microsecondsSinceEpoch}',
+        text: text,
+        isMe: false,
+        sentAt: DateTime.now(),
+      );
+      setState(() {
+        _messages = [..._messages, msg];
+      });
+      unawaited(_translateIncomingMessages());
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+    });
+  }
+
+  Future<void> _loadTranslatePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    final selected = prefs.getString(_translatePrefKey) ?? 'off';
+    if (!mounted) return;
+    setState(() {
+      _translateTargetLanguage = selected;
+    });
+    unawaited(_translateIncomingMessages());
+  }
+
+  Future<void> _loadSupportedTranslateLanguages() async {
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final langs = await ChatTranslationService.instance.fetchSupportedLanguages(
+      localeCode: localeCode,
+    );
+    if (!mounted) return;
+    setState(() {
+      _translationLanguages = langs;
+    });
+  }
+
+  Future<void> _setTranslateTargetLanguage(String languageCode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_translatePrefKey, languageCode);
+    if (!mounted) return;
+    setState(() {
+      _translateTargetLanguage = languageCode;
+      if (languageCode == 'off') {
+        _translatedByMessageId.clear();
+      }
+    });
+    unawaited(_translateIncomingMessages());
+  }
+
+  bool _shouldTranslate(ChatMessage msg) {
+    if (_translateTargetLanguage == 'off') return false;
+    if (msg.isMe || msg.isVideoNote) return false;
+    return msg.text.trim().isNotEmpty;
+  }
+
+  String _displayTextFor(ChatMessage msg) {
+    final manualOrAuto = _translatedByMessageId[msg.id];
+    if (manualOrAuto != null) return manualOrAuto;
+    if (!_shouldTranslate(msg)) return msg.text;
+    return msg.text;
+  }
+
+  bool _isTranslated(ChatMessage msg) {
+    final translated = _translatedByMessageId[msg.id];
+    return translated != null && translated != msg.text;
+  }
+
+  Future<void> _translateIncomingMessages() async {
+    if (_translateTargetLanguage == 'off' || _messages.isEmpty) return;
+    if (_isTranslatingMessages) return;
+    _isTranslatingMessages = true;
+    final next = Map<String, String>.from(_translatedByMessageId);
+    try {
+      for (final msg in _messages) {
+        if (!_shouldTranslate(msg)) continue;
+        if (next.containsKey(msg.id)) continue;
+        final translated = await ChatTranslationService.instance.translate(
+          text: msg.text,
+          toLanguageCode: _translateTargetLanguage,
+        );
+        next[msg.id] = translated;
+      }
+      if (!mounted) return;
+      setState(() {
+        _translatedByMessageId
+          ..clear()
+          ..addAll(next);
+      });
+    } finally {
+      _isTranslatingMessages = false;
+    }
+  }
+
+  Future<void> _showTranslateSettingsSheet() async {
+    final l10n = context.l10n;
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final base = _translationLanguages.isEmpty
+        ? await ChatTranslationService.instance.fetchSupportedLanguages(
+            localeCode: localeCode,
+          )
+        : _translationLanguages;
+    if (!mounted) return;
+    final options = <({String code, String label})>[
+      (code: 'off', label: l10n.chatTranslateOff),
+      ...base.map((e) => (code: e.code, label: e.label)),
+    ];
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        final maxHeight = MediaQuery.sizeOf(context).height * 0.72;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Text(
+                      l10n.chatTranslateSettingsTitle,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  for (final option in options)
+                    RadioListTile<String>(
+                      value: option.code,
+                      groupValue: _translateTargetLanguage,
+                      onChanged: (value) => Navigator.of(context).pop(value),
+                      title: Text(option.label),
+                    ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    if (selected == null || selected == _translateTargetLanguage) return;
+    await _setTranslateTargetLanguage(selected);
+  }
+
+  Future<String?> _pickTranslateLanguageForMessage() async {
+    final l10n = context.l10n;
+    final localeCode = Localizations.localeOf(context).languageCode;
+    final base = _translationLanguages.isEmpty
+        ? await ChatTranslationService.instance.fetchSupportedLanguages(
+            localeCode: localeCode,
+          )
+        : _translationLanguages;
+    if (!mounted) return null;
+    final options = <({String code, String label})>[
+      ...base.map((e) => (code: e.code, label: e.label)),
+    ];
+    return showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        final maxHeight = MediaQuery.sizeOf(context).height * 0.72;
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Text(
+                      l10n.chatTranslateTargetTitle,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  for (final option in options)
+                    ListTile(
+                      title: Text(option.label),
+                      trailing: option.code == _translateTargetLanguage
+                          ? const Icon(Icons.check_rounded)
+                          : null,
+                      onTap: () => Navigator.of(context).pop(option.code),
+                    ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onMessageMenuTap(
+    ChatMessage msg,
+    TapDownDetails details,
+  ) async {
+    final l10n = context.l10n;
+    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final selected = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromRect(
+        Rect.fromPoints(details.globalPosition, details.globalPosition),
+        Offset.zero & overlay.size,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          value: 'translate',
+          enabled: !msg.isVideoNote && msg.text.trim().isNotEmpty,
+          child: Text(l10n.chatMenuTranslate),
+        ),
+        PopupMenuItem<String>(
+          value: 'delete',
+          child: Text(l10n.chatMenuDelete),
+        ),
+      ],
+    );
+    if (!mounted || selected == null) return;
+    if (selected == 'delete') {
+      final isDebugLocal = msg.id.startsWith('debug-');
+      if (!isDebugLocal) {
+        try {
+          final deleted = await _repo.deleteMessage(msg.id);
+          if (!deleted) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.l10n.chatDeleteFailed)),
+            );
+            return;
+          }
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('$e')));
+          return;
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _messages = _messages.where((m) => m.id != msg.id).toList();
+        _translatedByMessageId.remove(msg.id);
+      });
+      return;
+    }
+    if (selected == 'translate') {
+      final target = await _pickTranslateLanguageForMessage();
+      if (!mounted || target == null) return;
+      final translated = await ChatTranslationService.instance.translate(
+        text: msg.text,
+        toLanguageCode: target,
+      );
+      if (!mounted) return;
+      setState(() {
+        _translatedByMessageId[msg.id] = translated;
+      });
+    }
   }
 
   Future<void> _triggerRecordHaptic({required bool isStart}) async {
@@ -652,6 +946,13 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            tooltip: l10n.chatTranslateSettingsTitle,
+            onPressed: _showTranslateSettingsSheet,
+            icon: const Icon(Icons.translate_rounded),
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -674,7 +975,13 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                         padding: const EdgeInsets.only(bottom: 10),
                         child: msg.isVideoNote
                             ? _VideoNoteBubble(message: msg)
-                            : _MessageBubble(message: msg),
+                            : _MessageBubble(
+                                message: msg,
+                                displayText: _displayTextFor(msg),
+                                showTranslatedBadge: _isTranslated(msg),
+                                onTapDown: (details) =>
+                                    _onMessageMenuTap(msg, details),
+                              ),
                       );
                     },
                   ),
@@ -1287,8 +1594,16 @@ class _VideoNoteBubbleState extends State<_VideoNoteBubble> {
 
 class _MessageBubble extends StatelessWidget {
   final ChatMessage message;
+  final String displayText;
+  final bool showTranslatedBadge;
+  final ValueChanged<TapDownDetails> onTapDown;
 
-  const _MessageBubble({required this.message});
+  const _MessageBubble({
+    required this.message,
+    required this.displayText,
+    required this.showTranslatedBadge,
+    required this.onTapDown,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1308,40 +1623,55 @@ class _MessageBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.sizeOf(context).width * 0.78,
         ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: bubble,
-            borderRadius: BorderRadius.only(
-              topLeft: const Radius.circular(18),
-              topRight: const Radius.circular(18),
-              bottomLeft: Radius.circular(message.isMe ? 18 : 4),
-              bottomRight: Radius.circular(message.isMe ? 4 : 18),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: onTapDown,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: bubble,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(18),
+                topRight: const Radius.circular(18),
+                bottomLeft: Radius.circular(message.isMe ? 18 : 4),
+                bottomRight: Radius.circular(message.isMe ? 4 : 18),
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-            child: Column(
-              crossAxisAlignment: message.isMe
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  message.text,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: onBubble,
-                    height: 1.35,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+              child: Column(
+                crossAxisAlignment: message.isMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (showTranslatedBadge)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        context.l10n.chatTranslatedBadge,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: onBubble.withValues(alpha: 0.65),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  Text(
+                    displayText,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: onBubble,
+                      height: 1.35,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  formatMessageTime(message.sentAt),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: onBubble.withValues(alpha: 0.65),
-                    fontSize: 11,
+                  const SizedBox(height: 4),
+                  Text(
+                    formatMessageTime(message.sentAt),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: onBubble.withValues(alpha: 0.65),
+                      fontSize: 11,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

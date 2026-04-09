@@ -682,6 +682,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get chatCameraUnavailable => 'Kamera kullanılamıyor';
 
   @override
+  String get chatTranslateSettingsTitle => 'Çeviri';
+
+  @override
+  String get chatTranslateTargetTitle => 'Mesajı şu dile çevir';
+
+  @override
+  String get chatTranslateOff => 'Kapalı';
+
+  @override
+  String get chatTranslatedBadge => 'Çevrildi';
+
+  @override
+  String get chatMenuTranslate => 'Çevir';
+
+  @override
+  String get chatMenuDelete => 'Sil';
+
+  @override
   String get chatProfileNotFound => 'Profil bulunamadı';
 
   @override
@@ -718,6 +736,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatDeleteSuccess => 'Sohbet silindi.';
+
+  @override
+  String get chatDeleteFailed => 'Mesaj silinemedi.';
 
   @override
   String get chatReportSubmitted =>
