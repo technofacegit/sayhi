@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:qr_dating_app/features/qr_zone/data/zone_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,6 +17,7 @@ class DiscoveryFiltersStorage {
 
   static const _table = 'user_discovery_filters';
   static const _localKey = 'discovery_filters_v1';
+  static final ValueNotifier<int> filtersRevision = ValueNotifier<int>(0);
 
   final SupabaseClient _client;
   final SharedPreferences? _prefsOverride;
@@ -62,6 +64,7 @@ class DiscoveryFiltersStorage {
           await _client.from(_table).delete().eq('user_id', uid);
         } catch (_) {}
       }
+      filtersRevision.value++;
       return;
     }
 
@@ -80,6 +83,7 @@ class DiscoveryFiltersStorage {
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       }, onConflict: 'user_id');
     } catch (_) {}
+    filtersRevision.value++;
   }
 
   Future<ZoneLobbyFilters> _loadLocal() async {

@@ -59,6 +59,7 @@ class DiscoveryRepository {
             }
           }
           final genderRaw = m['gender'] as String?;
+          final countryRaw = (m['country'] as String?)?.trim();
           return SwipeProfile(
             id: uid,
             photoUrl: (avatar != null && avatar.isNotEmpty) ? avatar : '',
@@ -67,6 +68,9 @@ class DiscoveryRepository {
             bio: m['bio'] as String? ?? '',
             gender: (genderRaw != null && genderRaw.isNotEmpty)
                 ? genderRaw
+                : null,
+            country: (countryRaw != null && countryRaw.isNotEmpty)
+                ? countryRaw
                 : null,
             galleryUrls: gallery,
           );

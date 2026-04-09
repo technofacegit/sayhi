@@ -62,6 +62,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
   bool _loadingMore = false;
 
   ZoneLobbyFilters _appliedFilters = ZoneLobbyFilters.none;
+  bool _syncingSharedFilters = false;
 
   @override
   void initState() {
@@ -72,6 +73,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
     )..repeat(reverse: true);
 
     _scrollController.addListener(_onScroll);
+    DiscoveryFiltersStorage.filtersRevision.addListener(_onSharedFiltersChanged);
 
     switch (widget.variant) {
       case ZoneLobbyVariant.sayHi:
@@ -97,6 +99,33 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
         }
         break;
     }
+  }
+
+  Future<void> _onSharedFiltersChanged() async {
+    if (widget.variant != ZoneLobbyVariant.sayHi) return;
+    if (_syncingSharedFilters) return;
+    _syncingSharedFilters = true;
+    try {
+      final latest = await _discoveryFiltersStorage.load();
+      if (!mounted || _sameFilters(_appliedFilters, latest)) return;
+      setState(() => _appliedFilters = latest);
+      await _loadFirstPageStandalone();
+    } finally {
+      _syncingSharedFilters = false;
+    }
+  }
+
+  bool _sameFilters(ZoneLobbyFilters a, ZoneLobbyFilters b) {
+    final aCountries = List<String>.from(a.countries ?? const <String>[])..sort();
+    final bCountries = List<String>.from(b.countries ?? const <String>[])..sort();
+    if (aCountries.length != bCountries.length) return false;
+    for (var i = 0; i < aCountries.length; i++) {
+      if (aCountries[i] != bCountries[i]) return false;
+    }
+    return a.gender == b.gender &&
+        a.minAge == b.minAge &&
+        a.maxAge == b.maxAge &&
+        a.maxDistanceKm == b.maxDistanceKm;
   }
 
   Future<void> _initStandaloneSayHi() async {
@@ -540,6 +569,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
 
   @override
   void dispose() {
+    DiscoveryFiltersStorage.filtersRevision.removeListener(_onSharedFiltersChanged);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _realtimeReloadDebounce?.cancel();
@@ -618,6 +648,14 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
 
   Future<void> _openMemberProfile(ZoneMemberPreview member, {required bool standalone}) async {
     if (standalone) {
+      String? country = member.country;
+      if (country == null || country.isEmpty) {
+        try {
+          country = await _repo.fetchProfileCountry(member.id);
+        } catch (_) {
+          // Best effort fallback.
+        }
+      }
       await context.push(
         AppRouter.discoveryProfilePath,
         extra: SwipeProfile(
@@ -627,6 +665,7 @@ class _ZoneLobbyScreenState extends State<ZoneLobbyScreen>
           age: member.age,
           bio: member.bio,
           gender: member.gender,
+          country: country,
           galleryUrls: const [],
         ),
       );

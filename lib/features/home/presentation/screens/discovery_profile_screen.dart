@@ -208,6 +208,30 @@ class _DiscoveryProfileScreenState extends State<DiscoveryProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                          if (p.country != null && p.country!.trim().isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.public_rounded,
+                                    size: 18,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.65,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    p.country!,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           Text(
                             l10n.discoveryProfileDescription,
                             style: theme.textTheme.titleMedium?.copyWith(

@@ -357,6 +357,8 @@ class ZoneRepository {
         'p_gender_filter': filters.gender,
         'p_min_age': filters.minAge,
         'p_max_age': filters.maxAge,
+        'p_country_filters': filters.countries,
+        'p_max_distance_km': filters.maxDistanceKm,
       },
     );
     if (raw is! Map<String, dynamic>) {
@@ -412,6 +414,7 @@ class ZoneRepository {
       bio: p['bio'] as String? ?? '',
       age: (p['age'] as num?)?.toInt(),
       gender: p['gender'] as String?,
+      country: (p['country'] as String?)?.trim(),
       avatarUrl: avatar,
       galleryUrls: gallery,
       swipe: swipe,
@@ -494,6 +497,22 @@ class ZoneRepository {
     return (swipe: swipe, isFavorite: m['is_favorite'] == true);
   }
 
+  /// Lightweight lookup for standalone detail screens.
+  Future<String?> fetchProfileCountry(String targetUserId) async {
+    final target = targetUserId.trim();
+    if (target.isEmpty) return null;
+    final row = await _client
+        .from('profiles')
+        .select('country')
+        .eq('id', target)
+        .maybeSingle();
+    if (row == null || row is! Map) return null;
+    final map = Map<String, dynamic>.from(row);
+    final country = (map['country'] as String?)?.trim();
+    if (country == null || country.isEmpty) return null;
+    return country;
+  }
+
   static List<ZoneMemberPreview> _parseZoneMemberPreviewList(
     List<dynamic> list,
   ) {
@@ -503,6 +522,7 @@ class ZoneRepository {
           final uid = m['user_id'] as String? ?? '';
           final avatar = m['avatar_url'] as String?;
           final genderRaw = m['gender'] as String?;
+          final countryRaw = (m['country'] as String?)?.trim();
           return ZoneMemberPreview(
             id: uid,
             photoUrl: (avatar != null && avatar.isNotEmpty) ? avatar : '',
@@ -511,6 +531,9 @@ class ZoneRepository {
             bio: m['bio'] as String? ?? '',
             gender: (genderRaw != null && genderRaw.isNotEmpty)
                 ? genderRaw
+                : null,
+            country: (countryRaw != null && countryRaw.isNotEmpty)
+                ? countryRaw
                 : null,
           );
         })

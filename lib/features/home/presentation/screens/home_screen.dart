@@ -34,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _loadingDeck = true;
   Object? _deckError;
   ZoneLobbyFilters _discoveryFilters = ZoneLobbyFilters.none;
+  bool _syncingSharedFilters = false;
 
   @override
   void initState() {
@@ -53,7 +54,40 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     // ignore: unawaited_futures
     _syncMyDiscoveryLocation();
+    DiscoveryFiltersStorage.filtersRevision.addListener(_onSharedFiltersChanged);
     _initDiscovery(sw);
+  }
+
+  @override
+  void dispose() {
+    DiscoveryFiltersStorage.filtersRevision.removeListener(_onSharedFiltersChanged);
+    super.dispose();
+  }
+
+  Future<void> _onSharedFiltersChanged() async {
+    if (_syncingSharedFilters) return;
+    _syncingSharedFilters = true;
+    try {
+      final latest = await _discoveryFiltersStorage.load();
+      if (!mounted || _sameFilters(_discoveryFilters, latest)) return;
+      setState(() => _discoveryFilters = latest);
+      await _loadDeck();
+    } finally {
+      _syncingSharedFilters = false;
+    }
+  }
+
+  bool _sameFilters(ZoneLobbyFilters a, ZoneLobbyFilters b) {
+    final aCountries = List<String>.from(a.countries ?? const <String>[])..sort();
+    final bCountries = List<String>.from(b.countries ?? const <String>[])..sort();
+    if (aCountries.length != bCountries.length) return false;
+    for (var i = 0; i < aCountries.length; i++) {
+      if (aCountries[i] != bCountries[i]) return false;
+    }
+    return a.gender == b.gender &&
+        a.minAge == b.minAge &&
+        a.maxAge == b.maxAge &&
+        a.maxDistanceKm == b.maxDistanceKm;
   }
 
   Future<void> _syncMyDiscoveryLocation() async {

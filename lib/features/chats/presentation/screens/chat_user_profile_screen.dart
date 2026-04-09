@@ -154,6 +154,26 @@ class _ChatUserProfileScreenState extends State<ChatUserProfileScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
+                if ((profile.country ?? '').trim().isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.public_rounded,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        profile.country!.trim(),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 Text(
                   l10n.chatAbout,
                   style: theme.textTheme.titleMedium?.copyWith(

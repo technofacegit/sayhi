@@ -8,6 +8,7 @@ class ZoneMemberPreview {
     this.age,
     required this.bio,
     this.gender,
+    this.country,
   });
 
   final String id;
@@ -16,4 +17,5 @@ class ZoneMemberPreview {
   final int? age;
   final String bio;
   final String? gender;
+  final String? country;
 }

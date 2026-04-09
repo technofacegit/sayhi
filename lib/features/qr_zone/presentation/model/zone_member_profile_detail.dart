@@ -6,6 +6,7 @@ class ZoneMemberProfileDetail {
     required this.bio,
     this.age,
     this.gender,
+    this.country,
     required this.avatarUrl,
     required this.galleryUrls,
     this.swipe,
@@ -17,6 +18,7 @@ class ZoneMemberProfileDetail {
   final String bio;
   final int? age;
   final String? gender;
+  final String? country;
   final String avatarUrl;
   final List<String> galleryUrls;
 

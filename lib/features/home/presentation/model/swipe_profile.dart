@@ -7,6 +7,7 @@ class SwipeProfile {
     this.age,
     required this.bio,
     this.gender,
+    this.country,
     this.galleryUrls = const [],
   });
 
@@ -16,6 +17,7 @@ class SwipeProfile {
   final int? age;
   final String bio;
   final String? gender;
+  final String? country;
   final List<String> galleryUrls;
 
   /// Primary photo first, then extras (deduped).

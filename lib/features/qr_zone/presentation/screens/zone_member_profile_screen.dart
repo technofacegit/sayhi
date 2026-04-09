@@ -105,6 +105,7 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
       bio: d.bio,
       age: d.age,
       gender: d.gender,
+      country: d.country,
       avatarUrl: d.avatarUrl,
       galleryUrls: d.galleryUrls,
       swipe: nextSwipe,
@@ -122,6 +123,7 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
       bio: d.bio,
       age: d.age,
       gender: d.gender,
+      country: d.country,
       avatarUrl: d.avatarUrl,
       galleryUrls: d.galleryUrls,
       swipe: nextSwipe,
@@ -138,6 +140,7 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
       bio: d.bio,
       age: d.age,
       gender: d.gender,
+      country: d.country,
       avatarUrl: d.avatarUrl,
       galleryUrls: d.galleryUrls,
       swipe: d.swipe,
@@ -274,6 +277,25 @@ class _ZoneMemberProfileScreenState extends State<ZoneMemberProfileScreen> {
               ),
             ],
             const SizedBox(height: 24),
+            if (d.country != null && d.country!.trim().isNotEmpty) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.public_rounded,
+                    size: 18,
+                    color: colorScheme.onSurface.withValues(alpha: 0.65),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    d.country!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+            ],
             Text(
               l10n.zoneMemberProfileAbout,
               style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),

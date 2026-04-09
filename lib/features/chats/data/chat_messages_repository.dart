@@ -11,6 +11,7 @@ class ChatPartnerPreview {
     required this.name,
     required this.avatarUrl,
     required this.bio,
+    this.country,
     required this.galleryUrls,
     required this.lastOnlineAt,
   });
@@ -19,6 +20,7 @@ class ChatPartnerPreview {
   final String name;
   final String avatarUrl;
   final String bio;
+  final String? country;
   final List<String> galleryUrls;
   final DateTime? lastOnlineAt;
 }
@@ -56,6 +58,7 @@ class ChatMessagesRepository {
             : (m['name'] as String).trim(),
         avatarUrl: (m['avatar_url'] as String? ?? '').trim(),
         bio: (m['bio'] as String? ?? '').trim(),
+        country: (m['country'] as String?)?.trim(),
         galleryUrls: urls,
         lastOnlineAt: DateTime.tryParse(
           (m['last_online_at']?.toString() ?? '').trim(),
