@@ -974,7 +974,11 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: msg.isVideoNote
-                            ? _VideoNoteBubble(message: msg)
+                            ? _VideoNoteBubble(
+                                message: msg,
+                                onTapDown: (details) =>
+                                    _onMessageMenuTap(msg, details),
+                              )
                             : _MessageBubble(
                                 message: msg,
                                 displayText: _displayTextFor(msg),
@@ -1451,9 +1455,10 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
 }
 
 class _VideoNoteBubble extends StatefulWidget {
-  const _VideoNoteBubble({required this.message});
+  const _VideoNoteBubble({required this.message, required this.onTapDown});
 
   final ChatMessage message;
+  final ValueChanged<TapDownDetails> onTapDown;
 
   @override
   State<_VideoNoteBubble> createState() => _VideoNoteBubbleState();
@@ -1523,6 +1528,7 @@ class _VideoNoteBubbleState extends State<_VideoNoteBubble> {
             : CrossAxisAlignment.start,
         children: [
           GestureDetector(
+            onTapDown: widget.onTapDown,
             onTap: () {
               final c = _controller;
               if (c == null || !c.value.isInitialized) return;
