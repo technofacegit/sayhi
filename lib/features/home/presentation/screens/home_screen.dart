@@ -282,12 +282,16 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(0, 14, 0, 10),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 16),
                   Row(
                     children: [
                       const SizedBox(width: 48),
@@ -319,12 +323,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   HomeStoryStrip(
                     groupsFuture: _storyFuture,
                     onStoriesChanged: _reloadStoriesOnly,
+                    leftPadding: 0,
+                    rightPadding: 48,
                   ),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -342,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: SizedBox(
                         height: deckHeight,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                           child: _buildDeckBody(theme, muted),
                         ),
                       ),

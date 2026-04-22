@@ -206,137 +206,128 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
-                  Text(
-                    l10n.accountSettingsContactSection,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: colors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.email_outlined),
-                    title: Text(l10n.accountSettingsEmailLabel),
-                    subtitle: Text(
-                      (_user?.email ?? '').trim().isEmpty
-                          ? l10n.accountSettingsNotSet
-                          : _user!.email!.trim(),
-                    ),
-                  ),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.phone_outlined),
-                    title: Text(l10n.accountSettingsPhoneLabel),
-                    subtitle: Text(
-                      (_user?.phone ?? '').trim().isEmpty
-                          ? l10n.accountSettingsNotSet
-                          : _user!.phone!.trim(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    l10n.accountSettingsSignInSection,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: colors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (_identities.isEmpty)
-                    Text(
-                      l10n.accountSettingsNotSet,
-                      style: theme.textTheme.bodyMedium,
-                    )
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                  _SettingsSectionCard(
+                    title: l10n.accountSettingsContactSection,
+                    child: Column(
                       children: [
-                        for (final id in _identities)
-                          Chip(
-                            avatar: Icon(
-                              _iconForProvider(id.provider),
-                              size: 18,
-                            ),
-                            label: Text(_providerLabel(id.provider)),
+                        ListTile(
+                          leading: const Icon(Icons.email_outlined),
+                          title: Text(l10n.accountSettingsEmailLabel),
+                          subtitle: Text(
+                            (_user?.email ?? '').trim().isEmpty
+                                ? l10n.accountSettingsNotSet
+                                : _user!.email!.trim(),
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        ListTile(
+                          leading: const Icon(Icons.phone_outlined),
+                          title: Text(l10n.accountSettingsPhoneLabel),
+                          subtitle: Text(
+                            (_user?.phone ?? '').trim().isEmpty
+                                ? l10n.accountSettingsNotSet
+                                : _user!.phone!.trim(),
+                          ),
+                        ),
                       ],
                     ),
-                  if (_hasEmailProvider) ...[
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: _sendPasswordReset,
-                        icon: const Icon(Icons.lock_reset_rounded),
-                        label: Text(l10n.accountSettingsPasswordReset),
+                  ),
+                  const SizedBox(height: 14),
+                  _SettingsSectionCard(
+                    title: l10n.accountSettingsSignInSection,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_identities.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              l10n.accountSettingsNotSet,
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (final id in _identities)
+                                Chip(
+                                  avatar: Icon(_iconForProvider(id.provider), size: 18),
+                                  label: Text(_providerLabel(id.provider)),
+                                ),
+                            ],
+                          ),
+                        if (_hasEmailProvider) ...[
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              onPressed: _sendPasswordReset,
+                              icon: const Icon(Icons.lock_reset_rounded),
+                              label: Text(l10n.accountSettingsPasswordReset),
+                            ),
+                          ),
+                        ],
+                        if (_identities.any((i) => i.provider == 'apple')) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.accountSettingsAppleHint,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.accountSettingsGoogleHint,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _SettingsSectionCard(
+                    title: l10n.accountSettingsNotificationsSection,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          secondary: const Icon(Icons.notifications_outlined),
+                          title: Text(l10n.accountSettingsPushLabel),
+                          subtitle: Text(l10n.accountSettingsPushSubtitle),
+                          value: _pushGranted,
+                          onChanged: _deleting ? null : _onPushToggle,
+                        ),
+                        TextButton.icon(
+                          onPressed: openAppSettings,
+                          icon: const Icon(Icons.settings_rounded),
+                          label: Text(l10n.accountSettingsOpenSettings),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _SettingsSectionCard(
+                    title: l10n.accountSettingsDangerZone,
+                    titleColor: colors.error,
+                    child: ListTile(
+                      leading: Icon(Icons.delete_forever_rounded, color: colors.error),
+                      title: Text(
+                        l10n.accountSettingsDeleteTitle,
+                        style: TextStyle(
+                          color: colors.error,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
+                      subtitle: Text(l10n.accountSettingsDeleteSubtitle),
+                      onTap: _deleting ? null : _confirmDelete,
                     ),
-                  ],
-                  if (_identities.any((i) => i.provider == 'apple')) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.accountSettingsAppleHint,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      l10n.accountSettingsGoogleHint,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    l10n.accountSettingsNotificationsSection,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: colors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    secondary: const Icon(Icons.notifications_outlined),
-                    title: Text(l10n.accountSettingsPushLabel),
-                    subtitle: Text(l10n.accountSettingsPushSubtitle),
-                    value: _pushGranted,
-                    onChanged: _deleting ? null : _onPushToggle,
-                  ),
-                  TextButton.icon(
-                    onPressed: openAppSettings,
-                    icon: const Icon(Icons.settings_rounded),
-                    label: Text(l10n.accountSettingsOpenSettings),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    l10n.accountSettingsDangerZone,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: colors.error,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.delete_forever_rounded, color: colors.error),
-                    title: Text(
-                      l10n.accountSettingsDeleteTitle,
-                      style: TextStyle(
-                        color: colors.error,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(l10n.accountSettingsDeleteSubtitle),
-                    onTap: _deleting ? null : _confirmDelete,
                   ),
                   if (_deleting)
                     Padding(
@@ -371,5 +362,44 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       default:
         return Icons.login_rounded;
     }
+  }
+}
+
+class _SettingsSectionCard extends StatelessWidget {
+  const _SettingsSectionCard({
+    required this.title,
+    required this.child,
+    this.titleColor,
+  });
+
+  final String title;
+  final Widget child;
+  final Color? titleColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: titleColor ?? colors.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
+    );
   }
 }

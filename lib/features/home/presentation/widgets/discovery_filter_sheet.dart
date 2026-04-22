@@ -20,16 +20,23 @@ class DiscoveryFilterSheet extends StatelessWidget {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 4, 24, 16),
-            child: DiscoveryFilterForm(
-              initial: initial,
-              sheetMode: true,
-              onClear: () async {
-                Navigator.of(context).pop(ZoneLobbyFilters.none);
-              },
-              onApply: (f) async {
-                Navigator.of(context).pop(f);
-              },
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: DiscoveryFilterForm(
+                initial: initial,
+                sheetMode: true,
+                onClear: () async {
+                  Navigator.of(context).pop(ZoneLobbyFilters.none);
+                },
+                onApply: (f) async {
+                  Navigator.of(context).pop(f);
+                },
+              ),
             ),
           ),
         ),

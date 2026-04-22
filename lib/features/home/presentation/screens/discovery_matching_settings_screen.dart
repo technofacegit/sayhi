@@ -43,37 +43,44 @@ class _DiscoveryMatchingSettingsScreenState
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
-              child: DiscoveryFilterForm(
-                key: ValueKey(_formKey),
-                initial: _initial,
-                sheetMode: false,
-                title: l10n.discoveryMatchingSettingsHeadline,
-                clearButtonLabel: l10n.zoneLobbyFilterClear,
-                applyButtonLabel: l10n.discoveryMatchingSettingsSave,
-                onClear: () async {
-                  await _storage.save(ZoneLobbyFilters.none);
-                  if (!context.mounted) return;
-                  setState(() {
-                    _initial = ZoneLobbyFilters.none;
-                    _formKey++;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.l10n.discoveryMatchingSettingsCleared),
-                    ),
-                  );
-                },
-                onApply: (f) async {
-                  await _storage.save(f);
-                  if (!context.mounted) return;
-                  setState(() => _initial = f);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.l10n.discoveryMatchingSettingsSaved),
-                    ),
-                  );
-                },
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: DiscoveryFilterForm(
+                  key: ValueKey(_formKey),
+                  initial: _initial,
+                  sheetMode: false,
+                  title: l10n.discoveryMatchingSettingsHeadline,
+                  clearButtonLabel: l10n.zoneLobbyFilterClear,
+                  applyButtonLabel: l10n.discoveryMatchingSettingsSave,
+                  onClear: () async {
+                    await _storage.save(ZoneLobbyFilters.none);
+                    if (!context.mounted) return;
+                    setState(() {
+                      _initial = ZoneLobbyFilters.none;
+                      _formKey++;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(context.l10n.discoveryMatchingSettingsCleared),
+                      ),
+                    );
+                  },
+                  onApply: (f) async {
+                    await _storage.save(f);
+                    if (!context.mounted) return;
+                    setState(() => _initial = f);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(context.l10n.discoveryMatchingSettingsSaved),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
     );

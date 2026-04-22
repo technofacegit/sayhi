@@ -202,7 +202,7 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
                       child: Row(
                         children: [
                           Text(
@@ -292,7 +292,7 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Expanded(
                       child: _loading
                           ? const Center(
@@ -339,14 +339,9 @@ class _ChatsTabScreenState extends State<ChatsTabScreen> {
                               ),
                             )
                           : ListView.separated(
-                              padding: const EdgeInsets.only(bottom: 100),
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
                               itemCount: chatItems.length,
-                              separatorBuilder: (_, __) => Divider(
-                                height: 1,
-                                indent: 88,
-                                color: colorScheme.outlineVariant
-                                    .withValues(alpha: 0.35),
-                              ),
+                              separatorBuilder: (_, __) => const SizedBox(height: 10),
                               itemBuilder: (context, index) {
                                 final thread = chatItems[index];
                                 return _ChatThreadTile(
@@ -474,11 +469,13 @@ class _ChatThreadTile extends StatelessWidget {
     final onlineMeta = formatLastOnline(thread.lastOnlineAt);
 
     return Material(
-      color: Colors.transparent,
+      color: colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
               Stack(

@@ -137,13 +137,13 @@ class _DiscoveryFilterFormState extends State<DiscoveryFilterForm> {
     final clearLabel = widget.clearButtonLabel ?? l10n.zoneLobbyFilterClear;
     final applyLabel = widget.applyButtonLabel ?? l10n.zoneLobbyFilterApply;
 
+    final sectionBg = theme.colorScheme.surfaceContainerLow;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
           child: SingleChildScrollView(
-            controller:
-                widget.sheetMode ? _sheetScrollController : null,
+            controller: widget.sheetMode ? _sheetScrollController : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
@@ -154,196 +154,209 @@ class _DiscoveryFilterFormState extends State<DiscoveryFilterForm> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.zoneLobbyFilterGender,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(
-                      alpha: 0.65,
-                    ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: sectionBg,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    FilterChip(
-                      label: Text(l10n.zoneLobbyFilterGenderAll),
-                      selected: _gender == null,
-                      onSelected: (_) =>
-                          _updateAndKeepBottom(() => _gender = null),
-                    ),
-                    FilterChip(
-                      label: Text(l10n.zoneLobbyFilterGenderFemale),
-                      selected: _gender == 'female',
-                      onSelected: (_) =>
-                          _updateAndKeepBottom(() => _gender = 'female'),
-                    ),
-                    FilterChip(
-                      label: Text(l10n.zoneLobbyFilterGenderMale),
-                      selected: _gender == 'male',
-                      onSelected: (_) =>
-                          _updateAndKeepBottom(() => _gender = 'male'),
-                    ),
-                    FilterChip(
-                      label: Text(l10n.zoneLobbyFilterGenderOther),
-                      selected: _gender == 'other',
-                      onSelected: (_) =>
-                          _updateAndKeepBottom(() => _gender = 'other'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.zoneLobbyFilterAge,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(
-                      alpha: 0.65,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.zoneLobbyFilterAgeToggle),
-                  value: _useAge,
-                  onChanged: (v) => _updateAndKeepBottom(() => _useAge = v),
-                ),
-                if (_useAge) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        '$minLabel',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                        l10n.zoneLobbyFilterGender,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
                         ),
                       ),
-                      Text(
-                        '$maxLabel',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  RangeSlider(
-                    values: _ageRange,
-                    min: 18,
-                    max: 99,
-                    divisions: 81,
-                    labels: RangeLabels('$minLabel', '$maxLabel'),
-                    onChanged: (v) =>
-                        _updateAndKeepBottom(() => _ageRange = v),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                Text(
-                  l10n.discoveryFilterCountry,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(
-                      alpha: 0.65,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _countryQueryController,
-                  onChanged: (_) => _updateAndKeepBottom(() {}),
-                  decoration: InputDecoration(
-                    hintText: l10n.discoveryFilterCountryHint,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    isDense: true,
-                  ),
-                ),
-                if (_selectedCountries.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final c in _selectedCountries)
-                        InputChip(
-                          label: Text(c),
-                          onDeleted: () {
-                            _updateAndKeepBottom(
-                              () => _selectedCountries.remove(c),
-                            );
-                          },
-                        ),
-                    ],
-                  ),
-                ],
-                if (showCountrySuggestions) ...[
-                  const SizedBox(height: 8),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 200),
-                    child: ListView(
-                      shrinkWrap: true,
-                      children: [
-                        for (final c in countrySuggestions)
-                          ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: Text(c),
-                            onTap: () {
-                              _updateAndKeepBottom(() {
-                                _selectedCountries.add(c);
-                                _countryQueryController.clear();
-                              });
-                            },
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          FilterChip(
+                            label: Text(l10n.zoneLobbyFilterGenderAll),
+                            selected: _gender == null,
+                            onSelected: (_) => _updateAndKeepBottom(() => _gender = null),
                           ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 20),
-                Text(
-                  l10n.discoveryFilterDistance,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(
-                      alpha: 0.65,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.discoveryFilterDistanceToggle),
-                  value: _useDistance,
-                  onChanged: (v) =>
-                      _updateAndKeepBottom(() => _useDistance = v),
-                ),
-                if (_useDistance) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${_distanceKm.round()} km',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                          FilterChip(
+                            label: Text(l10n.zoneLobbyFilterGenderFemale),
+                            selected: _gender == 'female',
+                            onSelected: (_) => _updateAndKeepBottom(() => _gender = 'female'),
+                          ),
+                          FilterChip(
+                            label: Text(l10n.zoneLobbyFilterGenderMale),
+                            selected: _gender == 'male',
+                            onSelected: (_) => _updateAndKeepBottom(() => _gender = 'male'),
+                          ),
+                          FilterChip(
+                            label: Text(l10n.zoneLobbyFilterGenderOther),
+                            selected: _gender == 'other',
+                            onSelected: (_) => _updateAndKeepBottom(() => _gender = 'other'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  Slider(
-                    value: _distanceKm,
-                    min: 1,
-                    max: 500,
-                    divisions: 499,
-                    label: '${_distanceKm.round()} km',
-                    onChanged: (v) =>
-                        _updateAndKeepBottom(() => _distanceKm = v),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: sectionBg,
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.zoneLobbyFilterAge,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.zoneLobbyFilterAgeToggle),
+                        value: _useAge,
+                        onChanged: (v) => _updateAndKeepBottom(() => _useAge = v),
+                      ),
+                      if (_useAge) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('$minLabel', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                            Text('$maxLabel', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                        RangeSlider(
+                          values: _ageRange,
+                          min: 18,
+                          max: 99,
+                          divisions: 81,
+                          labels: RangeLabels('$minLabel', '$maxLabel'),
+                          onChanged: (v) => _updateAndKeepBottom(() => _ageRange = v),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: sectionBg,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.discoveryFilterCountry,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _countryQueryController,
+                        onChanged: (_) => _updateAndKeepBottom(() {}),
+                        decoration: InputDecoration(
+                          hintText: l10n.discoveryFilterCountryHint,
+                          isDense: true,
+                        ),
+                      ),
+                      if (_selectedCountries.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final c in _selectedCountries)
+                              InputChip(
+                                label: Text(c),
+                                onDeleted: () {
+                                  _updateAndKeepBottom(() => _selectedCountries.remove(c));
+                                },
+                              ),
+                          ],
+                        ),
+                      ],
+                      if (showCountrySuggestions) ...[
+                        const SizedBox(height: 8),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          child: ListView(
+                            shrinkWrap: true,
+                            children: [
+                              for (final c in countrySuggestions)
+                                ListTile(
+                                  dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(c),
+                                  onTap: () {
+                                    _updateAndKeepBottom(() {
+                                      _selectedCountries.add(c);
+                                      _countryQueryController.clear();
+                                    });
+                                  },
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: sectionBg,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.discoveryFilterDistance,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.discoveryFilterDistanceToggle),
+                        value: _useDistance,
+                        onChanged: (v) => _updateAndKeepBottom(() => _useDistance = v),
+                      ),
+                      if (_useDistance) ...[
+                        Text(
+                          '${_distanceKm.round()} km',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Slider(
+                          value: _distanceKm,
+                          min: 1,
+                          max: 500,
+                          divisions: 499,
+                          label: '${_distanceKm.round()} km',
+                          onChanged: (v) => _updateAndKeepBottom(() => _distanceKm = v),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Row(
           children: [
             Expanded(

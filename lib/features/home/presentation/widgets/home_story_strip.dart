@@ -11,10 +11,14 @@ class HomeStoryStrip extends StatelessWidget {
     super.key,
     required this.groupsFuture,
     required this.onStoriesChanged,
+    this.leftPadding = 16,
+    this.rightPadding = 72,
   });
 
   final Future<List<StoryGroup>> groupsFuture;
   final VoidCallback onStoriesChanged;
+  final double leftPadding;
+  final double rightPadding;
 
   Future<void> _openViewer(
     BuildContext context,
@@ -56,31 +60,33 @@ class HomeStoryStrip extends StatelessWidget {
         if (!snapshot.hasData && !snapshot.hasError) {
           return SizedBox(
             height: 104,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 72,
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        width: 56,
-                        height: 56,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.commonLoading,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurface
-                              .withValues(alpha: 0.55),
+            child: Padding(
+              padding: EdgeInsets.only(left: leftPadding, right: rightPadding),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 72,
+                    child: Column(
+                      children: [
+                        const SizedBox(
+                          width: 56,
+                          height: 56,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.commonLoading,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.55),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         }
@@ -107,6 +113,8 @@ class HomeStoryStrip extends StatelessWidget {
           theme: theme,
           colorScheme: colorScheme,
           onOpen: _openViewer,
+          leftPadding: leftPadding,
+          rightPadding: rightPadding,
         );
       },
     );
@@ -150,6 +158,8 @@ class _StoryStripContent extends StatelessWidget {
     required this.theme,
     required this.colorScheme,
     required this.onOpen,
+    required this.leftPadding,
+    required this.rightPadding,
   });
 
   final List<StoryGroup> groups;
@@ -160,6 +170,8 @@ class _StoryStripContent extends StatelessWidget {
     List<StoryGroup> groups,
     int groupIndex,
   ) onOpen;
+  final double leftPadding;
+  final double rightPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +179,7 @@ class _StoryStripContent extends StatelessWidget {
       height: 104,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.only(left: leftPadding, right: rightPadding),
         itemCount: groups.length,
         separatorBuilder: (_, __) => const SizedBox(width: 14),
         itemBuilder: (context, index) {
