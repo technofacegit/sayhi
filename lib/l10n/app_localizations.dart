@@ -560,6 +560,42 @@ abstract class AppLocalizations {
   /// **'No one matches these filters. Try changing them or clear filters.'**
   String get zoneLobbyFilterEmpty;
 
+  /// No description provided for @discoveryMatchingSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Matching settings'**
+  String get discoveryMatchingSettingsTitle;
+
+  /// No description provided for @discoveryMatchingSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Age, distance, gender, and country preferences for discovery'**
+  String get discoveryMatchingSettingsSubtitle;
+
+  /// No description provided for @discoveryMatchingSettingsHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery filters'**
+  String get discoveryMatchingSettingsHeadline;
+
+  /// No description provided for @discoveryMatchingSettingsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get discoveryMatchingSettingsSave;
+
+  /// No description provided for @discoveryMatchingSettingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences saved.'**
+  String get discoveryMatchingSettingsSaved;
+
+  /// No description provided for @discoveryMatchingSettingsCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters cleared.'**
+  String get discoveryMatchingSettingsCleared;
+
   /// No description provided for @zoneMemberProfileAbout.
   ///
   /// In en, this message translates to:

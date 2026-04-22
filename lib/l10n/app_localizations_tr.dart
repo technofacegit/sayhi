@@ -259,6 +259,25 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu filtrelere uyan kimse yok. Filtreleri değiştirin veya temizleyin.';
 
   @override
+  String get discoveryMatchingSettingsTitle => 'Keşif ayarları';
+
+  @override
+  String get discoveryMatchingSettingsSubtitle =>
+      'Keşif için yaş, mesafe, cinsiyet ve ülke tercihleri';
+
+  @override
+  String get discoveryMatchingSettingsHeadline => 'Keşif filtreleri';
+
+  @override
+  String get discoveryMatchingSettingsSave => 'Kaydet';
+
+  @override
+  String get discoveryMatchingSettingsSaved => 'Tercihler kaydedildi.';
+
+  @override
+  String get discoveryMatchingSettingsCleared => 'Filtreler temizlendi.';
+
+  @override
   String get zoneMemberProfileAbout => 'Hakkında';
 
   @override

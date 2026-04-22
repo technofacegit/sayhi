@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_dating_app/app/router/app_router.dart';
 import 'package:qr_dating_app/core/auth_session.dart';
+import 'package:qr_dating_app/features/home/presentation/screens/discovery_matching_settings_screen.dart';
 import 'package:qr_dating_app/features/profile/presentation/screens/account_settings_screen.dart';
 import 'package:qr_dating_app/features/profile/presentation/screens/my_profile_screen.dart';
 import 'package:qr_dating_app/l10n/context_extension.dart';
@@ -91,6 +92,20 @@ class ProfileTabScreen extends StatelessWidget {
                   Navigator.of(context, rootNavigator: true).push(
                     MaterialPageRoute<void>(
                       builder: (_) => const AccountSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.tune_rounded),
+                title: Text(l10n.discoveryMatchingSettingsTitle),
+                subtitle: Text(l10n.discoveryMatchingSettingsSubtitle),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const DiscoveryMatchingSettingsScreen(),
                     ),
                   );
                 },

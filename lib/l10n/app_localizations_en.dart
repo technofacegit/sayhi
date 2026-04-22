@@ -257,6 +257,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'No one matches these filters. Try changing them or clear filters.';
 
   @override
+  String get discoveryMatchingSettingsTitle => 'Matching settings';
+
+  @override
+  String get discoveryMatchingSettingsSubtitle =>
+      'Age, distance, gender, and country preferences for discovery';
+
+  @override
+  String get discoveryMatchingSettingsHeadline => 'Discovery filters';
+
+  @override
+  String get discoveryMatchingSettingsSave => 'Save';
+
+  @override
+  String get discoveryMatchingSettingsSaved => 'Preferences saved.';
+
+  @override
+  String get discoveryMatchingSettingsCleared => 'Filters cleared.';
+
+  @override
   String get zoneMemberProfileAbout => 'About';
 
   @override
